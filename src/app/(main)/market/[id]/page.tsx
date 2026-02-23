@@ -1,0 +1,338 @@
+'use client';
+
+import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import {
+  ArrowLeft,
+  MapPin,
+  Tag,
+  Star,
+  Shield,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Share2,
+  Flag,
+  MessageCircle,
+  ShoppingBag,
+  Wrench,
+  Car,
+  BadgeCheck,
+  X,
+} from 'lucide-react';
+import { formatPrice, timeAgo, memberSince, formatWhatsAppLink, cn } from '@/lib/utils';
+import { useData } from '@/context/DataContext';
+import type { MarketListingWithDetails } from '@/types/database';
+
+const GRADIENTS = [
+  'from-emerald-400 to-teal-500',
+  'from-blue-400 to-indigo-500',
+  'from-purple-400 to-pink-500',
+  'from-orange-400 to-red-500',
+  'from-cyan-400 to-blue-500',
+  'from-rose-400 to-fuchsia-500',
+  'from-amber-400 to-orange-500',
+  'from-lime-400 to-green-500',
+  'from-violet-400 to-purple-500',
+  'from-teal-400 to-cyan-500',
+];
+
+export default function ListingDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { getMarketListing, marketListings } = useData();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+
+  const listing = getMarketListing(params.id as string);
+  const listingIndex = marketListings.findIndex((l) => l.id === params.id);
+
+  if (!listing) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+        <ShoppingBag size={48} className="text-border mb-3" />
+        <p className="text-foreground font-semibold">Listing not found</p>
+        <p className="text-muted text-sm mt-1">
+          This listing may have been removed or doesn&apos;t exist.
+        </p>
+        <Link
+          href="/market"
+          className="mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors"
+        >
+          Back to Market
+        </Link>
+      </div>
+    );
+  }
+
+  const gradient = GRADIENTS[(listingIndex >= 0 ? listingIndex : 0) % GRADIENTS.length];
+  const images = listing.market_listing_images;
+  const imageCount = Math.max(images.length, 1);
+
+  const whatsappMessage = `Hi, I'm interested in your listing on YuhPlace: "${listing.title}" (${formatPrice(listing.price_amount, listing.currency)})`;
+  const whatsappUrl = formatWhatsAppLink(listing.whatsapp_number, whatsappMessage);
+
+  const CategoryIcon =
+    listing.market_categories.slug === 'vehicles'
+      ? Car
+      : listing.market_categories.slug === 'services'
+        ? Wrench
+        : ShoppingBag;
+
+  return (
+    <div className="pb-24">
+      {/* Image Gallery */}
+      <div className="relative">
+        {/* Back Button */}
+        <button
+          onClick={() => router.back()}
+          className="absolute top-3 left-3 z-30 flex items-center justify-center w-9 h-9 bg-black/40 text-white rounded-full backdrop-blur-sm hover:bg-black/60 transition-colors"
+        >
+          <ArrowLeft size={18} />
+        </button>
+
+        {/* Share Button */}
+        <button
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: listing.title,
+                text: `Check out this listing on YuhPlace: ${listing.title}`,
+                url: window.location.href,
+              });
+            }
+          }}
+          className="absolute top-3 right-3 z-30 flex items-center justify-center w-9 h-9 bg-black/40 text-white rounded-full backdrop-blur-sm hover:bg-black/60 transition-colors"
+        >
+          <Share2 size={16} />
+        </button>
+
+        {/* Image Area */}
+        <div
+          className={cn(
+            'relative w-full aspect-[4/3] bg-gradient-to-br',
+            gradient
+          )}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <CategoryIcon size={64} className="text-white/30" />
+          </div>
+
+          {/* Featured Badge */}
+          {listing.is_featured && (
+            <div className="absolute top-3 left-14 z-20">
+              <span className="flex items-center gap-1 px-2.5 py-1 bg-accent text-white text-xs font-semibold rounded-full shadow-sm">
+                <Star size={12} fill="currentColor" />
+                Featured
+              </span>
+            </div>
+          )}
+
+          {/* Image Navigation */}
+          {imageCount > 1 && (
+            <>
+              <button
+                onClick={() =>
+                  setCurrentImageIndex((prev) =>
+                    prev === 0 ? imageCount - 1 : prev - 1
+                  )
+                }
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-8 h-8 bg-black/30 text-white rounded-full backdrop-blur-sm"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentImageIndex((prev) =>
+                    prev === imageCount - 1 ? 0 : prev + 1
+                  )
+                }
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-8 h-8 bg-black/30 text-white rounded-full backdrop-blur-sm"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </>
+          )}
+
+          {/* Image Counter */}
+          {imageCount > 1 && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+              {Array.from({ length: imageCount }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentImageIndex(i)}
+                  className={cn(
+                    'w-2 h-2 rounded-full transition-all',
+                    i === currentImageIndex
+                      ? 'bg-white w-4'
+                      : 'bg-white/50'
+                  )}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-4 space-y-4">
+        {/* Title + Price */}
+        <div>
+          <h1 className="text-xl font-bold text-foreground leading-tight">
+            {listing.title}
+          </h1>
+          <p className="text-2xl font-bold text-primary mt-1">
+            {formatPrice(listing.price_amount, listing.currency)}
+          </p>
+        </div>
+
+        {/* Badges Row */}
+        <div className="flex flex-wrap gap-2">
+          <span className="flex items-center gap-1 px-2.5 py-1 bg-surface border border-border rounded-full text-xs font-medium text-foreground">
+            <Tag size={12} className="text-muted" />
+            {listing.market_categories.name}
+          </span>
+          {listing.condition !== 'na' && (
+            <span
+              className={cn(
+                'px-2.5 py-1 rounded-full text-xs font-medium',
+                listing.condition === 'new'
+                  ? 'bg-primary-light text-primary'
+                  : 'bg-surface text-foreground border border-border'
+              )}
+            >
+              {listing.condition === 'new' ? 'New' : 'Used'}
+            </span>
+          )}
+          <span className="flex items-center gap-1 px-2.5 py-1 bg-surface border border-border rounded-full text-xs font-medium text-foreground">
+            <MapPin size={12} className="text-muted" />
+            {listing.regions.name}
+          </span>
+          {listing.seller_type === 'business' && (
+            <span className="flex items-center gap-1 px-2.5 py-1 bg-primary-light text-primary rounded-full text-xs font-medium">
+              <Shield size={12} />
+              Business
+            </span>
+          )}
+        </div>
+
+        {/* Posted Time */}
+        <div className="flex items-center gap-1.5 text-xs text-muted">
+          <Clock size={12} />
+          <span>Posted {timeAgo(listing.created_at)}</span>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Description */}
+        <div>
+          <h2 className="text-sm font-semibold text-foreground mb-2">
+            Description
+          </h2>
+          <div className="text-sm text-muted leading-relaxed whitespace-pre-line">
+            {listing.description}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Seller Card */}
+        <div>
+          <h2 className="text-sm font-semibold text-foreground mb-3">
+            Seller
+          </h2>
+          <div className="flex items-center gap-3 p-3 bg-surface border border-border rounded-xl">
+            {/* Avatar */}
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary-light text-primary font-bold text-lg shrink-0">
+              {listing.profiles.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-sm text-foreground truncate">
+                  {listing.profiles.name}
+                </span>
+                {listing.profiles.is_verified_business && (
+                  <BadgeCheck size={16} className="text-primary shrink-0" />
+                )}
+              </div>
+              <p className="text-xs text-muted mt-0.5">
+                Member since {memberSince(listing.profiles.created_at)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Report */}
+        <button
+          onClick={() => setReportModalOpen(true)}
+          className="flex items-center gap-1.5 text-xs text-muted hover:text-danger transition-colors"
+        >
+          <Flag size={12} />
+          Report this listing
+        </button>
+      </div>
+
+      {/* Report Modal */}
+      {reportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
+          <div className="w-full max-w-lg bg-white rounded-t-2xl p-5 pb-8 animate-slide-up">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-foreground">
+                Report Listing
+              </h3>
+              <button
+                onClick={() => setReportModalOpen(false)}
+                className="p-1 text-muted hover:text-foreground transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-sm text-muted mb-4">
+              Why are you reporting this listing?
+            </p>
+            <div className="space-y-2">
+              {[
+                'Spam',
+                'Scam / Fraud',
+                'Inappropriate content',
+                'Wrong category',
+                'Duplicate listing',
+                'Misleading information',
+              ].map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => {
+                    setReportModalOpen(false);
+                    // In production, this would submit the report
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm text-foreground border border-border rounded-xl hover:bg-surface hover:border-primary/30 transition-all"
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky Bottom Bar */}
+      <div className="fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-border">
+        <div className="mx-auto max-w-lg flex items-center gap-3 px-4 py-3">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#25D366] text-white font-semibold text-sm rounded-xl hover:bg-[#20BD5A] transition-colors active:scale-[0.98]"
+          >
+            <MessageCircle size={18} />
+            Chat on WhatsApp
+          </a>
+        </div>
+        <div className="h-[env(safe-area-inset-bottom)]" />
+      </div>
+    </div>
+  );
+}
