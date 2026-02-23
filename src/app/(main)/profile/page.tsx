@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ChevronRight,
   BadgeCheck,
@@ -13,32 +14,10 @@ import {
   MessageSquare,
   MapPin,
   Store,
-  Home,
 } from 'lucide-react';
 import { cn, memberSince } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import type { AccountType } from '@/types/database';
-
-// ---------------------------------------------------------------------------
-// Mock profile data
-// ---------------------------------------------------------------------------
-
-const MOCK_PROFILE = {
-  id: 'mock-user-1',
-  name: 'Rajesh Persaud',
-  account_type: 'individual' as AccountType,
-  avatar_url: null,
-  region: 'Georgetown',
-  is_verified_business: false,
-  created_at: '2024-11-15T00:00:00Z',
-  stats: {
-    listings: 4,
-    posts: 7,
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Account type badge config
-// ---------------------------------------------------------------------------
 
 const ACCOUNT_TYPE_CONFIG: Record<
   AccountType,
@@ -61,40 +40,12 @@ const ACCOUNT_TYPE_CONFIG: Record<
   },
 };
 
-// ---------------------------------------------------------------------------
-// Settings items
-// ---------------------------------------------------------------------------
-
 const SETTINGS_ITEMS = [
-  {
-    label: 'Edit Profile',
-    icon: UserPen,
-    href: '#',
-    comingSoon: false,
-  },
-  {
-    label: 'Notification Preferences',
-    icon: Bell,
-    href: '#',
-    comingSoon: true,
-  },
-  {
-    label: 'Safety Tips',
-    icon: ShieldCheck,
-    href: '#',
-    comingSoon: false,
-  },
-  {
-    label: 'Help & Support',
-    icon: HelpCircle,
-    href: '#',
-    comingSoon: false,
-  },
+  { label: 'Edit Profile', icon: UserPen, href: '#', comingSoon: false },
+  { label: 'Notification Preferences', icon: Bell, href: '#', comingSoon: true },
+  { label: 'Safety Tips', icon: ShieldCheck, href: '#', comingSoon: false },
+  { label: 'Help & Support', icon: HelpCircle, href: '#', comingSoon: false },
 ];
-
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
 
 function StatCard({
   label,
@@ -120,26 +71,20 @@ function SettingsRow({
   href,
   comingSoon,
   variant = 'default',
+  onClick,
 }: {
   label: string;
   icon: typeof UserPen;
-  href: string;
+  href?: string;
   comingSoon?: boolean;
   variant?: 'default' | 'danger';
+  onClick?: () => void;
 }) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        'flex items-center gap-3 px-4 py-3.5 hover:bg-surface transition-colors',
-        variant === 'danger' && 'hover:bg-danger-light',
-      )}
-    >
+  const content = (
+    <>
       <Icon
         size={18}
-        className={cn(
-          variant === 'danger' ? 'text-danger' : 'text-muted',
-        )}
+        className={cn(variant === 'danger' ? 'text-danger' : 'text-muted')}
       />
       <span
         className={cn(
@@ -156,10 +101,34 @@ function SettingsRow({
       )}
       <ChevronRight
         size={16}
-        className={cn(
-          variant === 'danger' ? 'text-danger/40' : 'text-border',
-        )}
+        className={cn(variant === 'danger' ? 'text-danger/40' : 'text-border')}
       />
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className={cn(
+          'w-full flex items-center gap-3 px-4 py-3.5 hover:bg-surface transition-colors text-left',
+          variant === 'danger' && 'hover:bg-danger-light',
+        )}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      href={href || '#'}
+      className={cn(
+        'flex items-center gap-3 px-4 py-3.5 hover:bg-surface transition-colors',
+        variant === 'danger' && 'hover:bg-danger-light',
+      )}
+    >
+      {content}
     </Link>
   );
 }
@@ -197,18 +166,62 @@ function PlaceholderSection({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
-
 export default function ProfilePage() {
-  const profile = MOCK_PROFILE;
-  const typeConfig = ACCOUNT_TYPE_CONFIG[profile.account_type];
-  const initials = profile.name
+  const router = useRouter();
+  const { user, profile, loading, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
+  // Not logged in
+  if (!loading && !user) {
+    return (
+      <div className="px-4 py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mx-auto mb-4">
+          <UserPen size={28} className="text-muted" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground mb-1">Sign in to view your profile</h2>
+        <p className="text-sm text-muted mb-6">
+          Create an account or log in to manage your listings and posts.
+        </p>
+        <div className="flex flex-col items-center gap-3">
+          <Link
+            href="/login"
+            className="inline-flex items-center justify-center px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+          >
+            Log in
+          </Link>
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center px-6 py-2.5 bg-surface text-primary rounded-lg text-sm font-medium border border-border hover:bg-primary-light transition-colors"
+          >
+            Create Account
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading
+  if (loading) {
+    return (
+      <div className="px-4 py-16 text-center">
+        <p className="text-sm text-muted">Loading profile...</p>
+      </div>
+    );
+  }
+
+  const displayName = profile?.name || user?.user_metadata?.name || user?.email || 'User';
+  const accountType: AccountType = (profile?.account_type as AccountType) || 'individual';
+  const typeConfig = ACCOUNT_TYPE_CONFIG[accountType];
+  const initials = displayName
     .split(' ')
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join('')
-    .slice(0, 2);
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="px-4 py-4">
@@ -226,9 +239,9 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-lg font-bold text-foreground truncate">
-                {profile.name}
+                {displayName}
               </h1>
-              {profile.is_verified_business && (
+              {profile?.is_verified_business && (
                 <BadgeCheck size={18} className="text-primary flex-shrink-0" />
               )}
             </div>
@@ -248,10 +261,10 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3 mt-2">
               <span className="flex items-center gap-1 text-xs text-muted">
                 <MapPin size={12} />
-                {profile.region}
+                Georgetown
               </span>
               <span className="text-xs text-muted">
-                Member since {memberSince(profile.created_at)}
+                Member since {memberSince(profile?.created_at || user?.created_at || '')}
               </span>
             </div>
           </div>
@@ -260,23 +273,15 @@ export default function ProfilePage() {
 
       {/* Stats row */}
       <div className="flex gap-3 mb-4">
-        <StatCard
-          label="Listings"
-          value={profile.stats.listings}
-          icon={Store}
-        />
-        <StatCard
-          label="Posts"
-          value={profile.stats.posts}
-          icon={MessageSquare}
-        />
+        <StatCard label="Listings" value={0} icon={Store} />
+        <StatCard label="Posts" value={0} icon={MessageSquare} />
       </div>
 
       {/* My Listings section */}
       <div className="mb-4">
         <PlaceholderSection
           title="My Listings"
-          count={profile.stats.listings}
+          count={0}
           icon={Package}
           linkHref="/market"
         />
@@ -286,7 +291,7 @@ export default function ProfilePage() {
       <div className="mb-4">
         <PlaceholderSection
           title="My Posts"
-          count={profile.stats.posts}
+          count={0}
           icon={MessageSquare}
           linkHref="/discover"
         />
@@ -315,8 +320,8 @@ export default function ProfilePage() {
         <SettingsRow
           label="Log Out"
           icon={LogOut}
-          href="/login"
           variant="danger"
+          onClick={handleSignOut}
         />
       </div>
     </div>

@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, CheckCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,35 +24,15 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-
-    // Mock login delay
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-
+    const { error: authError } = await signIn(email, password);
     setIsLoading(false);
-    setIsSuccess(true);
-  };
 
-  if (isSuccess) {
-    return (
-      <div className="bg-white border border-border rounded-2xl p-8 text-center">
-        <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
-          <CheckCircle size={28} className="text-primary" />
-        </div>
-        <h2 className="text-lg font-bold text-foreground mb-1">
-          Welcome back!
-        </h2>
-        <p className="text-sm text-muted mb-6">
-          You have been logged in successfully.
-        </p>
-        <Link
-          href="/discover"
-          className="inline-block w-full py-3 rounded-xl bg-primary text-white text-sm font-semibold text-center hover:bg-primary-dark transition-colors"
-        >
-          Go to Discover
-        </Link>
-      </div>
-    );
-  }
+    if (authError) {
+      setError(authError);
+    } else {
+      router.push('/discover');
+    }
+  };
 
   return (
     <div className="bg-white border border-border rounded-2xl p-6">

@@ -4,9 +4,11 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   useCallback,
   type ReactNode,
 } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type {
   DiscoverPostWithDetails,
   MarketListingWithDetails,
@@ -19,17 +21,13 @@ import type {
   OwnerType,
 } from '@/types/database';
 
-// ─── Initial mock data ──────────────────────────────────────────────────────
+// ─── Fallback mock data (shown when Supabase DB is empty) ───────────────────
 
-const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
+const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
   {
-    id: 'd1',
-    user_id: 'u1',
-    region_id: 'r1',
-    post_type: 'alert',
+    id: 'd1', user_id: 'u1', region_id: 'r1', post_type: 'alert',
     title: 'Flooding on Sheriff Street - Avoid the Area',
-    description:
-      'Heavy rainfall last night has caused serious flooding along Sheriff Street between Mandela Avenue and Orange Walk. Water level is above knee-height in some spots. Drivers should use alternative routes. The NDC is on the scene with pumps.\n\nRoads affected:\n- Sheriff Street (Mandela to Orange Walk)\n- Parts of Lamaha Street\n- Section of Albert Street near the canal\n\nPlease drive carefully if you must travel in the area. Stay safe everyone.',
+    description: 'Heavy rainfall last night has caused serious flooding along Sheriff Street between Mandela Avenue and Orange Walk. Water level is above knee-height in some spots. Drivers should use alternative routes.',
     status: 'active',
     created_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
@@ -38,13 +36,9 @@ const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     discover_post_images: [],
   },
   {
-    id: 'd2',
-    user_id: 'u2',
-    region_id: 'r2',
-    post_type: 'event',
+    id: 'd2', user_id: 'u2', region_id: 'r2', post_type: 'event',
     title: 'Mashramani Float Parade - Route & Schedule',
-    description:
-      "The Mashramani Float Parade starts at 9 AM this Saturday from D'Urban Park to Carifesta Avenue. There will be live music, cultural performances, and food stalls along the route. Bring the whole family!\n\nRoad closures will be in effect from 7 AM to 6 PM along the parade route.\n\nSchedule:\n- 9:00 AM - Parade kicks off at D'Urban Park\n- 10:30 AM - Steel pan performances at Vlissengen Road\n- 12:00 PM - Float judging at Carifesta Avenue\n- 2:00 PM - Cultural performances\n- 4:00 PM - Awards ceremony",
+    description: "The Mashramani Float Parade starts at 9 AM this Saturday from D'Urban Park to Carifesta Avenue. There will be live music, cultural performances, and food stalls along the route.",
     status: 'active',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
@@ -53,13 +47,9 @@ const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     discover_post_images: [{ id: 'img1', post_id: 'd2', image_url: '/placeholder-event.jpg', sort_order: 0 }],
   },
   {
-    id: 'd3',
-    user_id: 'u3',
-    region_id: 'r3',
-    post_type: 'business',
+    id: 'd3', user_id: 'u3', region_id: 'r3', post_type: 'business',
     title: 'New Roti Shop Opening in Berbice!',
-    description:
-      "Aunty Savi's Roti & Curry is opening this Friday at Lot 12 New Amsterdam main road.\n\nGrand opening specials:\n- Dhalpuri roti with curry - $500 GYD\n- Paratha roti with curry - $600 GYD\n- Free drink with every combo\n\nWe serve dhalpuri, paratha, and our famous pepper sauce. Come taste real home cooking! Open 7 AM to 8 PM daily.",
+    description: "Aunty Savi's Roti & Curry is opening this Friday at Lot 12 New Amsterdam main road. Grand opening specials: Dhalpuri roti with curry - $500 GYD.",
     status: 'active',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
@@ -68,13 +58,9 @@ const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     discover_post_images: [{ id: 'img2', post_id: 'd3', image_url: '/placeholder-food.jpg', sort_order: 0 }],
   },
   {
-    id: 'd4',
-    user_id: 'u4',
-    region_id: 'r4',
-    post_type: 'community',
+    id: 'd4', user_id: 'u4', region_id: 'r4', post_type: 'community',
     title: 'Community Clean-Up Day - East Coast Demerara',
-    description:
-      "Join us this Sunday for a community clean-up along the Enmore to Cove & John stretch. We need volunteers to help clear drains and collect litter.\n\nWhat to expect:\n- Gloves and bags provided\n- Refreshments will be served\n- Community lunch after the clean-up\n\nMeet at 7 AM at Enmore Market. Let's keep our community clean together!",
+    description: "Join us this Sunday for a community clean-up along the Enmore to Cove & John stretch. Gloves and bags provided. Refreshments will be served.",
     status: 'active',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
@@ -83,13 +69,9 @@ const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     discover_post_images: [],
   },
   {
-    id: 'd5',
-    user_id: 'u5',
-    region_id: 'r5',
-    post_type: 'alert',
+    id: 'd5', user_id: 'u5', region_id: 'r5', post_type: 'alert',
     title: 'GPL Scheduled Power Outage - West Demerara',
-    description:
-      'GPL has announced a scheduled power outage for West Coast Demerara from Vreed-en-Hoop to Parika. The outage will be from 9 AM to 5 PM on Wednesday for substation maintenance.\n\nAffected areas:\n- Vreed-en-Hoop\n- Stewartville\n- Leonora\n- Uitvlugt\n- Parika\n\nPlease prepare accordingly - charge devices and store perishables safely.',
+    description: 'GPL has announced a scheduled power outage for West Coast Demerara from Vreed-en-Hoop to Parika. The outage will be from 9 AM to 5 PM on Wednesday.',
     status: 'active',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 20).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 20).toISOString(),
@@ -98,13 +80,9 @@ const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     discover_post_images: [],
   },
   {
-    id: 'd6',
-    user_id: 'u6',
-    region_id: 'r6',
-    post_type: 'event',
+    id: 'd6', user_id: 'u6', region_id: 'r6', post_type: 'event',
     title: 'Linden Town Week Cultural Night',
-    description:
-      "Linden Town Week kicks off with a Cultural Night at the Mackenzie Sports Club. Enjoy tassa drumming, folk dancing, poetry, and live chutney and reggae music.\n\nDoors open at 6 PM. Tickets are $1,000 GYD at the gate. Food and drinks available.\n\nPerformers include:\n- The Linden Tassa Group\n- Esther's Dance Academy\n- Young poets from Linden schools\n\nBring your Linden pride!",
+    description: 'Linden Town Week kicks off with a Cultural Night at the Mackenzie Sports Club. Enjoy tassa drumming, folk dancing, poetry, and live chutney and reggae music.',
     status: 'active',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString(),
@@ -113,13 +91,9 @@ const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     discover_post_images: [{ id: 'img3', post_id: 'd6', image_url: '/placeholder-culture.jpg', sort_order: 0 }],
   },
   {
-    id: 'd7',
-    user_id: 'u7',
-    region_id: 'r7',
-    post_type: 'business',
+    id: 'd7', user_id: 'u7', region_id: 'r7', post_type: 'business',
     title: 'Free Wi-Fi Now at Bartica Waterfront',
-    description:
-      'Great news for Bartica residents! The new public Wi-Fi zone is live along the Bartica Waterfront from the stelling to the market area.\n\nHow to connect:\n1. Go to your Wi-Fi settings\n2. Connect to "BarticaFreeWiFi"\n3. No password needed\n\nSpeeds are decent for browsing and WhatsApp. Powered by GTT. Share with your friends and family.',
+    description: 'Great news for Bartica residents! The new public Wi-Fi zone is live along the Bartica Waterfront from the stelling to the market area.',
     status: 'active',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
@@ -128,13 +102,9 @@ const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     discover_post_images: [],
   },
   {
-    id: 'd8',
-    user_id: 'u8',
-    region_id: 'r8',
-    post_type: 'community',
+    id: 'd8', user_id: 'u8', region_id: 'r8', post_type: 'community',
     title: 'Looking for Volunteers - Anna Regina Soup Kitchen',
-    description:
-      'The Anna Regina Soup Kitchen needs volunteers for Saturday mornings. We serve 80-100 meals every weekend to elderly and vulnerable community members.\n\nWe need help with:\n- Cooking (from 5 AM)\n- Serving (from 10 AM)\n- Cleaning up (from 12 PM)\n\nEven 2 hours of your time makes a huge difference. Contact Patricia on WhatsApp to sign up.',
+    description: 'The Anna Regina Soup Kitchen needs volunteers for Saturday mornings. We serve 80-100 meals every weekend to elderly and vulnerable community members.',
     status: 'active',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
@@ -144,11 +114,11 @@ const INITIAL_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
   },
 ];
 
-const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
+const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm1', user_id: 'u1', region_id: 'r1', category_id: 'c1',
     title: 'Samsung Galaxy S24 Ultra - 256GB',
-    description: 'Brand new Samsung Galaxy S24 Ultra, factory unlocked, 256GB Phantom Black. Comes with original box, charger, and receipt from Courts Guyana. Never used, still in plastic.',
+    description: 'Brand new Samsung Galaxy S24 Ultra, factory unlocked, 256GB Phantom Black. Comes with original box, charger, and receipt from Courts Guyana.',
     price_amount: 385000, currency: 'GYD', condition: 'new', seller_type: 'individual',
     whatsapp_number: '+5926001234', status: 'active', is_featured: true,
     created_at: '2026-02-21T10:00:00Z', updated_at: '2026-02-21T10:00:00Z',
@@ -160,7 +130,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm2', user_id: 'u2', region_id: 'r2', category_id: 'c3',
     title: '2019 Honda Civic LX - Low Mileage',
-    description: 'Excellent condition 2019 Honda Civic LX, automatic transmission. Only 28,000 km. Full service history at Massy Motors. AC blowing cold, interior clean, no accidents.',
+    description: 'Excellent condition 2019 Honda Civic LX, automatic transmission. Only 28,000 km. Full service history at Massy Motors.',
     price_amount: 6500000, currency: 'GYD', condition: 'used', seller_type: 'individual',
     whatsapp_number: '+5926112233', status: 'active', is_featured: true,
     created_at: '2026-02-20T14:30:00Z', updated_at: '2026-02-20T14:30:00Z',
@@ -172,7 +142,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm3', user_id: 'u3', region_id: 'r3', category_id: 'c1',
     title: 'L-Shape Sectional Couch - Grey Fabric',
-    description: 'Comfortable L-shape sectional sofa in grey fabric. Bought from Furniture Plus last year. Minor wear, no stains or tears. Must pick up from Providence, EBD.',
+    description: 'Comfortable L-shape sectional sofa in grey fabric. Bought from Furniture Plus last year. Minor wear, no stains or tears.',
     price_amount: 180000, currency: 'GYD', condition: 'used', seller_type: 'individual',
     whatsapp_number: '+5926223344', status: 'active', is_featured: false,
     created_at: '2026-02-19T09:15:00Z', updated_at: '2026-02-19T09:15:00Z',
@@ -184,7 +154,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm4', user_id: 'u4', region_id: 'r1', category_id: 'c2',
     title: 'Professional Plumbing Services - 24/7',
-    description: 'Licensed plumber with 15+ years experience. Available across Georgetown and surrounding areas. Pipe repairs, bathroom installations, water heater setup, drainage. Quick response, fair pricing.',
+    description: 'Licensed plumber with 15+ years experience. Available across Georgetown and surrounding areas. Pipe repairs, bathroom installations, drainage.',
     price_amount: null, currency: 'GYD', condition: 'na', seller_type: 'business',
     whatsapp_number: '+5926334455', status: 'active', is_featured: false,
     created_at: '2026-02-18T16:00:00Z', updated_at: '2026-02-18T16:00:00Z',
@@ -196,7 +166,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm5', user_id: 'u5', region_id: 'r4', category_id: 'c2',
     title: 'Moving & Trucking Service - Island Wide',
-    description: 'Reliable moving and trucking service covering all of Guyana. Household moves, office relocations, cargo transport. Fleet of trucks available. Careful handlers, insured goods.',
+    description: 'Reliable moving and trucking service covering all of Guyana. Household moves, office relocations, cargo transport.',
     price_amount: null, currency: 'GYD', condition: 'na', seller_type: 'business',
     whatsapp_number: '+5926445566', status: 'active', is_featured: false,
     created_at: '2026-02-17T11:45:00Z', updated_at: '2026-02-17T11:45:00Z',
@@ -208,7 +178,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm6', user_id: 'u6', region_id: 'r1', category_id: 'c1',
     title: '55" TCL Smart TV - 4K Android',
-    description: 'TCL 55-inch 4K Android Smart TV. Model P735. Bought 3 months ago, selling because I upgraded to 65". Works perfectly, no dead pixels. Comes with remote, box, and stand.',
+    description: 'TCL 55-inch 4K Android Smart TV. Model P735. Bought 3 months ago, selling because I upgraded to 65".',
     price_amount: 145000, currency: 'GYD', condition: 'used', seller_type: 'individual',
     whatsapp_number: '+5926556677', status: 'active', is_featured: false,
     created_at: '2026-02-16T08:30:00Z', updated_at: '2026-02-16T08:30:00Z',
@@ -220,7 +190,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm7', user_id: 'u7', region_id: 'r5', category_id: 'c1',
     title: 'Kipor 8kVA Generator - Like New',
-    description: 'Kipor 8kVA diesel generator in excellent condition. Used only during power outages, very low hours. Starts first pull every time. Electric start included.',
+    description: 'Kipor 8kVA diesel generator in excellent condition. Used only during power outages, very low hours.',
     price_amount: 520000, currency: 'GYD', condition: 'used', seller_type: 'individual',
     whatsapp_number: '+5926667788', status: 'active', is_featured: false,
     created_at: '2026-02-15T13:20:00Z', updated_at: '2026-02-15T13:20:00Z',
@@ -232,7 +202,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm8', user_id: 'u8', region_id: 'r2', category_id: 'c1',
     title: 'Construction Materials - Cement, Sand, Gravel',
-    description: 'Supplying construction materials across Demerara. Cement (bags), white sand, gravel, hardcore, 3/4 stone, crusher run. Delivery available. Wholesale pricing for bulk orders.',
+    description: 'Supplying construction materials across Demerara. Cement (bags), white sand, gravel, hardcore, 3/4 stone, crusher run.',
     price_amount: null, currency: 'GYD', condition: 'new', seller_type: 'business',
     whatsapp_number: '+5926778899', status: 'active', is_featured: true,
     created_at: '2026-02-14T07:00:00Z', updated_at: '2026-02-14T07:00:00Z',
@@ -244,7 +214,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm9', user_id: 'u9', region_id: 'r1', category_id: 'c1',
     title: '6-Seater Dining Table Set - Solid Wood',
-    description: 'Beautiful solid wood dining table with 6 matching chairs. Mahogany finish, very sturdy. Minor surface scratches on table top, otherwise great condition. Must sell, relocating.',
+    description: 'Beautiful solid wood dining table with 6 matching chairs. Mahogany finish, very sturdy.',
     price_amount: 95000, currency: 'GYD', condition: 'used', seller_type: 'individual',
     whatsapp_number: '+5926889900', status: 'active', is_featured: false,
     created_at: '2026-02-13T15:45:00Z', updated_at: '2026-02-13T15:45:00Z',
@@ -256,7 +226,7 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   {
     id: 'm10', user_id: 'u10', region_id: 'r3', category_id: 'c3',
     title: '2021 Toyota Hilux Double Cab 4x4',
-    description: 'Toyota Hilux 2021 double cab 4x4, diesel, automatic. 45,000 km. Full option: leather seats, reverse camera, push start. One owner, serviced at Toyota dealer.',
+    description: 'Toyota Hilux 2021 double cab 4x4, diesel, automatic. 45,000 km. Full option: leather seats, reverse camera, push start.',
     price_amount: 14500000, currency: 'GYD', condition: 'used', seller_type: 'individual',
     whatsapp_number: '+5926990011', status: 'active', is_featured: false,
     created_at: '2026-02-12T10:10:00Z', updated_at: '2026-02-12T10:10:00Z',
@@ -267,11 +237,11 @@ const INITIAL_MARKET_LISTINGS: MarketListingWithDetails[] = [
   },
 ];
 
-const INITIAL_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
+const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
   {
     id: 'p1', user_id: 'user-1', region_id: 'region-1', listing_mode: 'rent', property_type: 'apartment',
     title: 'Modern 2-Bedroom Apartment in Georgetown',
-    description: 'Spacious fully furnished 2-bedroom apartment in the heart of Georgetown. AC in both rooms, modern kitchen with appliances, secure parking, 24hr water supply. Walking distance to Stabroek Market and main bus routes.',
+    description: 'Spacious fully furnished 2-bedroom apartment in the heart of Georgetown. AC in both rooms, modern kitchen with appliances, secure parking.',
     price_amount: 120000, currency: 'GYD', bedrooms: 2, bathrooms: 1, neighborhood_text: 'Cummingsburg',
     owner_type: 'landlord', whatsapp_number: '5926001234', status: 'active', is_featured: true,
     created_at: '2026-02-20T10:00:00Z', updated_at: '2026-02-20T10:00:00Z',
@@ -282,7 +252,7 @@ const INITIAL_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
   {
     id: 'p2', user_id: 'user-2', region_id: 'region-1', listing_mode: 'sale', property_type: 'house',
     title: 'Elegant 3-Bedroom House in Bel Air Park',
-    description: 'Beautiful 3-bedroom, 2-bathroom concrete house in the prestigious Bel Air Park area. Large living/dining area, covered patio, landscaped yard, and garage. Recently renovated with modern finishes.',
+    description: 'Beautiful 3-bedroom, 2-bathroom concrete house in Bel Air Park. Large living/dining area, covered patio, landscaped yard, and garage.',
     price_amount: 45000000, currency: 'GYD', bedrooms: 3, bathrooms: 2, neighborhood_text: 'Bel Air Park',
     owner_type: 'owner', whatsapp_number: '5926112233', status: 'active', is_featured: false,
     created_at: '2026-02-18T14:30:00Z', updated_at: '2026-02-18T14:30:00Z',
@@ -293,7 +263,7 @@ const INITIAL_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
   {
     id: 'p3', user_id: 'user-3', region_id: 'region-4', listing_mode: 'sale', property_type: 'land',
     title: 'Prime Residential Land - East Bank Demerara',
-    description: 'Large plot of residential land on the East Bank of Demerara. Perfect for building your dream home. Flat terrain, road access, all utilities at boundary. Quiet area with growing development. Title in hand.',
+    description: 'Large plot of residential land on the East Bank. Perfect for building your dream home. Flat terrain, road access, all utilities at boundary.',
     price_amount: 12000000, currency: 'GYD', bedrooms: null, bathrooms: null, neighborhood_text: 'Herstelling',
     owner_type: 'owner', whatsapp_number: '5926223344', status: 'active', is_featured: false,
     created_at: '2026-02-15T09:00:00Z', updated_at: '2026-02-15T09:00:00Z',
@@ -304,7 +274,7 @@ const INITIAL_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
   {
     id: 'p4', user_id: 'user-4', region_id: 'region-1', listing_mode: 'rent', property_type: 'room',
     title: 'Furnished Room near University of Guyana',
-    description: 'Clean, furnished room available for rent near the University of Guyana, Turkeyen campus. Shared kitchen and bathroom. Includes Wi-Fi, electricity, and water. Ideal for students.',
+    description: 'Clean, furnished room near UG Turkeyen campus. Shared kitchen and bathroom. Includes Wi-Fi, electricity, and water. Ideal for students.',
     price_amount: 35000, currency: 'GYD', bedrooms: 1, bathrooms: 1, neighborhood_text: 'Turkeyen',
     owner_type: 'landlord', whatsapp_number: '5926334455', status: 'active', is_featured: false,
     created_at: '2026-02-21T16:00:00Z', updated_at: '2026-02-21T16:00:00Z',
@@ -315,7 +285,7 @@ const INITIAL_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
   {
     id: 'p5', user_id: 'user-5', region_id: 'region-1', listing_mode: 'rent', property_type: 'commercial',
     title: 'Commercial Space in Stabroek Area',
-    description: 'Prime commercial space in the busy Stabroek area. Ground floor with street frontage, suitable for retail, food business, or office. High foot traffic. Approx 800 sq ft. Security grills included.',
+    description: 'Prime commercial space in the busy Stabroek area. Ground floor with street frontage, suitable for retail, food business, or office.',
     price_amount: 200000, currency: 'GYD', bedrooms: null, bathrooms: 1, neighborhood_text: 'Stabroek',
     owner_type: 'agent', whatsapp_number: '5926445566', status: 'active', is_featured: true,
     created_at: '2026-02-19T11:00:00Z', updated_at: '2026-02-19T11:00:00Z',
@@ -326,7 +296,7 @@ const INITIAL_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
   {
     id: 'p6', user_id: 'user-6', region_id: 'region-4', listing_mode: 'sale', property_type: 'house',
     title: 'Modern 4-Bedroom House in Providence',
-    description: 'Stunning modern 4-bedroom, 3-bathroom house in Providence. Open concept living, granite countertops, built-in wardrobes, covered carport for 2 vehicles. Fenced yard with fruit trees.',
+    description: 'Stunning modern 4-bedroom, 3-bathroom house in Providence. Open concept living, granite countertops, built-in wardrobes.',
     price_amount: 65000000, currency: 'GYD', bedrooms: 4, bathrooms: 3, neighborhood_text: 'Providence',
     owner_type: 'owner', whatsapp_number: '5926556677', status: 'active', is_featured: true,
     created_at: '2026-02-17T08:00:00Z', updated_at: '2026-02-17T08:00:00Z',
@@ -337,7 +307,7 @@ const INITIAL_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
   {
     id: 'p7', user_id: 'user-7', region_id: 'region-1', listing_mode: 'rent', property_type: 'apartment',
     title: 'Cozy 1-Bedroom Apartment in Kitty',
-    description: 'Neat 1-bedroom apartment in Kitty. Semi-furnished with stove, fridge, and washing machine. Private entrance, gated compound. Close to schools, hospitals, and public transport.',
+    description: 'Neat 1-bedroom apartment in Kitty. Semi-furnished with stove, fridge, and washing machine. Private entrance, gated compound.',
     price_amount: 75000, currency: 'GYD', bedrooms: 1, bathrooms: 1, neighborhood_text: 'Kitty',
     owner_type: 'landlord', whatsapp_number: '5926667788', status: 'active', is_featured: false,
     created_at: '2026-02-22T07:30:00Z', updated_at: '2026-02-22T07:30:00Z',
@@ -348,7 +318,7 @@ const INITIAL_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
   {
     id: 'p8', user_id: 'user-8', region_id: 'region-3', listing_mode: 'sale', property_type: 'land',
     title: 'Seafront Land on West Coast Demerara',
-    description: 'Rare opportunity to own seafront property on the West Coast of Demerara. Approximately 1 acre with ocean views. Suitable for residential or hospitality development.',
+    description: 'Rare opportunity to own seafront property on the West Coast. Approximately 1 acre with ocean views.',
     price_amount: 25000000, currency: 'GYD', bedrooms: null, bathrooms: null, neighborhood_text: 'Uitvlugt',
     owner_type: 'agent', whatsapp_number: '5926778899', status: 'active', is_featured: false,
     created_at: '2026-02-14T13:00:00Z', updated_at: '2026-02-14T13:00:00Z',
@@ -399,30 +369,27 @@ export interface CreatePropertyListingInput {
 // ─── Context type ───────────────────────────────────────────────────────────
 
 interface DataContextValue {
-  // Data
   discoverPosts: DiscoverPostWithDetails[];
   marketListings: MarketListingWithDetails[];
   propertyListings: PropertyListingWithDetails[];
+  loading: boolean;
 
-  // Lookups
   getDiscoverPost: (id: string) => DiscoverPostWithDetails | undefined;
   getMarketListing: (id: string) => MarketListingWithDetails | undefined;
   getPropertyListing: (id: string) => PropertyListingWithDetails | undefined;
 
-  // Create operations
   addDiscoverPost: (input: CreateDiscoverPostInput) => DiscoverPostWithDetails;
   addMarketListing: (input: CreateMarketListingInput) => MarketListingWithDetails;
   addPropertyListing: (input: CreatePropertyListingInput) => PropertyListingWithDetails;
 
-  // Stats
   totalListings: number;
   totalPosts: number;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
 
-// Mock user profile for items created in the app
-const MOCK_USER = {
+// Fallback user for items created locally (when not authenticated)
+const FALLBACK_USER = {
   id: 'current-user',
   name: 'Rajesh Persaud',
   avatar_url: null,
@@ -436,30 +403,75 @@ function nextId(prefix: string) {
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [discoverPosts, setDiscoverPosts] = useState(INITIAL_DISCOVER_POSTS);
-  const [marketListings, setMarketListings] = useState(INITIAL_MARKET_LISTINGS);
-  const [propertyListings, setPropertyListings] = useState(INITIAL_PROPERTY_LISTINGS);
+  const [discoverPosts, setDiscoverPosts] = useState(FALLBACK_DISCOVER_POSTS);
+  const [marketListings, setMarketListings] = useState(FALLBACK_MARKET_LISTINGS);
+  const [propertyListings, setPropertyListings] = useState(FALLBACK_PROPERTY_LISTINGS);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real data from Supabase on mount
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const supabase = createClient();
+
+        const [postsRes, listingsRes, propertiesRes] = await Promise.all([
+          supabase
+            .from('discover_posts')
+            .select('*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), discover_post_images(*)')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('market_listings')
+            .select('*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), market_categories(name, slug), market_listing_images(*)')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('property_listings')
+            .select('*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), property_listing_images(*)')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false }),
+        ]);
+
+        // Only replace state if Supabase returned actual content
+        if (postsRes.data && postsRes.data.length > 0) {
+          setDiscoverPosts(postsRes.data as unknown as DiscoverPostWithDetails[]);
+        }
+        if (listingsRes.data && listingsRes.data.length > 0) {
+          setMarketListings(listingsRes.data as unknown as MarketListingWithDetails[]);
+        }
+        if (propertiesRes.data && propertiesRes.data.length > 0) {
+          setPropertyListings(propertiesRes.data as unknown as PropertyListingWithDetails[]);
+        }
+      } catch {
+        // Silently keep fallback data on error
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   const getDiscoverPost = useCallback(
     (id: string) => discoverPosts.find((p) => p.id === id),
-    [discoverPosts]
+    [discoverPosts],
   );
 
   const getMarketListing = useCallback(
     (id: string) => marketListings.find((l) => l.id === id),
-    [marketListings]
+    [marketListings],
   );
 
   const getPropertyListing = useCallback(
     (id: string) => propertyListings.find((p) => p.id === id),
-    [propertyListings]
+    [propertyListings],
   );
 
   const addDiscoverPost = useCallback((input: CreateDiscoverPostInput) => {
     const now = new Date().toISOString();
     const newPost: DiscoverPostWithDetails = {
       id: nextId('d'),
-      user_id: MOCK_USER.id,
+      user_id: FALLBACK_USER.id,
       region_id: input.region_slug,
       post_type: input.post_type,
       title: input.title,
@@ -467,7 +479,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       status: 'active',
       created_at: now,
       updated_at: now,
-      profiles: { ...MOCK_USER },
+      profiles: { ...FALLBACK_USER },
       regions: { name: input.region_name, slug: input.region_slug },
       discover_post_images: [],
     };
@@ -479,7 +491,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const now = new Date().toISOString();
     const newListing: MarketListingWithDetails = {
       id: nextId('m'),
-      user_id: MOCK_USER.id,
+      user_id: FALLBACK_USER.id,
       region_id: input.region_slug,
       category_id: input.category_slug,
       title: input.title,
@@ -493,7 +505,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       is_featured: false,
       created_at: now,
       updated_at: now,
-      profiles: { ...MOCK_USER },
+      profiles: { ...FALLBACK_USER },
       regions: { name: input.region_name, slug: input.region_slug },
       market_categories: { name: input.category_name, slug: input.category_slug },
       market_listing_images: [],
@@ -506,7 +518,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const now = new Date().toISOString();
     const newListing: PropertyListingWithDetails = {
       id: nextId('p'),
-      user_id: MOCK_USER.id,
+      user_id: FALLBACK_USER.id,
       region_id: input.region_slug,
       listing_mode: input.listing_mode,
       property_type: input.property_type,
@@ -523,7 +535,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       is_featured: false,
       created_at: now,
       updated_at: now,
-      profiles: { ...MOCK_USER },
+      profiles: { ...FALLBACK_USER },
       regions: { name: input.region_name, slug: input.region_slug },
       property_listing_images: [],
     };
@@ -537,6 +549,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         discoverPosts,
         marketListings,
         propertyListings,
+        loading,
         getDiscoverPost,
         getMarketListing,
         getPropertyListing,

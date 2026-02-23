@@ -14,29 +14,8 @@ import {
   Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import type { AccountType } from '@/types/database';
-
-// ---------------------------------------------------------------------------
-// Regions (Guyana's 10 administrative regions + Georgetown)
-// ---------------------------------------------------------------------------
-
-const REGIONS = [
-  { id: 'georgetown', name: 'Georgetown' },
-  { id: 'region-1', name: 'Region 1 - Barima-Waini' },
-  { id: 'region-2', name: 'Region 2 - Pomeroon-Supenaam' },
-  { id: 'region-3', name: 'Region 3 - Essequibo Islands-West Demerara' },
-  { id: 'region-4', name: 'Region 4 - Demerara-Mahaica' },
-  { id: 'region-5', name: 'Region 5 - Mahaica-Berbice' },
-  { id: 'region-6', name: 'Region 6 - East Berbice-Corentyne' },
-  { id: 'region-7', name: 'Region 7 - Cuyuni-Mazaruni' },
-  { id: 'region-8', name: 'Region 8 - Potaro-Siparuni' },
-  { id: 'region-9', name: 'Region 9 - Upper Takutu-Upper Essequibo' },
-  { id: 'region-10', name: 'Region 10 - Upper Demerara-Berbice' },
-];
-
-// ---------------------------------------------------------------------------
-// Account type cards config
-// ---------------------------------------------------------------------------
 
 const ACCOUNT_TYPES: {
   value: AccountType;
@@ -64,16 +43,12 @@ const ACCOUNT_TYPES: {
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
-
 export default function SignupPage() {
+  const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('individual');
-  const [regionId, setRegionId] = useState('georgetown');
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -94,12 +69,17 @@ export default function SignupPage() {
     }
 
     setIsLoading(true);
-
-    // Mock signup delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
+    const { error: authError } = await signUp(email, password, name, {
+      account_type: accountType,
+      phone: phone ? `+592${phone}` : '',
+    });
     setIsLoading(false);
-    setIsSuccess(true);
+
+    if (authError) {
+      setError(authError);
+    } else {
+      setIsSuccess(true);
+    }
   };
 
   if (isSuccess) {
@@ -115,10 +95,10 @@ export default function SignupPage() {
           Welcome to YuhPlace, {name.split(' ')[0]}. Check your email to confirm your account.
         </p>
         <Link
-          href="/discover"
+          href="/login"
           className="inline-block w-full py-3 rounded-xl bg-primary text-white text-sm font-semibold text-center hover:bg-primary-dark transition-colors"
         >
-          Start Exploring
+          Go to Login
         </Link>
       </div>
     );
@@ -232,25 +212,6 @@ export default function SignupPage() {
               );
             })}
           </div>
-        </div>
-
-        {/* Region dropdown */}
-        <div>
-          <label htmlFor="region" className="block text-sm font-medium text-foreground mb-1.5">
-            Region
-          </label>
-          <select
-            id="region"
-            value={regionId}
-            onChange={(e) => setRegionId(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors appearance-none cursor-pointer"
-          >
-            {REGIONS.map((region) => (
-              <option key={region.id} value={region.id}>
-                {region.name}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Phone (optional) */}
