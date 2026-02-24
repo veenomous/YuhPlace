@@ -1,6 +1,7 @@
 -- =====================================================
 -- Favorites / Saved Listings
 -- Run this in Supabase Dashboard → SQL Editor
+-- Safe to re-run (uses IF NOT EXISTS / OR REPLACE)
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS favorites (
@@ -17,14 +18,17 @@ CREATE INDEX IF NOT EXISTS idx_favorites_target ON favorites(target_type, target
 
 ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own favorites" ON favorites;
 CREATE POLICY "Users can view own favorites"
   ON favorites FOR SELECT TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can add favorites" ON favorites;
 CREATE POLICY "Users can add favorites"
   ON favorites FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can remove own favorites" ON favorites;
 CREATE POLICY "Users can remove own favorites"
   ON favorites FOR DELETE TO authenticated
   USING (auth.uid() = user_id);
@@ -53,25 +57,5 @@ BEGIN
     VALUES (auth.uid(), p_target_type::report_target_type, p_target_id);
     RETURN true; -- favorited
   END IF;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- RPC: Get all favorites for the current user
-CREATE OR REPLACE FUNCTION get_my_favorites()
-RETURNS JSON AS $$
-BEGIN
-  IF auth.uid() IS NULL THEN
-    RAISE EXCEPTION 'Not authenticated';
-  END IF;
-
-  RETURN (
-    SELECT json_agg(row_to_json(f))
-    FROM (
-      SELECT target_type, target_id, created_at
-      FROM favorites
-      WHERE user_id = auth.uid()
-      ORDER BY created_at DESC
-    ) f
-  );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

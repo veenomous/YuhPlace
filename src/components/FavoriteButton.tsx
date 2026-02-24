@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Heart, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -18,10 +19,11 @@ export default function FavoriteButton({
   size?: 'default' | 'small';
 }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [isFavorited, setIsFavorited] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Don't check favorites for demo posts
+  // Don't show for demo/fallback posts
   const isRealPost = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId);
 
   const checkFavorite = useCallback(async () => {
@@ -40,7 +42,16 @@ export default function FavoriteButton({
   useEffect(() => { checkFavorite(); }, [checkFavorite]);
 
   async function handleToggle() {
-    if (!user || !isRealPost || loading) return;
+    if (loading) return;
+
+    // Not logged in — send to login
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!isRealPost) return;
+
     setLoading(true);
     const supabase = createClient();
     const { data: newState, error } = await supabase.rpc('toggle_favorite', {
@@ -53,7 +64,8 @@ export default function FavoriteButton({
     setLoading(false);
   }
 
-  if (!user || !isRealPost) return null;
+  // Hide only for demo posts
+  if (!isRealPost) return null;
 
   const iconSize = size === 'small' ? 14 : 18;
 

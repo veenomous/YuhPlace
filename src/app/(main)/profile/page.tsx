@@ -227,7 +227,12 @@ export default function ProfilePage() {
   const fetchFavorites = useCallback(async () => {
     if (!user) return;
     const supabase = createClient();
-    const { data } = await supabase.rpc('get_my_favorites');
+    // Fetch directly from the favorites table instead of RPC for reliability
+    const { data } = await supabase
+      .from('favorites')
+      .select('target_type, target_id')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
     if (data) setFavorites(data as { target_type: string; target_id: string }[]);
   }, [user]);
 
@@ -448,13 +453,13 @@ export default function ProfilePage() {
       </div>
 
       {/* Saved Items */}
-      {totalSaved > 0 && (
-        <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-            <Heart size={16} className="text-red-500" />
-            <h3 className="text-sm font-semibold text-foreground">Saved</h3>
-            <span className="text-xs text-muted">({totalSaved})</span>
-          </div>
+      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+          <Heart size={16} className="text-red-500" />
+          <h3 className="text-sm font-semibold text-foreground">Saved</h3>
+          <span className="text-xs text-muted">({totalSaved})</span>
+        </div>
+        {totalSaved > 0 ? (
           <div className="divide-y divide-border">
             {savedMarket.map((listing) => (
               <MyMarketCard key={listing.id} listing={listing} />
@@ -466,8 +471,14 @@ export default function ProfilePage() {
               <MyPostCard key={post.id} post={post} />
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="px-4 py-6 text-center">
+            <Heart size={24} className="text-border mx-auto mb-2" />
+            <p className="text-xs text-muted">No saved items yet</p>
+            <p className="text-xs text-muted mt-1">Tap the heart on any listing or post to save it</p>
+          </div>
+        )}
+      </div>
 
       {/* Settings section */}
       <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
