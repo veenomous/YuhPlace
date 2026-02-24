@@ -363,7 +363,7 @@ export default function MarketPage() {
                     {timeAgo(listing.created_at)}
                   </p>
                   {(commentCounts.get(listing.id) ?? 0) > 0 && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-muted">
+                    <span className="flex items-center gap-0.5 text-[10px] text-primary font-medium">
                       <MessageSquare size={10} />
                       {commentCounts.get(listing.id)}
                     </span>

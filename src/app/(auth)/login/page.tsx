@@ -15,7 +15,7 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const redirectTo = searchParams.get('redirect') || '/discover';
+  const redirectTo = searchParams.get('redirect') || '/';
 
   // Show error from auth callback failures
   useEffect(() => {
@@ -123,7 +123,7 @@ function LoginForm() {
       {/* Footer link */}
       <p className="text-center text-sm text-muted mt-6">
         Don&apos;t have an account?{' '}
-        <Link href={`/signup${redirectTo !== '/discover' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-primary font-semibold hover:underline">
+        <Link href={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-primary font-semibold hover:underline">
           Sign up
         </Link>
       </p>

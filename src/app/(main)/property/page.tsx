@@ -432,7 +432,7 @@ function PropertyCard({ property, commentCount }: { property: PropertyListingWit
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             {commentCount > 0 && (
-              <span className="flex items-center gap-1 text-[11px] text-muted">
+              <span className="flex items-center gap-1 text-[11px] text-primary font-medium">
                 <MessageSquare size={12} />
                 {commentCount}
               </span>

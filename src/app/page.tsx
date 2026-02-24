@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Search,
   MapPin,
@@ -26,6 +27,8 @@ import {
   Facebook,
   Instagram,
   Twitter,
+  User,
+  LogOut,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -211,7 +214,10 @@ const QUICK_ACCESS = [
 
 export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, profile, loading } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { user, profile, loading, signOut } = useAuth();
 
   const displayName = profile?.name || user?.user_metadata?.name || user?.email || '';
   const initials = displayName
@@ -221,6 +227,23 @@ export default function LandingPage() {
     .slice(0, 2)
     .toUpperCase();
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [menuOpen]);
+
+  async function handleSignOut() {
+    setMenuOpen(false);
+    await signOut();
+    router.refresh();
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* ────────── Top Bar ────────── */}
@@ -228,15 +251,37 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-end">
           {!loading && (
             user ? (
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-border hover:bg-white transition-colors"
-              >
-                <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-primary-dark">{initials}</span>
-                </div>
-                <span className="text-sm font-medium text-foreground">{displayName.split(' ')[0]}</span>
-              </Link>
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-border hover:bg-white transition-colors"
+                >
+                  <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center">
+                    <span className="text-[10px] font-bold text-primary-dark">{initials}</span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{displayName.split(' ')[0]}</span>
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded-xl shadow-lg py-1 min-w-[160px] z-50">
+                    <Link
+                      href="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface transition-colors"
+                    >
+                      <User size={15} className="text-muted" />
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-danger hover:bg-surface transition-colors"
+                    >
+                      <LogOut size={15} />
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Link
