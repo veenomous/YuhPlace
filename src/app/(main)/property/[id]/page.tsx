@@ -344,7 +344,7 @@ export default function PropertyDetailPage() {
               <div className="flex items-center gap-2 mb-0.5">
                 <h3 className="font-semibold text-foreground truncate">{property.profiles.name}</h3>
                 {property.profiles.is_verified_business && (
-                  <BadgeCheck size={16} className="text-blue-500 shrink-0" />
+                  <BadgeCheck size={16} className="text-amber-500 shrink-0" />
                 )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -352,7 +352,7 @@ export default function PropertyDetailPage() {
                   {OWNER_TYPE_LABELS[property.owner_type]}
                 </span>
                 {property.profiles.is_verified_business && (
-                  <BadgeCheck size={14} className="text-blue-500 flex-shrink-0" />
+                  <BadgeCheck size={14} className="text-amber-500 flex-shrink-0" />
                 )}
               </div>
               <div className="flex items-center gap-1.5 mt-2 text-xs text-muted">

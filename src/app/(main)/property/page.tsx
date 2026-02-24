@@ -411,7 +411,7 @@ function PropertyCard({ property }: { property: PropertyListingWithDetails }) {
               {property.profiles.name}
             </span>
             {property.profiles.is_verified_business && (
-              <BadgeCheck size={14} className="text-blue-500 flex-shrink-0" />
+              <BadgeCheck size={14} className="text-amber-500 flex-shrink-0" />
             )}
           </div>
           <span className="text-xs text-muted">{timeAgo(property.created_at)}</span>

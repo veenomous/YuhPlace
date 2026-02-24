@@ -267,7 +267,7 @@ export default function PostDetailPage({
                     {post.profiles.name}
                   </span>
                   {post.profiles.is_verified_business && (
-                    <BadgeCheck size={16} className="text-blue-500 flex-shrink-0" />
+                    <BadgeCheck size={16} className="text-amber-500 flex-shrink-0" />
                   )}
                 </div>
                 <p className="text-xs text-muted">
