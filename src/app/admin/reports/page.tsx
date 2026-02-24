@@ -11,7 +11,21 @@ import {
 } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import Link from 'next/link';
 import type { ReportStatus, ReportTargetType, ReportReason } from '@/types/database';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getTargetUrl(targetType: ReportTargetType, targetId: string): string {
+  switch (targetType) {
+    case 'discover_post': return `/discover/${targetId}`;
+    case 'market_listing': return `/market/${targetId}`;
+    case 'property_listing': return `/property/${targetId}`;
+    default: return '#';
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -292,9 +306,13 @@ export default function AdminReportsPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3 align-top">
-                        <code className="text-xs font-mono text-muted bg-surface px-1.5 py-0.5 rounded">
-                          {truncateId(report.target_id)}
-                        </code>
+                        <Link
+                          href={getTargetUrl(report.target_type, report.target_id)}
+                          target="_blank"
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          View post &rarr;
+                        </Link>
                       </td>
                       <td className="px-5 py-3 align-top">
                         <span

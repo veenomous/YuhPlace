@@ -19,6 +19,19 @@ import { createClient } from '@/lib/supabase/client';
 import type { ReportStatus, ReportTargetType, ReportReason } from '@/types/database';
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getTargetUrl(targetType: ReportTargetType, targetId: string): string {
+  switch (targetType) {
+    case 'discover_post': return `/discover/${targetId}`;
+    case 'market_listing': return `/market/${targetId}`;
+    case 'property_listing': return `/property/${targetId}`;
+    default: return '#';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -272,9 +285,10 @@ export default function AdminDashboardPage() {
                             </>
                           )}
                           <Link
-                            href="/admin/reports"
+                            href={getTargetUrl(report.target_type, report.target_id)}
+                            target="_blank"
                             className="p-1.5 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors"
-                            title="View Details"
+                            title="View reported content"
                           >
                             <Eye size={16} />
                           </Link>
