@@ -19,12 +19,13 @@ import {
   Loader2,
   Pencil,
 } from 'lucide-react';
-import { cn, timeAgo, memberSince, formatWhatsAppLink } from '@/lib/utils';
+import { cn, timeAgo, memberSince } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import type { PostType } from '@/types/database';
 import ReportModal from '@/components/ReportModal';
 import CommentSection from '@/components/CommentSection';
+import FavoriteButton from '@/components/FavoriteButton';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -121,11 +122,6 @@ export default function PostDetailPage({
       ? `${window.location.origin}/discover/${post.id}`
       : `/discover/${post.id}`;
 
-  const whatsappShareLink = formatWhatsAppLink(
-    '5926001234',
-    `Check out this post on YuhPlace: ${post.title} - ${shareUrl}`,
-  );
-
   const handleDelete = async () => {
     setDeleting(true);
     setDeleteError('');
@@ -216,15 +212,22 @@ export default function PostDetailPage({
 
           {/* Action buttons */}
           <div className="flex gap-2 mb-6">
-            <a
-              href={whatsappShareLink}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: post.title,
+                    text: `Check out this post on YuhPlace: ${post.title}`,
+                    url: shareUrl,
+                  });
+                }
+              }}
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
             >
               <Share2 size={16} />
-              Share on WhatsApp
-            </a>
+              Share
+            </button>
+            <FavoriteButton targetType="discover_post" targetId={post.id} />
             {!isOwner && (
               <button
                 onClick={() => setShowReport(true)}

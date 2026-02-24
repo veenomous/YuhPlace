@@ -29,6 +29,7 @@ import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import ReportModal from '@/components/ReportModal';
 import CommentSection from '@/components/CommentSection';
+import FavoriteButton from '@/components/FavoriteButton';
 
 const GRADIENTS = [
   'from-emerald-400 to-teal-500',
@@ -357,6 +358,7 @@ export default function ListingDetailPage() {
       {/* Sticky Bottom Bar */}
       <div className="fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-border">
         <div className="mx-auto max-w-lg flex items-center gap-3 px-4 py-3">
+          <FavoriteButton targetType="market_listing" targetId={listing.id} />
           <a
             href={whatsappUrl}
             target="_blank"

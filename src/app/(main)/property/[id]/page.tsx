@@ -33,6 +33,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { PropertyType } from '@/types/database';
 import ReportModal from '@/components/ReportModal';
 import CommentSection from '@/components/CommentSection';
+import FavoriteButton from '@/components/FavoriteButton';
 
 // ---------- Helpers ----------
 
@@ -443,6 +444,7 @@ export default function PropertyDetailPage() {
       {/* Sticky Bottom Bar */}
       <div className="fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-border">
         <div className="mx-auto max-w-lg flex items-center gap-3 px-4 py-3">
+          <FavoriteButton targetType="property_listing" targetId={property.id} />
           <div className="flex-1 min-w-0">
             <p className="text-lg font-bold text-foreground truncate">
               {formatPrice(property.price_amount, property.currency)}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -17,10 +17,12 @@ import {
   Store,
   Home,
   ShoppingBag,
+  Heart,
 } from 'lucide-react';
 import { cn, memberSince, formatPrice, timeAgo } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
+import { createClient } from '@/lib/supabase/client';
 import type { AccountType, MarketListingWithDetails, PropertyListingWithDetails, DiscoverPostWithDetails } from '@/types/database';
 
 const ACCOUNT_TYPE_CONFIG: Record<
@@ -219,6 +221,32 @@ export default function ProfilePage() {
     [discoverPosts, user],
   );
 
+  // Favorites
+  const [favorites, setFavorites] = useState<{ target_type: string; target_id: string }[]>([]);
+
+  const fetchFavorites = useCallback(async () => {
+    if (!user) return;
+    const supabase = createClient();
+    const { data } = await supabase.rpc('get_my_favorites');
+    if (data) setFavorites(data as { target_type: string; target_id: string }[]);
+  }, [user]);
+
+  useEffect(() => { fetchFavorites(); }, [fetchFavorites]);
+
+  const savedMarket = useMemo(
+    () => favorites.filter((f) => f.target_type === 'market_listing').map((f) => marketListings.find((l) => l.id === f.target_id)).filter(Boolean) as MarketListingWithDetails[],
+    [favorites, marketListings],
+  );
+  const savedProperty = useMemo(
+    () => favorites.filter((f) => f.target_type === 'property_listing').map((f) => propertyListings.find((p) => p.id === f.target_id)).filter(Boolean) as PropertyListingWithDetails[],
+    [favorites, propertyListings],
+  );
+  const savedPosts = useMemo(
+    () => favorites.filter((f) => f.target_type === 'discover_post').map((f) => discoverPosts.find((p) => p.id === f.target_id)).filter(Boolean) as DiscoverPostWithDetails[],
+    [favorites, discoverPosts],
+  );
+
+  const totalSaved = savedMarket.length + savedProperty.length + savedPosts.length;
   const totalListings = myMarketListings.length + myPropertyListings.length;
   const totalPosts = myPosts.length;
 
@@ -323,6 +351,7 @@ export default function ProfilePage() {
       <div className="flex gap-3 mb-4">
         <StatCard label="Listings" value={totalListings} icon={Store} />
         <StatCard label="Posts" value={totalPosts} icon={MessageSquare} />
+        <StatCard label="Saved" value={totalSaved} icon={Heart} />
       </div>
 
       {/* My Market Listings */}
@@ -417,6 +446,28 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Saved Items */}
+      {totalSaved > 0 && (
+        <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+            <Heart size={16} className="text-red-500" />
+            <h3 className="text-sm font-semibold text-foreground">Saved</h3>
+            <span className="text-xs text-muted">({totalSaved})</span>
+          </div>
+          <div className="divide-y divide-border">
+            {savedMarket.map((listing) => (
+              <MyMarketCard key={listing.id} listing={listing} />
+            ))}
+            {savedProperty.map((listing) => (
+              <MyPropertyCard key={listing.id} listing={listing} />
+            ))}
+            {savedPosts.map((post) => (
+              <MyPostCard key={post.id} post={post} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Settings section */}
       <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
