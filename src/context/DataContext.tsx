@@ -390,6 +390,13 @@ interface DataContextValue {
   deleteMarketListing: (id: string) => Promise<{ error: string | null }>;
   deletePropertyListing: (id: string) => Promise<{ error: string | null }>;
 
+  updateDiscoverPost: (id: string, input: Partial<CreateDiscoverPostInput>) => Promise<{ error: string | null }>;
+  updateMarketListing: (id: string, input: Partial<CreateMarketListingInput>) => Promise<{ error: string | null }>;
+  updatePropertyListing: (id: string, input: Partial<CreatePropertyListingInput>) => Promise<{ error: string | null }>;
+
+  regionMap: Map<string, string>;
+  categoryMap: Map<string, string>;
+
   totalListings: number;
   totalPosts: number;
 }
@@ -640,6 +647,84 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }, [regionMap]);
 
+  const updateDiscoverPost = useCallback(async (id: string, input: Partial<CreateDiscoverPostInput>): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const updateData: Record<string, unknown> = {};
+    if (input.title !== undefined) updateData.title = input.title;
+    if (input.description !== undefined) updateData.description = input.description;
+    if (input.post_type !== undefined) updateData.post_type = input.post_type;
+    if (input.region_slug) {
+      const regionId = regionMap.get(input.region_slug);
+      if (regionId) updateData.region_id = regionId;
+    }
+
+    const { error } = await supabase.from('discover_posts').update(updateData).eq('id', id);
+    if (error) return { error: error.message };
+
+    // Refetch updated row
+    const { data: full } = await supabase.from('discover_posts').select(DISCOVER_POST_SELECT).eq('id', id).single();
+    if (full) {
+      setDiscoverPosts((prev) => prev.map((p) => p.id === id ? full as unknown as DiscoverPostWithDetails : p));
+    }
+    return { error: null };
+  }, [regionMap]);
+
+  const updateMarketListing = useCallback(async (id: string, input: Partial<CreateMarketListingInput>): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const updateData: Record<string, unknown> = {};
+    if (input.title !== undefined) updateData.title = input.title;
+    if (input.description !== undefined) updateData.description = input.description;
+    if (input.price_amount !== undefined) updateData.price_amount = input.price_amount;
+    if (input.condition !== undefined) updateData.condition = input.condition;
+    if (input.seller_type !== undefined) updateData.seller_type = input.seller_type;
+    if (input.whatsapp_number !== undefined) updateData.whatsapp_number = input.whatsapp_number;
+    if (input.region_slug) {
+      const regionId = regionMap.get(input.region_slug);
+      if (regionId) updateData.region_id = regionId;
+    }
+    if (input.category_slug) {
+      const categoryId = categoryMap.get(input.category_slug);
+      if (categoryId) updateData.category_id = categoryId;
+    }
+
+    const { error } = await supabase.from('market_listings').update(updateData).eq('id', id);
+    if (error) return { error: error.message };
+
+    const { data: full } = await supabase.from('market_listings').select(MARKET_LISTING_SELECT).eq('id', id).single();
+    if (full) {
+      setMarketListings((prev) => prev.map((l) => l.id === id ? full as unknown as MarketListingWithDetails : l));
+    }
+    return { error: null };
+  }, [regionMap, categoryMap]);
+
+  const updatePropertyListing = useCallback(async (id: string, input: Partial<CreatePropertyListingInput>): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const updateData: Record<string, unknown> = {};
+    if (input.title !== undefined) updateData.title = input.title;
+    if (input.description !== undefined) updateData.description = input.description;
+    if (input.price_amount !== undefined) updateData.price_amount = input.price_amount;
+    if (input.listing_mode !== undefined) updateData.listing_mode = input.listing_mode;
+    if (input.property_type !== undefined) updateData.property_type = input.property_type;
+    if (input.bedrooms !== undefined) updateData.bedrooms = input.bedrooms;
+    if (input.bathrooms !== undefined) updateData.bathrooms = input.bathrooms;
+    if (input.neighborhood_text !== undefined) updateData.neighborhood_text = input.neighborhood_text;
+    if (input.owner_type !== undefined) updateData.owner_type = input.owner_type;
+    if (input.whatsapp_number !== undefined) updateData.whatsapp_number = input.whatsapp_number;
+    if (input.region_slug) {
+      const regionId = regionMap.get(input.region_slug);
+      if (regionId) updateData.region_id = regionId;
+    }
+
+    const { error } = await supabase.from('property_listings').update(updateData).eq('id', id);
+    if (error) return { error: error.message };
+
+    const { data: full } = await supabase.from('property_listings').select(PROPERTY_LISTING_SELECT).eq('id', id).single();
+    if (full) {
+      setPropertyListings((prev) => prev.map((p) => p.id === id ? full as unknown as PropertyListingWithDetails : p));
+    }
+    return { error: null };
+  }, [regionMap]);
+
   const deleteDiscoverPost = useCallback(async (id: string): Promise<{ error: string | null }> => {
     const supabase = createClient();
     const { error } = await supabase.from('discover_posts').update({ status: 'removed' }).eq('id', id);
@@ -680,6 +765,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         deleteDiscoverPost,
         deleteMarketListing,
         deletePropertyListing,
+        updateDiscoverPost,
+        updateMarketListing,
+        updatePropertyListing,
+        regionMap,
+        categoryMap,
         totalListings: marketListings.length + propertyListings.length,
         totalPosts: discoverPosts.length,
       }}

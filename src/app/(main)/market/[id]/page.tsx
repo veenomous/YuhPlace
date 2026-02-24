@@ -22,6 +22,7 @@ import {
   X,
   Trash2,
   Loader2,
+  Pencil,
 } from 'lucide-react';
 import { formatPrice, timeAgo, memberSince, formatWhatsAppLink, cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
@@ -274,13 +275,20 @@ export default function ListingDetailPage() {
 
         {/* Owner actions */}
         {isOwner && (
-          <div className="border-t border-border pt-4">
+          <div className="border-t border-border pt-4 flex items-center gap-4">
+            <Link
+              href={`/market/${listing.id}/edit`}
+              className="flex items-center gap-2 text-sm text-primary hover:text-primary-dark transition-colors"
+            >
+              <Pencil size={14} />
+              Edit listing
+            </Link>
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="flex items-center gap-2 text-sm text-danger hover:text-danger/80 transition-colors"
             >
               <Trash2 size={14} />
-              Delete this listing
+              Delete
             </button>
           </div>
         )}
@@ -299,8 +307,8 @@ export default function ListingDetailPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
-          <div className="w-full max-w-lg bg-white rounded-t-2xl p-5 pb-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl p-5">
             <h3 className="text-base font-semibold text-foreground mb-2">Delete Listing?</h3>
             <p className="text-sm text-muted mb-4">
               This will permanently remove your listing. This action cannot be undone.
