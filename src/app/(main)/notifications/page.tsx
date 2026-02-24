@@ -88,7 +88,7 @@ export default function NotificationsPage() {
       <div className="px-4 py-16 text-center">
         <Bell size={32} className="text-border mx-auto mb-3" />
         <p className="text-sm text-muted mb-4">Log in to see your notifications</p>
-        <Link href="/login" className="text-sm text-primary font-semibold hover:underline">
+        <Link href="/login?redirect=%2Fnotifications" className="text-sm text-primary font-semibold hover:underline">
           Log in
         </Link>
       </div>

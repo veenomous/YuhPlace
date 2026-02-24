@@ -274,7 +274,7 @@ export default function ProfilePage() {
         </p>
         <div className="flex flex-col items-center gap-3">
           <Link
-            href="/login"
+            href="/login?redirect=%2Fprofile"
             className="inline-flex items-center justify-center px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
           >
             Log in

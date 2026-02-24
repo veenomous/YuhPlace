@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, MapPin, X, LogOut, ChevronDown, Bell } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRegion } from '@/context/RegionContext';
@@ -16,6 +16,7 @@ export default function TopNav() {
   const { query, setQuery } = useSearch();
   const { user, profile, loading, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [regionOpen, setRegionOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -165,7 +166,7 @@ export default function TopNav() {
               </div>
             ) : (
               <Link
-                href="/login"
+                href={`/login${pathname !== '/' ? `?redirect=${encodeURIComponent(pathname)}` : ''}`}
                 className="ml-1 text-xs sm:text-sm font-semibold text-primary hover:text-primary-dark transition-colors whitespace-nowrap"
               >
                 Log in
