@@ -20,14 +20,16 @@ import {
   ChevronRight,
   Share2,
   ShieldCheck,
-  User,
   CalendarDays,
   Tag,
   KeyRound,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { cn, formatPrice, timeAgo, memberSince, formatWhatsAppLink } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
-import type { PropertyListingWithDetails, PropertyType } from '@/types/database';
+import { useAuth } from '@/context/AuthContext';
+import type { PropertyType } from '@/types/database';
 
 // ---------- Helpers ----------
 
@@ -66,9 +68,12 @@ const OWNER_TYPE_LABELS: Record<string, string> = {
 export default function PropertyDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { getPropertyListing } = useData();
+  const { getPropertyListing, deletePropertyListing } = useData();
+  const { user } = useAuth();
   const [showReportModal, setShowReportModal] = useState(false);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const property = getPropertyListing(params.id as string);
 
@@ -89,23 +94,46 @@ export default function PropertyDetailPage() {
     );
   }
 
+  const isOwner = user && property.user_id === user.id;
   const Icon = PROPERTY_TYPE_ICONS[property.property_type];
   const gradient = PLACEHOLDER_GRADIENTS[property.property_type];
   const isRent = property.listing_mode === 'rent';
+  const images = property.property_listing_images.filter((img) => img.image_url);
+  const hasRealImages = images.length > 0;
+  const galleryCount = hasRealImages ? images.length : 1;
 
   const whatsappMessage = `Hi, I'm interested in your property listing on YuhPlace: "${property.title}" (${formatPrice(property.price_amount, property.currency)}${isRent ? '/mo' : ''})`;
   const whatsappLink = formatWhatsAppLink(property.whatsapp_number, whatsappMessage);
 
-  // Simulate gallery images (placeholders)
-  const galleryCount = 4;
+  const handleDelete = async () => {
+    setDeleting(true);
+    const { error } = await deletePropertyListing(property.id);
+    setDeleting(false);
+    if (!error) {
+      router.push('/property');
+    }
+  };
 
   return (
     <div className="pb-24">
       {/* Image Gallery */}
-      <div className={cn('relative w-full h-64 bg-gradient-to-br', gradient)}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Icon size={64} className="text-white/30" />
-        </div>
+      <div className="relative w-full h-64">
+        {hasRealImages ? (
+          <div className="relative w-full h-full bg-surface">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={images[currentImageIdx].image_url}
+              alt={property.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className={cn('w-full h-full bg-gradient-to-br', gradient)}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Icon size={64} className="text-white/30" />
+            </div>
+          </div>
+        )}
 
         {/* Back button */}
         <button
@@ -116,42 +144,61 @@ export default function PropertyDetailPage() {
         </button>
 
         {/* Share button */}
-        <button className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center bg-black/40 backdrop-blur-sm text-white rounded-full hover:bg-black/60 transition-colors">
+        <button
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: property.title,
+                text: `Check out this property on YuhPlace: ${property.title}`,
+                url: window.location.href,
+              });
+            }
+          }}
+          className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center bg-black/40 backdrop-blur-sm text-white rounded-full hover:bg-black/60 transition-colors"
+        >
           <Share2 size={16} />
         </button>
 
         {/* Image counter */}
-        <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/50 backdrop-blur-sm text-white text-xs font-medium rounded-lg">
-          {currentImageIdx + 1} / {galleryCount}
-        </div>
+        {galleryCount > 1 && (
+          <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/50 backdrop-blur-sm text-white text-xs font-medium rounded-lg">
+            {currentImageIdx + 1} / {galleryCount}
+          </div>
+        )}
 
         {/* Gallery nav arrows */}
-        <button
-          onClick={() => setCurrentImageIdx((i) => (i > 0 ? i - 1 : galleryCount - 1))}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/30 text-white rounded-full hover:bg-black/50 transition-colors"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <button
-          onClick={() => setCurrentImageIdx((i) => (i < galleryCount - 1 ? i + 1 : 0))}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/30 text-white rounded-full hover:bg-black/50 transition-colors"
-        >
-          <ChevronRight size={16} />
-        </button>
+        {galleryCount > 1 && (
+          <>
+            <button
+              onClick={() => setCurrentImageIdx((i) => (i > 0 ? i - 1 : galleryCount - 1))}
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/30 text-white rounded-full hover:bg-black/50 transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={() => setCurrentImageIdx((i) => (i < galleryCount - 1 ? i + 1 : 0))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/30 text-white rounded-full hover:bg-black/50 transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </>
+        )}
 
         {/* Gallery dots */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-          {Array.from({ length: galleryCount }).map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentImageIdx(idx)}
-              className={cn(
-                'w-2 h-2 rounded-full transition-all',
-                idx === currentImageIdx ? 'bg-white w-4' : 'bg-white/50'
-              )}
-            />
-          ))}
-        </div>
+        {galleryCount > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+            {Array.from({ length: galleryCount }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentImageIdx(idx)}
+                className={cn(
+                  'w-2 h-2 rounded-full transition-all',
+                  idx === currentImageIdx ? 'bg-white w-4' : 'bg-white/50'
+                )}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -221,13 +268,10 @@ export default function PropertyDetailPage() {
           Listed {timeAgo(property.created_at)}
         </div>
 
-        {/* Divider */}
         <hr className="border-border mb-5" />
 
         {/* Key Details Grid */}
-        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">
-          Key Details
-        </h2>
+        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">Key Details</h2>
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="flex items-center gap-3 p-3 bg-surface rounded-xl">
             <div className="w-9 h-9 rounded-lg bg-primary-light flex items-center justify-center">
@@ -235,9 +279,7 @@ export default function PropertyDetailPage() {
             </div>
             <div>
               <p className="text-xs text-muted">Type</p>
-              <p className="text-sm font-semibold text-foreground capitalize">
-                {PROPERTY_TYPE_LABELS[property.property_type]}
-              </p>
+              <p className="text-sm font-semibold text-foreground capitalize">{PROPERTY_TYPE_LABELS[property.property_type]}</p>
             </div>
           </div>
 
@@ -276,43 +318,30 @@ export default function PropertyDetailPage() {
           )}
         </div>
 
-        {/* Divider */}
         <hr className="border-border mb-5" />
 
         {/* Description */}
-        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">
-          Description
-        </h2>
+        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">Description</h2>
         <div className="text-sm text-foreground leading-relaxed whitespace-pre-line mb-6">
           {property.description}
         </div>
 
-        {/* Divider */}
         <hr className="border-border mb-5" />
 
         {/* Owner / Agent Card */}
-        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">
-          Listed By
-        </h2>
+        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">Listed By</h2>
         <div className="bg-surface rounded-2xl p-4 mb-6">
           <div className="flex items-start gap-3">
-            {/* Avatar */}
             <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center shrink-0">
-              <span className="text-lg font-bold text-primary">
-                {property.profiles.name.charAt(0)}
-              </span>
+              <span className="text-lg font-bold text-primary">{property.profiles.name.charAt(0)}</span>
             </div>
-
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="font-semibold text-foreground truncate">
-                  {property.profiles.name}
-                </h3>
+                <h3 className="font-semibold text-foreground truncate">{property.profiles.name}</h3>
                 {property.profiles.is_verified_business && (
                   <ShieldCheck size={16} className="text-primary shrink-0" />
                 )}
               </div>
-
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white border border-border text-muted capitalize">
                   {OWNER_TYPE_LABELS[property.owner_type]}
@@ -321,7 +350,6 @@ export default function PropertyDetailPage() {
                   <span className="text-xs text-primary font-medium">Verified</span>
                 )}
               </div>
-
               <div className="flex items-center gap-1.5 mt-2 text-xs text-muted">
                 <CalendarDays size={12} />
                 Member since {memberSince(property.profiles.created_at)}
@@ -330,46 +358,77 @@ export default function PropertyDetailPage() {
           </div>
         </div>
 
+        {/* Owner actions */}
+        {isOwner && (
+          <div className="border-t border-border pt-4 mb-4">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 text-sm text-danger hover:text-danger/80 transition-colors"
+            >
+              <Trash2 size={14} />
+              Delete this listing
+            </button>
+          </div>
+        )}
+
         {/* Report */}
-        <button
-          onClick={() => setShowReportModal(true)}
-          className="flex items-center gap-2 text-sm text-muted hover:text-danger transition-colors mb-4"
-        >
-          <Flag size={14} />
-          Report this listing
-        </button>
+        {!isOwner && (
+          <button
+            onClick={() => setShowReportModal(true)}
+            className="flex items-center gap-2 text-sm text-muted hover:text-danger transition-colors mb-4"
+          >
+            <Flag size={14} />
+            Report this listing
+          </button>
+        )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
+          <div className="w-full max-w-lg bg-white rounded-t-2xl p-5 pb-8">
+            <h3 className="text-base font-semibold text-foreground mb-2">Delete Listing?</h3>
+            <p className="text-sm text-muted mb-4">
+              This will permanently remove your property listing. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2.5 bg-surface text-foreground text-sm font-medium rounded-xl border border-border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-danger text-white text-sm font-medium rounded-xl"
+              >
+                {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Report Modal */}
       {showReportModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setShowReportModal(false)}
-          />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowReportModal(false)} />
           <div className="relative bg-white rounded-t-2xl w-full max-w-lg p-6 pb-8 animate-slide-up">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-foreground">Report Listing</h3>
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="p-1 text-muted hover:text-foreground"
-              >
-                <span className="sr-only">Close</span>
-                &times;
+              <button onClick={() => setShowReportModal(false)} className="p-1 text-muted hover:text-foreground">
+                <span className="sr-only">Close</span>&times;
               </button>
             </div>
-            <p className="text-sm text-muted mb-4">
-              Why are you reporting this listing?
-            </p>
+            <p className="text-sm text-muted mb-4">Why are you reporting this listing?</p>
             <div className="space-y-2">
               {['Spam', 'Scam / Fraud', 'Inappropriate content', 'Wrong category', 'Duplicate listing', 'Misleading information'].map(
                 (reason) => (
                   <button
                     key={reason}
-                    onClick={() => {
-                      setShowReportModal(false);
-                      // Would submit report here
-                    }}
+                    onClick={() => setShowReportModal(false)}
                     className="w-full text-left px-4 py-3 text-sm text-foreground bg-surface hover:bg-primary-light rounded-xl transition-colors"
                   >
                     {reason}
@@ -400,7 +459,6 @@ export default function PropertyDetailPage() {
             Contact on WhatsApp
           </a>
         </div>
-        {/* Safe area padding */}
         <div className="h-[env(safe-area-inset-bottom)]" />
       </div>
     </div>

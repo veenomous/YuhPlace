@@ -20,10 +20,12 @@ import {
   Car,
   BadgeCheck,
   X,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { formatPrice, timeAgo, memberSince, formatWhatsAppLink, cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
-import type { MarketListingWithDetails } from '@/types/database';
+import { useAuth } from '@/context/AuthContext';
 
 const GRADIENTS = [
   'from-emerald-400 to-teal-500',
@@ -41,9 +43,12 @@ const GRADIENTS = [
 export default function ListingDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { getMarketListing, marketListings } = useData();
+  const { getMarketListing, marketListings, deleteMarketListing } = useData();
+  const { user } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const listing = getMarketListing(params.id as string);
   const listingIndex = marketListings.findIndex((l) => l.id === params.id);
@@ -66,9 +71,11 @@ export default function ListingDetailPage() {
     );
   }
 
+  const isOwner = user && listing.user_id === user.id;
   const gradient = GRADIENTS[(listingIndex >= 0 ? listingIndex : 0) % GRADIENTS.length];
-  const images = listing.market_listing_images;
-  const imageCount = Math.max(images.length, 1);
+  const images = listing.market_listing_images.filter((img) => img.image_url);
+  const hasRealImages = images.length > 0;
+  const imageCount = hasRealImages ? images.length : 1;
 
   const whatsappMessage = `Hi, I'm interested in your listing on YuhPlace: "${listing.title}" (${formatPrice(listing.price_amount, listing.currency)})`;
   const whatsappUrl = formatWhatsAppLink(listing.whatsapp_number, whatsappMessage);
@@ -79,6 +86,15 @@ export default function ListingDetailPage() {
       : listing.market_categories.slug === 'services'
         ? Wrench
         : ShoppingBag;
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    const { error } = await deleteMarketListing(listing.id);
+    setDeleting(false);
+    if (!error) {
+      router.push('/market');
+    }
+  };
 
   return (
     <div className="pb-24">
@@ -109,70 +125,68 @@ export default function ListingDetailPage() {
         </button>
 
         {/* Image Area */}
-        <div
-          className={cn(
-            'relative w-full aspect-[4/3] bg-gradient-to-br',
-            gradient
-          )}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <CategoryIcon size={64} className="text-white/30" />
-          </div>
+        {hasRealImages ? (
+          <div className="relative w-full aspect-[4/3] bg-surface">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={images[currentImageIndex].image_url}
+              alt={listing.title}
+              className="w-full h-full object-cover"
+            />
 
-          {/* Featured Badge */}
-          {listing.is_featured && (
-            <div className="absolute top-3 left-14 z-20">
-              <span className="flex items-center gap-1 px-2.5 py-1 bg-accent text-white text-xs font-semibold rounded-full shadow-sm">
-                <Star size={12} fill="currentColor" />
-                Featured
-              </span>
-            </div>
-          )}
+            {listing.is_featured && (
+              <div className="absolute top-3 left-14 z-20">
+                <span className="flex items-center gap-1 px-2.5 py-1 bg-accent text-white text-xs font-semibold rounded-full shadow-sm">
+                  <Star size={12} fill="currentColor" />
+                  Featured
+                </span>
+              </div>
+            )}
 
-          {/* Image Navigation */}
-          {imageCount > 1 && (
-            <>
-              <button
-                onClick={() =>
-                  setCurrentImageIndex((prev) =>
-                    prev === 0 ? imageCount - 1 : prev - 1
-                  )
-                }
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-8 h-8 bg-black/30 text-white rounded-full backdrop-blur-sm"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentImageIndex((prev) =>
-                    prev === imageCount - 1 ? 0 : prev + 1
-                  )
-                }
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-8 h-8 bg-black/30 text-white rounded-full backdrop-blur-sm"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </>
-          )}
-
-          {/* Image Counter */}
-          {imageCount > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
-              {Array.from({ length: imageCount }).map((_, i) => (
+            {imageCount > 1 && (
+              <>
                 <button
-                  key={i}
-                  onClick={() => setCurrentImageIndex(i)}
-                  className={cn(
-                    'w-2 h-2 rounded-full transition-all',
-                    i === currentImageIndex
-                      ? 'bg-white w-4'
-                      : 'bg-white/50'
-                  )}
-                />
-              ))}
+                  onClick={() => setCurrentImageIndex((prev) => prev === 0 ? imageCount - 1 : prev - 1)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-8 h-8 bg-black/30 text-white rounded-full backdrop-blur-sm"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={() => setCurrentImageIndex((prev) => prev === imageCount - 1 ? 0 : prev + 1)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-8 h-8 bg-black/30 text-white rounded-full backdrop-blur-sm"
+                >
+                  <ChevronRight size={18} />
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentImageIndex(i)}
+                      className={cn(
+                        'w-2 h-2 rounded-full transition-all',
+                        i === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'
+                      )}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className={cn('relative w-full aspect-[4/3] bg-gradient-to-br', gradient)}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <CategoryIcon size={64} className="text-white/30" />
             </div>
-          )}
-        </div>
+            {listing.is_featured && (
+              <div className="absolute top-3 left-14 z-20">
+                <span className="flex items-center gap-1 px-2.5 py-1 bg-accent text-white text-xs font-semibold rounded-full shadow-sm">
+                  <Star size={12} fill="currentColor" />
+                  Featured
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -223,29 +237,22 @@ export default function ListingDetailPage() {
           <span>Posted {timeAgo(listing.created_at)}</span>
         </div>
 
-        {/* Divider */}
         <div className="border-t border-border" />
 
         {/* Description */}
         <div>
-          <h2 className="text-sm font-semibold text-foreground mb-2">
-            Description
-          </h2>
+          <h2 className="text-sm font-semibold text-foreground mb-2">Description</h2>
           <div className="text-sm text-muted leading-relaxed whitespace-pre-line">
             {listing.description}
           </div>
         </div>
 
-        {/* Divider */}
         <div className="border-t border-border" />
 
         {/* Seller Card */}
         <div>
-          <h2 className="text-sm font-semibold text-foreground mb-3">
-            Seller
-          </h2>
+          <h2 className="text-sm font-semibold text-foreground mb-3">Seller</h2>
           <div className="flex items-center gap-3 p-3 bg-surface border border-border rounded-xl">
-            {/* Avatar */}
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary-light text-primary font-bold text-lg shrink-0">
               {listing.profiles.name.charAt(0).toUpperCase()}
             </div>
@@ -265,24 +272,65 @@ export default function ListingDetailPage() {
           </div>
         </div>
 
+        {/* Owner actions */}
+        {isOwner && (
+          <div className="border-t border-border pt-4">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 text-sm text-danger hover:text-danger/80 transition-colors"
+            >
+              <Trash2 size={14} />
+              Delete this listing
+            </button>
+          </div>
+        )}
+
         {/* Report */}
-        <button
-          onClick={() => setReportModalOpen(true)}
-          className="flex items-center gap-1.5 text-xs text-muted hover:text-danger transition-colors"
-        >
-          <Flag size={12} />
-          Report this listing
-        </button>
+        {!isOwner && (
+          <button
+            onClick={() => setReportModalOpen(true)}
+            className="flex items-center gap-1.5 text-xs text-muted hover:text-danger transition-colors"
+          >
+            <Flag size={12} />
+            Report this listing
+          </button>
+        )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
+          <div className="w-full max-w-lg bg-white rounded-t-2xl p-5 pb-8">
+            <h3 className="text-base font-semibold text-foreground mb-2">Delete Listing?</h3>
+            <p className="text-sm text-muted mb-4">
+              This will permanently remove your listing. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2.5 bg-surface text-foreground text-sm font-medium rounded-xl border border-border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-danger text-white text-sm font-medium rounded-xl"
+              >
+                {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Report Modal */}
       {reportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
           <div className="w-full max-w-lg bg-white rounded-t-2xl p-5 pb-8 animate-slide-up">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-foreground">
-                Report Listing
-              </h3>
+              <h3 className="text-base font-semibold text-foreground">Report Listing</h3>
               <button
                 onClick={() => setReportModalOpen(false)}
                 className="p-1 text-muted hover:text-foreground transition-colors"
@@ -290,24 +338,12 @@ export default function ListingDetailPage() {
                 <X size={20} />
               </button>
             </div>
-            <p className="text-sm text-muted mb-4">
-              Why are you reporting this listing?
-            </p>
+            <p className="text-sm text-muted mb-4">Why are you reporting this listing?</p>
             <div className="space-y-2">
-              {[
-                'Spam',
-                'Scam / Fraud',
-                'Inappropriate content',
-                'Wrong category',
-                'Duplicate listing',
-                'Misleading information',
-              ].map((reason) => (
+              {['Spam', 'Scam / Fraud', 'Inappropriate content', 'Wrong category', 'Duplicate listing', 'Misleading information'].map((reason) => (
                 <button
                   key={reason}
-                  onClick={() => {
-                    setReportModalOpen(false);
-                    // In production, this would submit the report
-                  }}
+                  onClick={() => setReportModalOpen(false)}
                   className="w-full text-left px-4 py-3 text-sm text-foreground border border-border rounded-xl hover:bg-surface hover:border-primary/30 transition-all"
                 >
                   {reason}

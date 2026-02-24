@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
-  Camera,
   Plus,
   X,
   ChevronDown,
@@ -14,16 +13,18 @@ import {
   Wrench,
   Car,
   CheckCircle2,
+  LogIn,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
+import { useAuth } from '@/context/AuthContext';
 import { REGIONS } from '@/lib/constants';
 import type { ItemCondition } from '@/types/database';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { slug: 'buy-and-sell', name: 'Buy & Sell', icon: ShoppingBag },
+  { slug: 'buy-sell', name: 'Buy & Sell', icon: ShoppingBag },
   { slug: 'services', name: 'Services', icon: Wrench },
   { slug: 'vehicles', name: 'Vehicles', icon: Car },
 ];
@@ -38,6 +39,7 @@ const MAX_PHOTOS = 6;
 export default function CreateListingPage() {
   const router = useRouter();
   const { addMarketListing } = useData();
+  const { user, loading: authLoading } = useAuth();
 
   // Form state
   const [category, setCategory] = useState('');
@@ -47,13 +49,15 @@ export default function CreateListingPage() {
   const [description, setDescription] = useState('');
   const [region, setRegion] = useState('');
   const [whatsapp, setWhatsapp] = useState('+592');
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
 
   // UI state
   const [regionOpen, setRegionOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedCategory = CATEGORIES.find((c) => c.slug === category);
   const isService = selectedCategory?.slug === 'services';
@@ -84,14 +88,12 @@ export default function CreateListingPage() {
     if (!validate()) return;
 
     setSubmitting(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setSubmitError('');
 
     const regionObj = REGIONS.find(r => r.slug === region);
     const categoryObj = CATEGORIES.find(c => c.slug === category);
 
-    addMarketListing({
+    const { error } = await addMarketListing({
       title: title.trim(),
       description: description.trim(),
       category_slug: category,
@@ -102,29 +104,64 @@ export default function CreateListingPage() {
       whatsapp_number: whatsapp,
       region_slug: region,
       region_name: regionObj?.name || region,
+      photos: photos.map(p => p.file),
     });
 
     setSubmitting(false);
+    if (error) {
+      setSubmitError(error);
+      return;
+    }
     setSubmitted(true);
   };
 
   const handleAddPhoto = () => {
-    if (photos.length >= MAX_PHOTOS) return;
-    // Simulate photo selection with placeholder
-    const gradients = [
-      'bg-gradient-to-br from-emerald-400 to-teal-500',
-      'bg-gradient-to-br from-blue-400 to-indigo-500',
-      'bg-gradient-to-br from-purple-400 to-pink-500',
-      'bg-gradient-to-br from-orange-400 to-red-500',
-      'bg-gradient-to-br from-cyan-400 to-blue-500',
-      'bg-gradient-to-br from-amber-400 to-orange-500',
-    ];
-    setPhotos([...photos, gradients[photos.length % gradients.length]]);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newPhotos = [...photos];
+    for (let i = 0; i < files.length && newPhotos.length < MAX_PHOTOS; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        newPhotos.push({ file, preview: URL.createObjectURL(file) });
+      }
+    }
+    setPhotos(newPhotos);
+    e.target.value = '';
   };
 
   const handleRemovePhoto = (index: number) => {
+    const removed = photos[index];
+    URL.revokeObjectURL(removed.preview);
     setPhotos(photos.filter((_, i) => i !== index));
   };
+
+  // Auth guard
+  if (!authLoading && !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center">
+        <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center mb-4">
+          <LogIn size={24} className="text-primary" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground mb-1">Sign in to sell</h2>
+        <p className="text-sm text-muted mb-6">
+          You need an account to list items on the marketplace.
+        </p>
+        <Link
+          href="/login?redirect=/market/create"
+          className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors"
+        >
+          Sign In
+        </Link>
+        <Link href="/signup?redirect=/market/create" className="mt-3 text-sm text-primary font-medium hover:underline">
+          Create an account
+        </Link>
+      </div>
+    );
+  }
 
   // Success screen
   if (submitted) {
@@ -160,6 +197,7 @@ export default function CreateListingPage() {
               setDescription('');
               setRegion('');
               setWhatsapp('+592');
+              photos.forEach((p) => URL.revokeObjectURL(p.preview));
               setPhotos([]);
               setErrors({});
             }}
@@ -228,26 +266,34 @@ export default function CreateListingPage() {
           <label className="block text-sm font-semibold text-foreground mb-2">
             Photos <span className="text-muted font-normal text-xs">(up to {MAX_PHOTOS})</span>
           </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
           <div className="grid grid-cols-3 gap-2">
-            {photos.map((gradient, index) => (
+            {photos.map((photo, index) => (
               <div
                 key={index}
-                className={cn(
-                  'relative aspect-square rounded-xl overflow-hidden',
-                  gradient
-                )}
+                className="relative aspect-square rounded-xl overflow-hidden border border-border"
               >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Camera size={20} className="text-white/50" />
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.preview}
+                  alt={`Photo ${index + 1}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
                 <button
                   onClick={() => handleRemovePhoto(index)}
-                  className="absolute top-1.5 right-1.5 flex items-center justify-center w-6 h-6 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                  className="absolute top-1.5 right-1.5 flex items-center justify-center w-6 h-6 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors z-10"
                 >
                   <X size={12} />
                 </button>
                 {index === 0 && (
-                  <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-black/50 text-white text-[9px] font-medium rounded">
+                  <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-black/50 text-white text-[9px] font-medium rounded z-10">
                     Cover
                   </span>
                 )}
@@ -528,6 +574,13 @@ export default function CreateListingPage() {
             <p className="text-xs text-danger mt-1">{errors.whatsapp}</p>
           )}
         </div>
+
+        {/* ─── Error Message ─────────────────────────────────────────── */}
+        {submitError && (
+          <div className="px-4 py-3 bg-danger-light border border-danger/20 rounded-xl">
+            <p className="text-sm text-danger">{submitError}</p>
+          </div>
+        )}
 
         {/* ─── Submit Button ──────────────────────────────────────────── */}
         <button

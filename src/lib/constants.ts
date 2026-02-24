@@ -19,7 +19,7 @@ export const REGIONS_WITH_ALL = [
 ] as const;
 
 export const MARKET_CATEGORIES = [
-  { slug: 'buy-and-sell', name: 'Buy & Sell' },
+  { slug: 'buy-sell', name: 'Buy & Sell' },
   { slug: 'services', name: 'Services' },
   { slug: 'vehicles', name: 'Vehicles' },
 ] as const;

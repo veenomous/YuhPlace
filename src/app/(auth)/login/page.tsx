@@ -1,18 +1,29 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const redirectTo = searchParams.get('redirect') || '/discover';
+
+  // Show error from auth callback failures
+  useEffect(() => {
+    const callbackError = searchParams.get('error');
+    if (callbackError === 'auth_callback_failed') {
+      setError('Email verification failed. Please try again or request a new link.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +41,7 @@ export default function LoginPage() {
     if (authError) {
       setError(authError);
     } else {
-      router.push('/discover');
+      router.push(redirectTo);
     }
   };
 
@@ -80,6 +91,11 @@ export default function LoginPage() {
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-surface text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
           </div>
+          <div className="mt-1.5 text-right">
+            <Link href="/forgot-password" className="text-xs text-primary font-medium hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         {/* Error message */}
@@ -107,10 +123,18 @@ export default function LoginPage() {
       {/* Footer link */}
       <p className="text-center text-sm text-muted mt-6">
         Don&apos;t have an account?{' '}
-        <Link href="/signup" className="text-primary font-semibold hover:underline">
+        <Link href={`/signup${redirectTo !== '/discover' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-primary font-semibold hover:underline">
           Sign up
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

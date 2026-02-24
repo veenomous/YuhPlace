@@ -28,6 +28,7 @@ import {
   Twitter,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 // ─── Mock Data ──────────────────────────────────────────────────────────────
 
@@ -210,9 +211,52 @@ const QUICK_ACCESS = [
 
 export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { user, profile, loading } = useAuth();
+
+  const displayName = profile?.name || user?.user_metadata?.name || user?.email || '';
+  const initials = displayName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="min-h-screen bg-background">
+      {/* ────────── Top Bar ────────── */}
+      <div className="absolute top-0 left-0 right-0 z-10">
+        <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-end">
+          {!loading && (
+            user ? (
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-border hover:bg-white transition-colors"
+              >
+                <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-primary-dark">{initials}</span>
+                </div>
+                <span className="text-sm font-medium text-foreground">{displayName.split(' ')[0]}</span>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="px-4 py-1.5 text-sm font-semibold text-primary hover:text-primary-dark transition-colors"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-4 py-1.5 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  Sign up
+                </Link>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+
       {/* ────────── Section 1: Hero ────────── */}
       <section className="relative overflow-hidden bg-gradient-to-b from-primary-light via-background to-background">
         {/* Decorative background circles */}

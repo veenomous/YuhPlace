@@ -12,7 +12,6 @@ import {
   Wrench,
   Car,
   Package,
-  Plus,
 } from 'lucide-react';
 import { formatPrice, timeAgo, cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
@@ -23,7 +22,7 @@ import type { MarketListingWithDetails } from '@/types/database';
 
 const CATEGORIES = [
   { slug: 'all', name: 'All', icon: Package },
-  { slug: 'buy-and-sell', name: 'Buy & Sell', icon: ShoppingBag },
+  { slug: 'buy-sell', name: 'Buy & Sell', icon: ShoppingBag },
   { slug: 'services', name: 'Services', icon: Wrench },
   { slug: 'vehicles', name: 'Vehicles', icon: Car },
 ];
@@ -280,22 +279,33 @@ export default function MarketPage() {
               href={`/market/${listing.id}`}
               className="group bg-white border border-border rounded-xl overflow-hidden hover:shadow-md transition-all hover:border-primary/20"
             >
-              {/* Image Placeholder */}
+              {/* Image */}
               <div
                 className={cn(
-                  'relative w-full aspect-[4/3] bg-gradient-to-br',
-                  GRADIENTS[index % GRADIENTS.length]
+                  'relative w-full aspect-[4/3]',
+                  listing.market_listing_images[0]?.image_url
+                    ? 'bg-surface'
+                    : `bg-gradient-to-br ${GRADIENTS[index % GRADIENTS.length]}`
                 )}
               >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {listing.market_categories.slug === 'vehicles' ? (
-                    <Car size={32} className="text-white/50" />
-                  ) : listing.market_categories.slug === 'services' ? (
-                    <Wrench size={32} className="text-white/50" />
-                  ) : (
-                    <ShoppingBag size={32} className="text-white/50" />
-                  )}
-                </div>
+                {listing.market_listing_images[0]?.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={listing.market_listing_images[0].image_url}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {listing.market_categories.slug === 'vehicles' ? (
+                      <Car size={32} className="text-white/50" />
+                    ) : listing.market_categories.slug === 'services' ? (
+                      <Wrench size={32} className="text-white/50" />
+                    ) : (
+                      <ShoppingBag size={32} className="text-white/50" />
+                    )}
+                  </div>
+                )}
 
                 {/* Badges */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -348,14 +358,6 @@ export default function MarketPage() {
         </div>
       )}
 
-      {/* Floating Create Button */}
-      <Link
-        href="/market/create"
-        className="fixed bottom-24 right-4 z-40 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-full shadow-lg hover:bg-primary-dark transition-colors active:scale-95"
-      >
-        <Plus size={20} />
-        <span className="text-sm font-semibold">Sell</span>
-      </Link>
     </div>
   );
 }

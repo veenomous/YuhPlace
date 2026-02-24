@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -14,10 +15,13 @@ import {
   MessageSquare,
   MapPin,
   Store,
+  Home,
+  ShoppingBag,
 } from 'lucide-react';
-import { cn, memberSince } from '@/lib/utils';
+import { cn, memberSince, formatPrice, timeAgo } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import type { AccountType } from '@/types/database';
+import { useData } from '@/context/DataContext';
+import type { AccountType, MarketListingWithDetails, PropertyListingWithDetails, DiscoverPostWithDetails } from '@/types/database';
 
 const ACCOUNT_TYPE_CONFIG: Record<
   AccountType,
@@ -133,42 +137,90 @@ function SettingsRow({
   );
 }
 
-function PlaceholderSection({
-  title,
-  count,
-  icon: Icon,
-  linkHref,
-}: {
-  title: string;
-  count: number;
-  icon: typeof Package;
-  linkHref: string;
-}) {
+function MyMarketCard({ listing }: { listing: MarketListingWithDetails }) {
+  const img = listing.market_listing_images[0];
+  const hasImage = img && img.image_url;
+
   return (
-    <div className="bg-white border border-border rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Icon size={16} className="text-primary" />
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          <span className="text-xs text-muted">({count})</span>
-        </div>
-        <Link href={linkHref} className="text-xs text-primary font-semibold hover:underline">
-          View all
-        </Link>
+    <Link href={`/market/${listing.id}`} className="flex gap-3 p-3 hover:bg-surface transition-colors rounded-lg">
+      <div className="w-14 h-14 rounded-lg bg-surface border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
+        {hasImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <ShoppingBag size={20} className="text-border" />
+        )}
       </div>
-      <div className="px-4 py-8 text-center">
-        <Icon size={28} className="text-border mx-auto mb-2" />
-        <p className="text-xs text-muted">
-          Your {title.toLowerCase()} will appear here
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-foreground truncate">{listing.title}</p>
+        <p className="text-xs text-primary font-medium">{formatPrice(listing.price_amount, listing.currency)}</p>
+        <p className="text-[11px] text-muted">{timeAgo(listing.created_at)}</p>
+      </div>
+    </Link>
+  );
+}
+
+function MyPropertyCard({ listing }: { listing: PropertyListingWithDetails }) {
+  const img = listing.property_listing_images[0];
+  const hasImage = img && img.image_url;
+  const isRent = listing.listing_mode === 'rent';
+
+  return (
+    <Link href={`/property/${listing.id}`} className="flex gap-3 p-3 hover:bg-surface transition-colors rounded-lg">
+      <div className="w-14 h-14 rounded-lg bg-surface border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
+        {hasImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <Home size={20} className="text-border" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-foreground truncate">{listing.title}</p>
+        <p className="text-xs text-primary font-medium">
+          {formatPrice(listing.price_amount, listing.currency)}{isRent ? '/mo' : ''}
         </p>
+        <p className="text-[11px] text-muted">{timeAgo(listing.created_at)}</p>
       </div>
-    </div>
+    </Link>
+  );
+}
+
+function MyPostCard({ post }: { post: DiscoverPostWithDetails }) {
+  return (
+    <Link href={`/discover/${post.id}`} className="flex gap-3 p-3 hover:bg-surface transition-colors rounded-lg">
+      <div className="w-14 h-14 rounded-lg bg-surface border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
+        <MessageSquare size={20} className="text-border" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-foreground truncate">{post.title}</p>
+        <p className="text-xs text-muted capitalize">{post.post_type} post</p>
+        <p className="text-[11px] text-muted">{timeAgo(post.created_at)}</p>
+      </div>
+    </Link>
   );
 }
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, profile, loading, signOut } = useAuth();
+  const { marketListings, propertyListings, discoverPosts } = useData();
+
+  const myMarketListings = useMemo(
+    () => (user ? marketListings.filter((l) => l.user_id === user.id) : []),
+    [marketListings, user],
+  );
+  const myPropertyListings = useMemo(
+    () => (user ? propertyListings.filter((p) => p.user_id === user.id) : []),
+    [propertyListings, user],
+  );
+  const myPosts = useMemo(
+    () => (user ? discoverPosts.filter((p) => p.user_id === user.id) : []),
+    [discoverPosts, user],
+  );
+
+  const totalListings = myMarketListings.length + myPropertyListings.length;
+  const totalPosts = myPosts.length;
 
   const handleSignOut = async () => {
     await signOut();
@@ -257,12 +309,8 @@ export default function ProfilePage() {
               {typeConfig.label}
             </span>
 
-            {/* Region & member since */}
+            {/* Member since */}
             <div className="flex items-center gap-3 mt-2">
-              <span className="flex items-center gap-1 text-xs text-muted">
-                <MapPin size={12} />
-                Georgetown
-              </span>
               <span className="text-xs text-muted">
                 Member since {memberSince(profile?.created_at || user?.created_at || '')}
               </span>
@@ -273,28 +321,101 @@ export default function ProfilePage() {
 
       {/* Stats row */}
       <div className="flex gap-3 mb-4">
-        <StatCard label="Listings" value={0} icon={Store} />
-        <StatCard label="Posts" value={0} icon={MessageSquare} />
+        <StatCard label="Listings" value={totalListings} icon={Store} />
+        <StatCard label="Posts" value={totalPosts} icon={MessageSquare} />
       </div>
 
-      {/* My Listings section */}
-      <div className="mb-4">
-        <PlaceholderSection
-          title="My Listings"
-          count={0}
-          icon={Package}
-          linkHref="/market"
-        />
+      {/* My Market Listings */}
+      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <ShoppingBag size={16} className="text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Market Listings</h3>
+            <span className="text-xs text-muted">({myMarketListings.length})</span>
+          </div>
+          {myMarketListings.length > 0 && (
+            <Link href="/market" className="text-xs text-primary font-semibold hover:underline">
+              View all
+            </Link>
+          )}
+        </div>
+        {myMarketListings.length > 0 ? (
+          <div className="divide-y divide-border">
+            {myMarketListings.slice(0, 3).map((listing) => (
+              <MyMarketCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        ) : (
+          <div className="px-4 py-6 text-center">
+            <ShoppingBag size={24} className="text-border mx-auto mb-2" />
+            <p className="text-xs text-muted mb-2">No market listings yet</p>
+            <Link href="/market/create" className="text-xs text-primary font-semibold hover:underline">
+              Create a listing
+            </Link>
+          </div>
+        )}
       </div>
 
-      {/* My Posts section */}
-      <div className="mb-4">
-        <PlaceholderSection
-          title="My Posts"
-          count={0}
-          icon={MessageSquare}
-          linkHref="/discover"
-        />
+      {/* My Property Listings */}
+      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Home size={16} className="text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Property Listings</h3>
+            <span className="text-xs text-muted">({myPropertyListings.length})</span>
+          </div>
+          {myPropertyListings.length > 0 && (
+            <Link href="/property" className="text-xs text-primary font-semibold hover:underline">
+              View all
+            </Link>
+          )}
+        </div>
+        {myPropertyListings.length > 0 ? (
+          <div className="divide-y divide-border">
+            {myPropertyListings.slice(0, 3).map((listing) => (
+              <MyPropertyCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        ) : (
+          <div className="px-4 py-6 text-center">
+            <Home size={24} className="text-border mx-auto mb-2" />
+            <p className="text-xs text-muted mb-2">No property listings yet</p>
+            <Link href="/property/create" className="text-xs text-primary font-semibold hover:underline">
+              List a property
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* My Posts */}
+      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <MessageSquare size={16} className="text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">My Posts</h3>
+            <span className="text-xs text-muted">({myPosts.length})</span>
+          </div>
+          {myPosts.length > 0 && (
+            <Link href="/discover" className="text-xs text-primary font-semibold hover:underline">
+              View all
+            </Link>
+          )}
+        </div>
+        {myPosts.length > 0 ? (
+          <div className="divide-y divide-border">
+            {myPosts.slice(0, 3).map((post) => (
+              <MyPostCard key={post.id} post={post} />
+            ))}
+          </div>
+        ) : (
+          <div className="px-4 py-6 text-center">
+            <MessageSquare size={24} className="text-border mx-auto mb-2" />
+            <p className="text-xs text-muted mb-2">No posts yet</p>
+            <Link href="/post" className="text-xs text-primary font-semibold hover:underline">
+              Create a post
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Settings section */}

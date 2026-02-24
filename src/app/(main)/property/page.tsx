@@ -309,11 +309,23 @@ function PropertyCard({ property }: { property: PropertyListingWithDetails }) {
       href={`/property/${property.id}`}
       className="block bg-white rounded-2xl border border-border overflow-hidden hover:shadow-md transition-shadow"
     >
-      {/* Image placeholder */}
-      <div className={cn('relative w-full h-48 bg-gradient-to-br', gradient)}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Icon size={48} className="text-white/40" />
-        </div>
+      {/* Image */}
+      <div className={cn(
+        'relative w-full h-48',
+        property.property_listing_images[0]?.image_url ? 'bg-surface' : `bg-gradient-to-br ${gradient}`
+      )}>
+        {property.property_listing_images[0]?.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={property.property_listing_images[0].image_url}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Icon size={48} className="text-white/40" />
+          </div>
+        )}
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex items-center gap-2">

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Mail,
@@ -16,6 +17,15 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import type { AccountType } from '@/types/database';
+
+const COUNTRY_CODES = [
+  { code: '+592', label: 'GY +592', flag: '🇬🇾' },
+  { code: '+1', label: 'US/CA +1', flag: '🇺🇸' },
+  { code: '+44', label: 'UK +44', flag: '🇬🇧' },
+  { code: '+1-868', label: 'TT +1-868', flag: '🇹🇹' },
+  { code: '+1-246', label: 'BB +1-246', flag: '🇧🇧' },
+  { code: '+597', label: 'SR +597', flag: '🇸🇷' },
+];
 
 const ACCOUNT_TYPES: {
   value: AccountType;
@@ -43,13 +53,16 @@ const ACCOUNT_TYPES: {
   },
 ];
 
-export default function SignupPage() {
+function SignupForm() {
   const { signUp } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('individual');
   const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('+592');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -71,7 +84,7 @@ export default function SignupPage() {
     setIsLoading(true);
     const { error: authError } = await signUp(email, password, name, {
       account_type: accountType,
-      phone: phone ? `+592${phone}` : '',
+      phone: phone ? `${countryCode}${phone}` : '',
     });
     setIsLoading(false);
 
@@ -220,9 +233,17 @@ export default function SignupPage() {
             Phone <span className="text-xs text-muted font-normal">(optional)</span>
           </label>
           <div className="relative flex">
-            <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-border bg-white text-sm text-muted font-medium">
-              +592
-            </span>
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              className="appearance-none rounded-l-xl border border-r-0 border-border bg-white pl-3 pr-7 py-2.5 text-sm text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors cursor-pointer"
+            >
+              {COUNTRY_CODES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.label}
+                </option>
+              ))}
+            </select>
             <div className="relative flex-1">
               <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input
@@ -230,7 +251,7 @@ export default function SignupPage() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="600 0000"
+                placeholder={countryCode === '+592' ? '600 0000' : 'Phone number'}
                 className="w-full pl-10 pr-4 py-2.5 rounded-r-xl border border-border bg-surface text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
               />
             </div>
@@ -262,10 +283,18 @@ export default function SignupPage() {
       {/* Footer link */}
       <p className="text-center text-sm text-muted mt-6">
         Already have an account?{' '}
-        <Link href="/login" className="text-primary font-semibold hover:underline">
+        <Link href={`/login${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-primary font-semibold hover:underline">
           Log in
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   );
 }

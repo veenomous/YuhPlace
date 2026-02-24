@@ -107,7 +107,16 @@ function PostCard({ post }: { post: DiscoverPostWithDetails }) {
 
           {hasImage && (
             <div className="flex-shrink-0 w-20 h-20 rounded-lg bg-surface border border-border overflow-hidden flex items-center justify-center">
-              <ImageIcon size={24} className="text-border" />
+              {post.discover_post_images[0].image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={post.discover_post_images[0].image_url}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <ImageIcon size={24} className="text-border" />
+              )}
             </div>
           )}
         </div>

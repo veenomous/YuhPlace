@@ -1,7 +1,8 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   AlertTriangle,
@@ -12,11 +13,15 @@ import {
   BadgeCheck,
   Share2,
   Flag,
-  Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { cn, timeAgo, memberSince, formatWhatsAppLink } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
-import type { DiscoverPostWithDetails, PostType } from '@/types/database';
+import { useAuth } from '@/context/AuthContext';
+import type { PostType } from '@/types/database';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -79,7 +84,13 @@ export default function PostDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { getDiscoverPost } = useData();
+  const router = useRouter();
+  const { getDiscoverPost, deleteDiscoverPost } = useData();
+  const { user } = useAuth();
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const post = getDiscoverPost(id);
 
   if (!post) {
@@ -96,6 +107,10 @@ export default function PostDetailPage({
     );
   }
 
+  const isOwner = user && post.user_id === user.id;
+  const images = post.discover_post_images.filter((img) => img.image_url);
+  const hasImages = images.length > 0;
+
   const shareUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/discover/${post.id}`
@@ -106,7 +121,14 @@ export default function PostDetailPage({
     `Check out this post on YuhPlace: ${post.title} - ${shareUrl}`,
   );
 
-  const hasImages = post.discover_post_images.length > 0;
+  const handleDelete = async () => {
+    setDeleting(true);
+    const { error } = await deleteDiscoverPost(post.id);
+    setDeleting(false);
+    if (!error) {
+      router.push('/discover');
+    }
+  };
 
   return (
     <div className="px-4 py-4">
@@ -121,15 +143,43 @@ export default function PostDetailPage({
 
       {/* Post card */}
       <article className="bg-white border border-border rounded-xl overflow-hidden">
-        {/* Image gallery placeholder */}
+        {/* Image gallery */}
         {hasImages && (
-          <div className="w-full aspect-video bg-surface flex items-center justify-center border-b border-border">
-            <div className="text-center">
-              <ImageIcon size={40} className="text-border mx-auto mb-2" />
-              <p className="text-xs text-muted">
-                {post.discover_post_images.length} photo{post.discover_post_images.length > 1 ? 's' : ''}
-              </p>
-            </div>
+          <div className="relative w-full aspect-video bg-surface">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={images[currentImageIdx].image_url}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={() => setCurrentImageIdx((i) => (i > 0 ? i - 1 : images.length - 1))}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/30 text-white rounded-full"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setCurrentImageIdx((i) => (i < images.length - 1 ? i + 1 : 0))}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/30 text-white rounded-full"
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentImageIdx(i)}
+                      className={cn(
+                        'w-2 h-2 rounded-full transition-all',
+                        i === currentImageIdx ? 'bg-white w-4' : 'bg-white/50'
+                      )}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -167,11 +217,26 @@ export default function PostDetailPage({
               <Share2 size={16} />
               Share on WhatsApp
             </a>
-            <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-surface text-muted rounded-lg text-sm font-medium border border-border hover:text-danger hover:border-danger transition-colors">
-              <Flag size={16} />
-              Report
-            </button>
+            {!isOwner && (
+              <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-surface text-muted rounded-lg text-sm font-medium border border-border hover:text-danger hover:border-danger transition-colors">
+                <Flag size={16} />
+                Report
+              </button>
+            )}
           </div>
+
+          {/* Owner actions */}
+          {isOwner && (
+            <div className="border-t border-border pt-4 mb-4">
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-2 text-sm text-danger hover:text-danger/80 transition-colors"
+              >
+                <Trash2 size={14} />
+                Delete this post
+              </button>
+            </div>
+          )}
 
           {/* Author card */}
           <div className="border-t border-border pt-4">
@@ -179,7 +244,6 @@ export default function PostDetailPage({
               Posted by
             </p>
             <div className="flex items-center gap-3">
-              {/* Avatar placeholder */}
               <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
                 <span className="text-sm font-bold text-primary-dark">
                   {post.profiles.name.charAt(0)}
@@ -202,6 +266,34 @@ export default function PostDetailPage({
           </div>
         </div>
       </article>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
+          <div className="w-full max-w-lg bg-white rounded-t-2xl p-5 pb-8">
+            <h3 className="text-base font-semibold text-foreground mb-2">Delete Post?</h3>
+            <p className="text-sm text-muted mb-4">
+              This will permanently remove your post from Discover. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2.5 bg-surface text-foreground text-sm font-medium rounded-xl border border-border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-danger text-white text-sm font-medium rounded-xl"
+              >
+                {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

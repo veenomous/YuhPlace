@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { uploadImages } from '@/lib/storage';
 import type {
   DiscoverPostWithDetails,
   MarketListingWithDetails,
@@ -124,7 +125,7 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     created_at: '2026-02-21T10:00:00Z', updated_at: '2026-02-21T10:00:00Z',
     profiles: { id: 'u1', name: 'Anil Persaud', avatar_url: null, is_verified_business: false, created_at: '2025-06-01T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
-    market_categories: { name: 'Buy & Sell', slug: 'buy-and-sell' },
+    market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img1', listing_id: 'm1', image_url: '', sort_order: 0 }],
   },
   {
@@ -148,7 +149,7 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     created_at: '2026-02-19T09:15:00Z', updated_at: '2026-02-19T09:15:00Z',
     profiles: { id: 'u3', name: 'Shanna Williams', avatar_url: null, is_verified_business: false, created_at: '2025-08-20T00:00:00Z' },
     regions: { name: 'East Bank Demerara', slug: 'east-bank-demerara' },
-    market_categories: { name: 'Buy & Sell', slug: 'buy-and-sell' },
+    market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img3', listing_id: 'm3', image_url: '', sort_order: 0 }],
   },
   {
@@ -184,7 +185,7 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     created_at: '2026-02-16T08:30:00Z', updated_at: '2026-02-16T08:30:00Z',
     profiles: { id: 'u6', name: 'Marcus James', avatar_url: null, is_verified_business: false, created_at: '2025-09-05T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
-    market_categories: { name: 'Buy & Sell', slug: 'buy-and-sell' },
+    market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img6', listing_id: 'm6', image_url: '', sort_order: 0 }],
   },
   {
@@ -196,7 +197,7 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     created_at: '2026-02-15T13:20:00Z', updated_at: '2026-02-15T13:20:00Z',
     profiles: { id: 'u7', name: 'Rajesh Doodnauth', avatar_url: null, is_verified_business: false, created_at: '2025-05-22T00:00:00Z' },
     regions: { name: 'Linden', slug: 'linden' },
-    market_categories: { name: 'Buy & Sell', slug: 'buy-and-sell' },
+    market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img7', listing_id: 'm7', image_url: '', sort_order: 0 }],
   },
   {
@@ -208,7 +209,7 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     created_at: '2026-02-14T07:00:00Z', updated_at: '2026-02-14T07:00:00Z',
     profiles: { id: 'u8', name: 'D&R Supplies', avatar_url: null, is_verified_business: true, created_at: '2024-08-15T00:00:00Z' },
     regions: { name: 'East Coast Demerara', slug: 'east-coast-demerara' },
-    market_categories: { name: 'Buy & Sell', slug: 'buy-and-sell' },
+    market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [],
   },
   {
@@ -220,7 +221,7 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     created_at: '2026-02-13T15:45:00Z', updated_at: '2026-02-13T15:45:00Z',
     profiles: { id: 'u9', name: 'Camille Chen', avatar_url: null, is_verified_business: false, created_at: '2025-12-01T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
-    market_categories: { name: 'Buy & Sell', slug: 'buy-and-sell' },
+    market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img9', listing_id: 'm9', image_url: '', sort_order: 0 }],
   },
   {
@@ -336,6 +337,7 @@ export interface CreateDiscoverPostInput {
   description: string;
   region_slug: string;
   region_name: string;
+  photos?: File[];
 }
 
 export interface CreateMarketListingInput {
@@ -349,6 +351,7 @@ export interface CreateMarketListingInput {
   whatsapp_number: string;
   region_slug: string;
   region_name: string;
+  photos?: File[];
 }
 
 export interface CreatePropertyListingInput {
@@ -364,6 +367,7 @@ export interface CreatePropertyListingInput {
   whatsapp_number: string;
   region_slug: string;
   region_name: string;
+  photos?: File[];
 }
 
 // ─── Context type ───────────────────────────────────────────────────────────
@@ -378,9 +382,13 @@ interface DataContextValue {
   getMarketListing: (id: string) => MarketListingWithDetails | undefined;
   getPropertyListing: (id: string) => PropertyListingWithDetails | undefined;
 
-  addDiscoverPost: (input: CreateDiscoverPostInput) => DiscoverPostWithDetails;
-  addMarketListing: (input: CreateMarketListingInput) => MarketListingWithDetails;
-  addPropertyListing: (input: CreatePropertyListingInput) => PropertyListingWithDetails;
+  addDiscoverPost: (input: CreateDiscoverPostInput) => Promise<{ error: string | null }>;
+  addMarketListing: (input: CreateMarketListingInput) => Promise<{ error: string | null }>;
+  addPropertyListing: (input: CreatePropertyListingInput) => Promise<{ error: string | null }>;
+
+  deleteDiscoverPost: (id: string) => Promise<{ error: string | null }>;
+  deleteMarketListing: (id: string) => Promise<{ error: string | null }>;
+  deletePropertyListing: (id: string) => Promise<{ error: string | null }>;
 
   totalListings: number;
   totalPosts: number;
@@ -388,19 +396,10 @@ interface DataContextValue {
 
 const DataContext = createContext<DataContextValue | null>(null);
 
-// Fallback user for items created locally (when not authenticated)
-const FALLBACK_USER = {
-  id: 'current-user',
-  name: 'Rajesh Persaud',
-  avatar_url: null,
-  is_verified_business: false,
-  created_at: '2024-11-15T00:00:00Z',
-};
-
-let _idCounter = 100;
-function nextId(prefix: string) {
-  return `${prefix}${++_idCounter}`;
-}
+// Select queries shared between initial fetch and post-insert refetch
+const DISCOVER_POST_SELECT = '*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), discover_post_images(*)';
+const MARKET_LISTING_SELECT = '*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), market_categories(name, slug), market_listing_images(*)';
+const PROPERTY_LISTING_SELECT = '*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), property_listing_images(*)';
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [discoverPosts, setDiscoverPosts] = useState(FALLBACK_DISCOVER_POSTS);
@@ -408,40 +407,53 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [propertyListings, setPropertyListings] = useState(FALLBACK_PROPERTY_LISTINGS);
   const [loading, setLoading] = useState(true);
 
-  // Fetch real data from Supabase on mount
+  // Lookup maps: slug → UUID (populated on mount)
+  const [regionMap, setRegionMap] = useState<Map<string, string>>(new Map());
+  const [categoryMap, setCategoryMap] = useState<Map<string, string>>(new Map());
+
+  // Fetch real data + lookup tables from Supabase on mount
   useEffect(() => {
     async function fetchData() {
       try {
         const supabase = createClient();
 
-        const [postsRes, listingsRes, propertiesRes] = await Promise.all([
+        const [postsRes, listingsRes, propertiesRes, regionsRes, categoriesRes] = await Promise.all([
           supabase
             .from('discover_posts')
-            .select('*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), discover_post_images(*)')
+            .select(DISCOVER_POST_SELECT)
             .eq('status', 'active')
             .order('created_at', { ascending: false }),
           supabase
             .from('market_listings')
-            .select('*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), market_categories(name, slug), market_listing_images(*)')
+            .select(MARKET_LISTING_SELECT)
             .eq('status', 'active')
             .order('created_at', { ascending: false }),
           supabase
             .from('property_listings')
-            .select('*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), property_listing_images(*)')
+            .select(PROPERTY_LISTING_SELECT)
             .eq('status', 'active')
             .order('created_at', { ascending: false }),
+          supabase.from('regions').select('id, slug'),
+          supabase.from('market_categories').select('id, slug'),
         ]);
 
-        // Only replace state if Supabase returned actual content
-        if (postsRes.data && postsRes.data.length > 0) {
-          setDiscoverPosts(postsRes.data as unknown as DiscoverPostWithDetails[]);
+        // Build lookup maps
+        if (regionsRes.data) {
+          setRegionMap(new Map(regionsRes.data.map((r) => [r.slug, r.id])));
         }
-        if (listingsRes.data && listingsRes.data.length > 0) {
-          setMarketListings(listingsRes.data as unknown as MarketListingWithDetails[]);
+        if (categoriesRes.data) {
+          setCategoryMap(new Map(categoriesRes.data.map((c) => [c.slug, c.id])));
         }
-        if (propertiesRes.data && propertiesRes.data.length > 0) {
-          setPropertyListings(propertiesRes.data as unknown as PropertyListingWithDetails[]);
-        }
+
+        // Merge real Supabase data (shown first) with fallback mock data
+        const realPosts = (postsRes.data ?? []) as unknown as DiscoverPostWithDetails[];
+        setDiscoverPosts([...realPosts, ...FALLBACK_DISCOVER_POSTS]);
+
+        const realListings = (listingsRes.data ?? []) as unknown as MarketListingWithDetails[];
+        setMarketListings([...realListings, ...FALLBACK_MARKET_LISTINGS]);
+
+        const realProperties = (propertiesRes.data ?? []) as unknown as PropertyListingWithDetails[];
+        setPropertyListings([...realProperties, ...FALLBACK_PROPERTY_LISTINGS]);
       } catch {
         // Silently keep fallback data on error
       } finally {
@@ -467,80 +479,189 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [propertyListings],
   );
 
-  const addDiscoverPost = useCallback((input: CreateDiscoverPostInput) => {
-    const now = new Date().toISOString();
-    const newPost: DiscoverPostWithDetails = {
-      id: nextId('d'),
-      user_id: FALLBACK_USER.id,
-      region_id: input.region_slug,
-      post_type: input.post_type,
-      title: input.title,
-      description: input.description,
-      status: 'active',
-      created_at: now,
-      updated_at: now,
-      profiles: { ...FALLBACK_USER },
-      regions: { name: input.region_name, slug: input.region_slug },
-      discover_post_images: [],
-    };
-    setDiscoverPosts((prev) => [newPost, ...prev]);
-    return newPost;
+  const addDiscoverPost = useCallback(async (input: CreateDiscoverPostInput): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'You must be signed in to post.' };
+
+    const regionId = regionMap.get(input.region_slug);
+    if (!regionId) return { error: 'Invalid region selected.' };
+
+    const { data: inserted, error: insertError } = await supabase
+      .from('discover_posts')
+      .insert({
+        user_id: user.id,
+        region_id: regionId,
+        post_type: input.post_type,
+        title: input.title,
+        description: input.description,
+      })
+      .select('id')
+      .single();
+
+    if (insertError) return { error: insertError.message };
+
+    // Upload photos if provided (non-fatal — post was already created)
+    if (input.photos && input.photos.length > 0) {
+      const { urls } = await uploadImages(input.photos, 'discover', inserted.id);
+      if (urls.length > 0) {
+        const imageRecords = urls.map((url, idx) => ({
+          post_id: inserted.id,
+          image_url: url,
+          sort_order: idx,
+        }));
+        await supabase.from('discover_post_images').insert(imageRecords);
+      }
+    }
+
+    // Refetch with full joins
+    const { data: full } = await supabase
+      .from('discover_posts')
+      .select(DISCOVER_POST_SELECT)
+      .eq('id', inserted.id)
+      .single();
+
+    if (full) {
+      setDiscoverPosts((prev) => [full as unknown as DiscoverPostWithDetails, ...prev]);
+    }
+
+    return { error: null };
+  }, [regionMap]);
+
+  const addMarketListing = useCallback(async (input: CreateMarketListingInput): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'You must be signed in to create a listing.' };
+
+    const regionId = regionMap.get(input.region_slug);
+    if (!regionId) return { error: 'Invalid region selected.' };
+
+    const categoryId = categoryMap.get(input.category_slug);
+    if (!categoryId) return { error: 'Invalid category selected.' };
+
+    const { data: inserted, error: insertError } = await supabase
+      .from('market_listings')
+      .insert({
+        user_id: user.id,
+        region_id: regionId,
+        category_id: categoryId,
+        title: input.title,
+        description: input.description,
+        price_amount: input.price_amount,
+        condition: input.condition,
+        seller_type: input.seller_type,
+        whatsapp_number: input.whatsapp_number,
+      })
+      .select('id')
+      .single();
+
+    if (insertError) return { error: insertError.message };
+
+    // Upload photos if provided (non-fatal — listing was already created)
+    if (input.photos && input.photos.length > 0) {
+      const { urls } = await uploadImages(input.photos, 'market', inserted.id);
+      if (urls.length > 0) {
+        const imageRecords = urls.map((url, idx) => ({
+          listing_id: inserted.id,
+          image_url: url,
+          sort_order: idx,
+        }));
+        await supabase.from('market_listing_images').insert(imageRecords);
+      }
+    }
+
+    // Refetch with full joins
+    const { data: full } = await supabase
+      .from('market_listings')
+      .select(MARKET_LISTING_SELECT)
+      .eq('id', inserted.id)
+      .single();
+
+    if (full) {
+      setMarketListings((prev) => [full as unknown as MarketListingWithDetails, ...prev]);
+    }
+
+    return { error: null };
+  }, [regionMap, categoryMap]);
+
+  const addPropertyListing = useCallback(async (input: CreatePropertyListingInput): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'You must be signed in to create a listing.' };
+
+    const regionId = regionMap.get(input.region_slug);
+    if (!regionId) return { error: 'Invalid region selected.' };
+
+    const { data: inserted, error: insertError } = await supabase
+      .from('property_listings')
+      .insert({
+        user_id: user.id,
+        region_id: regionId,
+        listing_mode: input.listing_mode,
+        property_type: input.property_type,
+        title: input.title,
+        description: input.description,
+        price_amount: input.price_amount,
+        bedrooms: input.bedrooms,
+        bathrooms: input.bathrooms,
+        neighborhood_text: input.neighborhood_text || null,
+        owner_type: input.owner_type,
+        whatsapp_number: input.whatsapp_number,
+      })
+      .select('id')
+      .single();
+
+    if (insertError) return { error: insertError.message };
+
+    // Upload photos if provided (non-fatal — listing was already created)
+    if (input.photos && input.photos.length > 0) {
+      const { urls } = await uploadImages(input.photos, 'property', inserted.id);
+      if (urls.length > 0) {
+        const imageRecords = urls.map((url, idx) => ({
+          property_listing_id: inserted.id,
+          image_url: url,
+          sort_order: idx,
+        }));
+        await supabase.from('property_listing_images').insert(imageRecords);
+      }
+    }
+
+    // Refetch with full joins
+    const { data: full } = await supabase
+      .from('property_listings')
+      .select(PROPERTY_LISTING_SELECT)
+      .eq('id', inserted.id)
+      .single();
+
+    if (full) {
+      setPropertyListings((prev) => [full as unknown as PropertyListingWithDetails, ...prev]);
+    }
+
+    return { error: null };
+  }, [regionMap]);
+
+  const deleteDiscoverPost = useCallback(async (id: string): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { error } = await supabase.from('discover_posts').update({ status: 'removed' }).eq('id', id);
+    if (error) return { error: error.message };
+    setDiscoverPosts((prev) => prev.filter((p) => p.id !== id));
+    return { error: null };
   }, []);
 
-  const addMarketListing = useCallback((input: CreateMarketListingInput) => {
-    const now = new Date().toISOString();
-    const newListing: MarketListingWithDetails = {
-      id: nextId('m'),
-      user_id: FALLBACK_USER.id,
-      region_id: input.region_slug,
-      category_id: input.category_slug,
-      title: input.title,
-      description: input.description,
-      price_amount: input.price_amount,
-      currency: 'GYD',
-      condition: input.condition,
-      seller_type: input.seller_type,
-      whatsapp_number: input.whatsapp_number,
-      status: 'active',
-      is_featured: false,
-      created_at: now,
-      updated_at: now,
-      profiles: { ...FALLBACK_USER },
-      regions: { name: input.region_name, slug: input.region_slug },
-      market_categories: { name: input.category_name, slug: input.category_slug },
-      market_listing_images: [],
-    };
-    setMarketListings((prev) => [newListing, ...prev]);
-    return newListing;
+  const deleteMarketListing = useCallback(async (id: string): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { error } = await supabase.from('market_listings').update({ status: 'removed' }).eq('id', id);
+    if (error) return { error: error.message };
+    setMarketListings((prev) => prev.filter((l) => l.id !== id));
+    return { error: null };
   }, []);
 
-  const addPropertyListing = useCallback((input: CreatePropertyListingInput) => {
-    const now = new Date().toISOString();
-    const newListing: PropertyListingWithDetails = {
-      id: nextId('p'),
-      user_id: FALLBACK_USER.id,
-      region_id: input.region_slug,
-      listing_mode: input.listing_mode,
-      property_type: input.property_type,
-      title: input.title,
-      description: input.description,
-      price_amount: input.price_amount,
-      currency: 'GYD',
-      bedrooms: input.bedrooms,
-      bathrooms: input.bathrooms,
-      neighborhood_text: input.neighborhood_text,
-      owner_type: input.owner_type,
-      whatsapp_number: input.whatsapp_number,
-      status: 'active',
-      is_featured: false,
-      created_at: now,
-      updated_at: now,
-      profiles: { ...FALLBACK_USER },
-      regions: { name: input.region_name, slug: input.region_slug },
-      property_listing_images: [],
-    };
-    setPropertyListings((prev) => [newListing, ...prev]);
-    return newListing;
+  const deletePropertyListing = useCallback(async (id: string): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { error } = await supabase.from('property_listings').update({ status: 'removed' }).eq('id', id);
+    if (error) return { error: error.message };
+    setPropertyListings((prev) => prev.filter((p) => p.id !== id));
+    return { error: null };
   }, []);
 
   return (
@@ -556,6 +677,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addDiscoverPost,
         addMarketListing,
         addPropertyListing,
+        deleteDiscoverPost,
+        deleteMarketListing,
+        deletePropertyListing,
         totalListings: marketListings.length + propertyListings.length,
         totalPosts: discoverPosts.length,
       }}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -11,13 +11,14 @@ import {
   LandPlot,
   Store,
   Upload,
-  ImagePlus,
   X,
   Check,
   Loader2,
+  LogIn,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
+import { useAuth } from '@/context/AuthContext';
 import { REGIONS } from '@/lib/constants';
 import type { PropertyType, ListingMode, OwnerType } from '@/types/database';
 
@@ -42,6 +43,7 @@ const OWNER_TYPES: { value: OwnerType; label: string }[] = [
 export default function CreatePropertyPage() {
   const router = useRouter();
   const { addPropertyListing } = useData();
+  const { user, loading: authLoading } = useAuth();
 
   // Form state
   const [listingMode, setListingMode] = useState<ListingMode>('rent');
@@ -55,29 +57,45 @@ export default function CreatePropertyPage() {
   const [description, setDescription] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [ownerType, setOwnerType] = useState<OwnerType>('owner');
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showBedsAndBaths = propertyType !== 'land';
 
-  function handlePhotoPlaceholder() {
-    // Simulate adding a photo placeholder
-    if (photos.length < 6) {
-      setPhotos([...photos, `photo-${photos.length + 1}`]);
+  function handleAddPhoto() {
+    fileInputRef.current?.click();
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files) return;
+    const newPhotos = [...photos];
+    for (let i = 0; i < files.length && newPhotos.length < 6; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        newPhotos.push({ file, preview: URL.createObjectURL(file) });
+      }
     }
+    setPhotos(newPhotos);
+    e.target.value = '';
   }
 
   function removePhoto(idx: number) {
+    const removed = photos[idx];
+    URL.revokeObjectURL(removed.preview);
     setPhotos(photos.filter((_, i) => i !== idx));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError('');
 
     const regionObj = REGIONS.find(r => r.slug === region);
-    addPropertyListing({
+    const { error } = await addPropertyListing({
       listing_mode: listingMode as ListingMode,
       property_type: propertyType as PropertyType,
       title: title.trim(),
@@ -90,12 +108,15 @@ export default function CreatePropertyPage() {
       whatsapp_number: whatsapp,
       region_slug: region,
       region_name: regionObj?.name || region,
+      photos: photos.map(p => p.file),
     });
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setShowSuccess(true);
-    }, 1500);
+    setIsSubmitting(false);
+    if (error) {
+      setSubmitError(error);
+      return;
+    }
+    setShowSuccess(true);
   }
 
   const isFormValid =
@@ -104,6 +125,30 @@ export default function CreatePropertyPage() {
     region.length > 0 &&
     description.trim().length > 0 &&
     whatsapp.trim().length > 0;
+
+  // Auth guard
+  if (!authLoading && !user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+        <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center mb-4">
+          <LogIn size={24} className="text-primary" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground mb-1">Sign in to list</h2>
+        <p className="text-sm text-muted mb-6">
+          You need an account to list properties on YuhPlace.
+        </p>
+        <Link
+          href="/login?redirect=/property/create"
+          className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors"
+        >
+          Sign In
+        </Link>
+        <Link href="/signup?redirect=/property/create" className="mt-3 text-sm text-primary font-medium hover:underline">
+          Create an account
+        </Link>
+      </div>
+    );
+  }
 
   // Success screen
   if (showSuccess) {
@@ -410,30 +455,45 @@ export default function CreatePropertyPage() {
           <label className="text-sm font-semibold text-foreground mb-2 block">
             Photos
           </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
           <div className="grid grid-cols-3 gap-2">
             {photos.map((photo, idx) => (
               <div
-                key={photo}
-                className="relative aspect-square bg-primary-light rounded-xl flex items-center justify-center"
+                key={idx}
+                className="relative aspect-square rounded-xl overflow-hidden border border-border"
               >
-                <ImagePlus size={24} className="text-primary/40" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.preview}
+                  alt={`Photo ${idx + 1}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
                 <button
                   type="button"
                   onClick={() => removePhoto(idx)}
-                  className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-danger text-white rounded-full flex items-center justify-center text-xs"
+                  className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center z-10"
                 >
                   <X size={12} />
                 </button>
-                <span className="absolute bottom-1 text-[10px] text-primary/60 font-medium">
-                  Photo {idx + 1}
-                </span>
+                {idx === 0 && (
+                  <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-black/50 text-white text-[9px] font-medium rounded z-10">
+                    Cover
+                  </span>
+                )}
               </div>
             ))}
 
             {photos.length < 6 && (
               <button
                 type="button"
-                onClick={handlePhotoPlaceholder}
+                onClick={handleAddPhoto}
                 className="aspect-square border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1 text-muted hover:border-primary hover:text-primary transition-colors"
               >
                 <Upload size={20} />
@@ -445,6 +505,13 @@ export default function CreatePropertyPage() {
             Add up to 6 photos. First photo will be the cover image.
           </p>
         </div>
+
+        {/* Error Message */}
+        {submitError && (
+          <div className="px-4 py-3 bg-danger-light border border-danger/20 rounded-xl">
+            <p className="text-sm text-danger">{submitError}</p>
+          </div>
+        )}
 
         {/* Submit Button */}
         <button

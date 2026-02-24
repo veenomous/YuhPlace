@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
@@ -10,9 +10,12 @@ import {
   Camera,
   X,
   ChevronDown,
+  Loader2,
+  LogIn,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
+import { useAuth } from '@/context/AuthContext';
 import { REGIONS } from '@/lib/constants';
 import type { PostType } from '@/types/database';
 
@@ -63,38 +66,90 @@ const POST_TYPES: {
 
 export default function CreatePostPage() {
   const { addDiscoverPost } = useData();
+  const { user, loading: authLoading } = useAuth();
   const [postType, setPostType] = useState<PostType | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [region, setRegion] = useState('');
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isFormValid = postType && title.trim() && description.trim() && region;
 
   function handleAddPhoto() {
-    // Mock: just add a placeholder
-    if (photos.length < 4) {
-      setPhotos([...photos, `photo-${photos.length + 1}`]);
+    fileInputRef.current?.click();
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files) return;
+    const newPhotos = [...photos];
+    for (let i = 0; i < files.length && newPhotos.length < 4; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        newPhotos.push({ file, preview: URL.createObjectURL(file) });
+      }
     }
+    setPhotos(newPhotos);
+    // Reset input so selecting the same file again works
+    e.target.value = '';
   }
 
   function handleRemovePhoto(index: number) {
+    const removed = photos[index];
+    URL.revokeObjectURL(removed.preview);
     setPhotos(photos.filter((_, i) => i !== index));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isFormValid) return;
+    setSubmitting(true);
+    setSubmitError('');
+
     const regionObj = REGIONS.find(r => r.slug === region);
-    addDiscoverPost({
+    const { error } = await addDiscoverPost({
       post_type: postType!,
       title: title.trim(),
       description: description.trim(),
       region_slug: region,
       region_name: regionObj?.name || region,
+      photos: photos.map(p => p.file),
     });
+
+    setSubmitting(false);
+    if (error) {
+      setSubmitError(error);
+      return;
+    }
     setSubmitted(true);
+  }
+
+  // Auth guard
+  if (!authLoading && !user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+        <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center mb-4">
+          <LogIn size={24} className="text-primary" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground mb-1">Sign in to post</h2>
+        <p className="text-sm text-muted mb-6">
+          You need an account to share posts with the community.
+        </p>
+        <Link
+          href="/login?redirect=/post"
+          className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors"
+        >
+          Sign In
+        </Link>
+        <Link href="/signup?redirect=/post" className="mt-3 text-sm text-primary font-medium hover:underline">
+          Create an account
+        </Link>
+      </div>
+    );
   }
 
   if (submitted) {
@@ -127,6 +182,7 @@ export default function CreatePostPage() {
               setTitle('');
               setDescription('');
               setRegion('');
+              photos.forEach((p) => URL.revokeObjectURL(p.preview));
               setPhotos([]);
             }}
             className="inline-flex items-center justify-center px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
@@ -280,17 +336,30 @@ export default function CreatePostPage() {
             Photos{' '}
             <span className="font-normal text-muted">(optional, max 4)</span>
           </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
           <div className="flex gap-2 flex-wrap">
-            {photos.map((_, index) => (
+            {photos.map((photo, index) => (
               <div
                 key={index}
-                className="relative w-20 h-20 rounded-lg bg-surface border border-border flex items-center justify-center"
+                className="relative w-20 h-20 rounded-lg overflow-hidden border border-border"
               >
-                <Camera size={20} className="text-muted" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.preview}
+                  alt={`Photo ${index + 1}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
                 <button
                   type="button"
                   onClick={() => handleRemovePhoto(index)}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-danger text-white rounded-full flex items-center justify-center"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-danger text-white rounded-full flex items-center justify-center z-10"
                 >
                   <X size={12} />
                 </button>
@@ -309,18 +378,32 @@ export default function CreatePostPage() {
           </div>
         </div>
 
+        {/* Error Message */}
+        {submitError && (
+          <div className="px-4 py-3 bg-danger-light border border-danger/20 rounded-xl">
+            <p className="text-sm text-danger">{submitError}</p>
+          </div>
+        )}
+
         {/* Submit */}
         <button
           type="submit"
-          disabled={!isFormValid}
+          disabled={!isFormValid || submitting}
           className={cn(
-            'w-full py-3 rounded-xl text-sm font-semibold transition-colors',
-            isFormValid
+            'w-full py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2',
+            isFormValid && !submitting
               ? 'bg-primary text-white hover:bg-primary-dark active:scale-[0.98] transform'
               : 'bg-border text-muted cursor-not-allowed',
           )}
         >
-          Publish Post
+          {submitting ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Publishing...
+            </>
+          ) : (
+            'Publish Post'
+          )}
         </button>
 
         <p className="text-[11px] text-muted text-center">
