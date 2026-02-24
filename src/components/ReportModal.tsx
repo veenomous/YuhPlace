@@ -33,6 +33,12 @@ export default function ReportModal({
 
   async function handleSubmit() {
     if (!selected) return;
+    // Fallback/demo posts have short IDs like "d1", not real UUIDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(targetId)) {
+      setError('This is demo content and cannot be reported.');
+      return;
+    }
     setSubmitting(true);
     setError('');
 
