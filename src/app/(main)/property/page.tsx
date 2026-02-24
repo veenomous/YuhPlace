@@ -16,6 +16,7 @@ import {
   X,
   ChevronDown,
   Plus,
+  BadgeCheck,
 } from 'lucide-react';
 import { cn, formatPrice, timeAgo } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
@@ -410,7 +411,7 @@ function PropertyCard({ property }: { property: PropertyListingWithDetails }) {
               {property.profiles.name}
             </span>
             {property.profiles.is_verified_business && (
-              <span className="text-xs text-primary font-medium">Verified</span>
+              <BadgeCheck size={14} className="text-blue-500 flex-shrink-0" />
             )}
           </div>
           <span className="text-xs text-muted">{timeAgo(property.created_at)}</span>

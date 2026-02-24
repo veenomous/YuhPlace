@@ -294,7 +294,7 @@ export default function ProfilePage() {
                 {displayName}
               </h1>
               {profile?.is_verified_business && (
-                <BadgeCheck size={18} className="text-primary flex-shrink-0" />
+                <BadgeCheck size={18} className="text-blue-500 flex-shrink-0" />
               )}
             </div>
 

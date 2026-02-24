@@ -267,7 +267,7 @@ export default function ListingDetailPage() {
                   {listing.profiles.name}
                 </span>
                 {listing.profiles.is_verified_business && (
-                  <BadgeCheck size={16} className="text-primary shrink-0" />
+                  <BadgeCheck size={16} className="text-blue-500 shrink-0" />
                 )}
               </div>
               <p className="text-xs text-muted mt-0.5">

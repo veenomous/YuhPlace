@@ -133,7 +133,7 @@ function PostCard({ post }: { post: DiscoverPostWithDetails }) {
             {post.profiles.name}
           </span>
           {post.profiles.is_verified_business && (
-            <BadgeCheck size={14} className="text-primary flex-shrink-0" />
+            <BadgeCheck size={14} className="text-blue-500 flex-shrink-0" />
           )}
           <span className="text-xs text-muted ml-auto flex-shrink-0">
             {timeAgo(post.created_at)}
