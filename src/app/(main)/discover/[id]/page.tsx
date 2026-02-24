@@ -131,7 +131,7 @@ export default function PostDetailPage({
     if (error) {
       setDeleteError(error);
     } else {
-      router.push('/discover');
+      router.back();
     }
   };
 

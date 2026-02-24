@@ -97,7 +97,7 @@ export default function ListingDetailPage() {
     if (error) {
       setDeleteError(error);
     } else {
-      router.push('/market');
+      router.back();
     }
   };
 

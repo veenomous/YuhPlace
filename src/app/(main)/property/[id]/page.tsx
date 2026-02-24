@@ -115,7 +115,7 @@ export default function PropertyDetailPage() {
     if (error) {
       setDeleteError(error);
     } else {
-      router.push('/property');
+      router.back();
     }
   };
 
