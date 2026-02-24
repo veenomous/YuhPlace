@@ -397,6 +397,9 @@ interface DataContextValue {
   regionMap: Map<string, string>;
   categoryMap: Map<string, string>;
 
+  /** Comment count per target_id */
+  commentCounts: Map<string, number>;
+
   totalListings: number;
   totalPosts: number;
 }
@@ -418,13 +421,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [regionMap, setRegionMap] = useState<Map<string, string>>(new Map());
   const [categoryMap, setCategoryMap] = useState<Map<string, string>>(new Map());
 
+  // Comment counts per target_id
+  const [commentCounts, setCommentCounts] = useState<Map<string, number>>(new Map());
+
   // Fetch real data + lookup tables from Supabase on mount
   useEffect(() => {
     async function fetchData() {
       try {
         const supabase = createClient();
 
-        const [postsRes, listingsRes, propertiesRes, regionsRes, categoriesRes] = await Promise.all([
+        const [postsRes, listingsRes, propertiesRes, regionsRes, categoriesRes, commentsRes] = await Promise.all([
           supabase
             .from('discover_posts')
             .select(DISCOVER_POST_SELECT)
@@ -442,6 +448,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             .order('created_at', { ascending: false }),
           supabase.from('regions').select('id, slug'),
           supabase.from('market_categories').select('id, slug'),
+          supabase.from('comments').select('target_id').eq('status', 'active'),
         ]);
 
         // Build lookup maps
@@ -450,6 +457,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
         if (categoriesRes.data) {
           setCategoryMap(new Map(categoriesRes.data.map((c) => [c.slug, c.id])));
+        }
+
+        // Build comment counts map
+        if (commentsRes.data) {
+          const counts = new Map<string, number>();
+          for (const row of commentsRes.data) {
+            counts.set(row.target_id, (counts.get(row.target_id) ?? 0) + 1);
+          }
+          setCommentCounts(counts);
         }
 
         // Merge real Supabase data (shown first) with fallback mock data
@@ -770,6 +786,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updatePropertyListing,
         regionMap,
         categoryMap,
+        commentCounts,
         totalListings: marketListings.length + propertyListings.length,
         totalPosts: discoverPosts.length,
       }}

@@ -12,12 +12,14 @@ import {
   Wrench,
   Car,
   Package,
+  MessageSquare,
 } from 'lucide-react';
 import { formatPrice, timeAgo, cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useRegion } from '@/context/RegionContext';
 import { MarketFeedSkeleton } from '@/components/Skeletons';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import SellerRating from '@/components/SellerRating';
 import type { MarketListingWithDetails } from '@/types/database';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -64,7 +66,7 @@ const GRADIENTS = [
 ];
 
 export default function MarketPage() {
-  const { marketListings, loading } = useData();
+  const { marketListings, loading, commentCounts } = useData();
   const { selectedRegion: globalRegion } = useRegion();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -344,6 +346,7 @@ export default function MarketPage() {
                 <p className="text-sm font-bold text-primary">
                   {formatPrice(listing.price_amount, listing.currency)}
                 </p>
+                <SellerRating sellerId={listing.user_id} size="small" />
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-0.5 text-[11px] text-muted">
                     <MapPin size={10} />
@@ -355,9 +358,17 @@ export default function MarketPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-muted/60">
-                  {timeAgo(listing.created_at)}
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] text-muted/60">
+                    {timeAgo(listing.created_at)}
+                  </p>
+                  {(commentCounts.get(listing.id) ?? 0) > 0 && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-muted">
+                      <MessageSquare size={10} />
+                      {commentCounts.get(listing.id)}
+                    </span>
+                  )}
+                </div>
               </div>
             </Link>
           ))}

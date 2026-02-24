@@ -10,6 +10,7 @@ import {
   MapPin,
   Image as ImageIcon,
   BadgeCheck,
+  MessageSquare,
 } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
@@ -81,7 +82,7 @@ function PostTypeBadge({ type }: { type: PostType }) {
   );
 }
 
-function PostCard({ post }: { post: DiscoverPostWithDetails }) {
+function PostCard({ post, commentCount }: { post: DiscoverPostWithDetails; commentCount: number }) {
   const hasImage = post.discover_post_images.length > 0;
 
   return (
@@ -137,9 +138,17 @@ function PostCard({ post }: { post: DiscoverPostWithDetails }) {
           {post.profiles.is_verified_business && (
             <BadgeCheck size={14} className="text-amber-500 flex-shrink-0" />
           )}
-          <span className="text-xs text-muted ml-auto flex-shrink-0">
-            {timeAgo(post.created_at)}
-          </span>
+          <div className="flex items-center gap-3 ml-auto flex-shrink-0">
+            {commentCount > 0 && (
+              <span className="flex items-center gap-1 text-[11px] text-muted">
+                <MessageSquare size={12} />
+                {commentCount}
+              </span>
+            )}
+            <span className="text-xs text-muted">
+              {timeAgo(post.created_at)}
+            </span>
+          </div>
         </div>
       </article>
     </Link>
@@ -152,7 +161,7 @@ function PostCard({ post }: { post: DiscoverPostWithDetails }) {
 
 export default function DiscoverPage() {
   const [activeFilter, setActiveFilter] = useState<PostType | 'all'>('all');
-  const { discoverPosts, loading } = useData();
+  const { discoverPosts, loading, commentCounts } = useData();
   const { selectedRegion } = useRegion();
 
   const filteredPosts = discoverPosts.filter((p) => {
@@ -205,7 +214,7 @@ export default function DiscoverPage() {
             </div>
           ) : (
             <>
-              {visibleItems.map((post) => <PostCard key={post.id} post={post} />)}
+              {visibleItems.map((post) => <PostCard key={post.id} post={post} commentCount={commentCounts.get(post.id) ?? 0} />)}
               {hasMore && <div ref={sentinelRef} className="h-4" />}
             </>
           )}

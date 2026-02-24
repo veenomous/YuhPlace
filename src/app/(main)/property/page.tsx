@@ -17,12 +17,14 @@ import {
   ChevronDown,
   Plus,
   BadgeCheck,
+  MessageSquare,
 } from 'lucide-react';
 import { cn, formatPrice, timeAgo } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useRegion } from '@/context/RegionContext';
 import { PropertyFeedSkeleton } from '@/components/Skeletons';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import SellerRating from '@/components/SellerRating';
 import type { PropertyListingWithDetails, PropertyType, ListingMode } from '@/types/database';
 
 // ---------- Helpers ----------
@@ -78,7 +80,7 @@ const PRICE_RANGES_SALE = [
 // ---------- Component ----------
 
 export default function PropertyBrowsePage() {
-  const { propertyListings, loading } = useData();
+  const { propertyListings, loading, commentCounts } = useData();
   const { selectedRegion } = useRegion();
 
   const [mode, setMode] = useState<ListingMode>('rent');
@@ -282,7 +284,7 @@ export default function PropertyBrowsePage() {
       ) : (
       <div className="space-y-4">
         {visibleItems.map((property) => (
-          <PropertyCard key={property.id} property={property} />
+          <PropertyCard key={property.id} property={property} commentCount={commentCounts.get(property.id) ?? 0} />
         ))}
         {hasMore && <div ref={sentinelRef} className="h-4" />}
 
@@ -309,7 +311,7 @@ export default function PropertyBrowsePage() {
 
 // ---------- Property Card ----------
 
-function PropertyCard({ property }: { property: PropertyListingWithDetails }) {
+function PropertyCard({ property, commentCount }: { property: PropertyListingWithDetails; commentCount: number }) {
   const Icon = PROPERTY_TYPE_ICONS[property.property_type];
   const gradient = PLACEHOLDER_GRADIENTS[property.property_type];
   const isRent = property.listing_mode === 'rent';
@@ -408,6 +410,11 @@ function PropertyCard({ property }: { property: PropertyListingWithDetails }) {
           </span>
         </div>
 
+        {/* Seller rating */}
+        <div className="mt-1">
+          <SellerRating sellerId={property.user_id} size="small" />
+        </div>
+
         {/* Footer */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
           <div className="flex items-center gap-2">
@@ -423,7 +430,15 @@ function PropertyCard({ property }: { property: PropertyListingWithDetails }) {
               <BadgeCheck size={14} className="text-amber-500 flex-shrink-0" />
             )}
           </div>
-          <span className="text-xs text-muted">{timeAgo(property.created_at)}</span>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {commentCount > 0 && (
+              <span className="flex items-center gap-1 text-[11px] text-muted">
+                <MessageSquare size={12} />
+                {commentCount}
+              </span>
+            )}
+            <span className="text-xs text-muted">{timeAgo(property.created_at)}</span>
+          </div>
         </div>
       </div>
     </Link>
