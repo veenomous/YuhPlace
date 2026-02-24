@@ -8,6 +8,7 @@ import {
   Filter,
   ChevronDown,
   Loader2,
+  RotateCcw,
 } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -129,6 +130,14 @@ export default function AdminReportsPage() {
     const { error } = await supabase.rpc('admin_action_report', { p_report_id: reportId });
     if (!error) {
       setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, status: 'action_taken' as ReportStatus, reviewed_at: new Date().toISOString() } : r));
+    }
+  }
+
+  async function handleReopen(reportId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.rpc('admin_reopen_report', { p_report_id: reportId });
+    if (!error) {
+      setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, status: 'open' as ReportStatus, reviewed_at: null } : r));
     }
   }
 
@@ -370,6 +379,17 @@ export default function AdminReportsPage() {
                                 <Gavel size={16} />
                               </button>
                             </>
+                          )}
+
+                          {/* Reopen for dismissed/actioned reports */}
+                          {(report.status === 'dismissed' || report.status === 'action_taken') && (
+                            <button
+                              onClick={() => handleReopen(report.id)}
+                              className="p-1.5 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors"
+                              title="Reopen report &amp; restore content"
+                            >
+                              <RotateCcw size={16} />
+                            </button>
                           )}
                         </div>
 

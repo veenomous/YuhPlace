@@ -13,6 +13,7 @@ import {
   XCircle,
   Gavel,
   Loader2,
+  RotateCcw,
 } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -120,6 +121,15 @@ export default function AdminDashboardPage() {
     if (!error) {
       setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, status: 'action_taken' as ReportStatus } : r));
       setStats((prev) => prev ? { ...prev, open_reports: Math.max(0, prev.open_reports - 1) } : prev);
+    }
+  }
+
+  async function handleReopen(reportId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.rpc('admin_reopen_report', { p_report_id: reportId });
+    if (!error) {
+      setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, status: 'open' as ReportStatus } : r));
+      setStats((prev) => prev ? { ...prev, open_reports: prev.open_reports + 1 } : prev);
     }
   }
 
@@ -283,6 +293,15 @@ export default function AdminDashboardPage() {
                                 <Gavel size={16} />
                               </button>
                             </>
+                          )}
+                          {(report.status === 'dismissed' || report.status === 'action_taken') && (
+                            <button
+                              onClick={() => handleReopen(report.id)}
+                              className="p-1.5 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors"
+                              title="Reopen report &amp; restore content"
+                            >
+                              <RotateCcw size={16} />
+                            </button>
                           )}
                           <Link
                             href={getTargetUrl(report.target_type, report.target_id)}

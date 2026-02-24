@@ -148,6 +148,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- RPC: Admin reopen report (undo dismiss/action, restore content)
+CREATE OR REPLACE FUNCTION admin_reopen_report(p_report_id UUID)
+RETURNS VOID AS $$
+DECLARE
+  r reports%ROWTYPE;
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true) THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  SELECT * INTO r FROM reports WHERE id = p_report_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Report not found'; END IF;
+
+  -- Restore content if it was removed
+  IF r.status = 'action_taken' THEN
+    IF r.target_type = 'discover_post' THEN
+      UPDATE discover_posts SET status = 'active' WHERE id = r.target_id;
+    ELSIF r.target_type = 'market_listing' THEN
+      UPDATE market_listings SET status = 'active' WHERE id = r.target_id;
+    ELSIF r.target_type = 'property_listing' THEN
+      UPDATE property_listings SET status = 'active' WHERE id = r.target_id;
+    END IF;
+  END IF;
+
+  UPDATE reports
+  SET status = 'open', reviewed_by_admin_id = NULL, reviewed_at = NULL
+  WHERE id = p_report_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Auto-update updated_at for comments
 CREATE TRIGGER update_comments_updated_at
   BEFORE UPDATE ON comments
