@@ -27,6 +27,7 @@ import {
 import { formatPrice, timeAgo, memberSince, formatWhatsAppLink, cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
+import ReportModal from '@/components/ReportModal';
 
 const GRADIENTS = [
   'from-emerald-400 to-teal-500',
@@ -342,31 +343,11 @@ export default function ListingDetailPage() {
 
       {/* Report Modal */}
       {reportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
-          <div className="w-full max-w-lg bg-white rounded-t-2xl p-5 pb-8 animate-slide-up">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-foreground">Report Listing</h3>
-              <button
-                onClick={() => setReportModalOpen(false)}
-                className="p-1 text-muted hover:text-foreground transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <p className="text-sm text-muted mb-4">Why are you reporting this listing?</p>
-            <div className="space-y-2">
-              {['Spam', 'Scam / Fraud', 'Inappropriate content', 'Wrong category', 'Duplicate listing', 'Misleading information'].map((reason) => (
-                <button
-                  key={reason}
-                  onClick={() => setReportModalOpen(false)}
-                  className="w-full text-left px-4 py-3 text-sm text-foreground border border-border rounded-xl hover:bg-surface hover:border-primary/30 transition-all"
-                >
-                  {reason}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <ReportModal
+          targetType="market_listing"
+          targetId={listing.id}
+          onClose={() => setReportModalOpen(false)}
+        />
       )}
 
       {/* Sticky Bottom Bar */}

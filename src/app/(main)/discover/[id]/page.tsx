@@ -23,6 +23,7 @@ import { cn, timeAgo, memberSince, formatWhatsAppLink } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import type { PostType } from '@/types/database';
+import ReportModal from '@/components/ReportModal';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -92,6 +93,7 @@ export default function PostDetailPage({
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [showReport, setShowReport] = useState(false);
 
   const post = getDiscoverPost(id);
 
@@ -223,7 +225,10 @@ export default function PostDetailPage({
               Share on WhatsApp
             </a>
             {!isOwner && (
-              <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-surface text-muted rounded-lg text-sm font-medium border border-border hover:text-danger hover:border-danger transition-colors">
+              <button
+                onClick={() => setShowReport(true)}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-surface text-muted rounded-lg text-sm font-medium border border-border hover:text-danger hover:border-danger transition-colors"
+              >
                 <Flag size={16} />
                 Report
               </button>
@@ -308,6 +313,14 @@ export default function PostDetailPage({
             </div>
           </div>
         </div>
+      )}
+
+      {showReport && (
+        <ReportModal
+          targetType="discover_post"
+          targetId={post.id}
+          onClose={() => setShowReport(false)}
+        />
       )}
     </div>
   );

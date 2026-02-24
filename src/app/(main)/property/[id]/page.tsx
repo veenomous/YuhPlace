@@ -31,6 +31,7 @@ import { cn, formatPrice, timeAgo, memberSince, formatWhatsAppLink } from '@/lib
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import type { PropertyType } from '@/types/database';
+import ReportModal from '@/components/ReportModal';
 
 // ---------- Helpers ----------
 
@@ -428,31 +429,11 @@ export default function PropertyDetailPage() {
 
       {/* Report Modal */}
       {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowReportModal(false)} />
-          <div className="relative bg-white rounded-t-2xl w-full max-w-lg p-6 pb-8 animate-slide-up">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-foreground">Report Listing</h3>
-              <button onClick={() => setShowReportModal(false)} className="p-1 text-muted hover:text-foreground">
-                <span className="sr-only">Close</span>&times;
-              </button>
-            </div>
-            <p className="text-sm text-muted mb-4">Why are you reporting this listing?</p>
-            <div className="space-y-2">
-              {['Spam', 'Scam / Fraud', 'Inappropriate content', 'Wrong category', 'Duplicate listing', 'Misleading information'].map(
-                (reason) => (
-                  <button
-                    key={reason}
-                    onClick={() => setShowReportModal(false)}
-                    className="w-full text-left px-4 py-3 text-sm text-foreground bg-surface hover:bg-primary-light rounded-xl transition-colors"
-                  >
-                    {reason}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-        </div>
+        <ReportModal
+          targetType="property_listing"
+          targetId={property.id}
+          onClose={() => setShowReportModal(false)}
+        />
       )}
 
       {/* Sticky Bottom Bar */}
