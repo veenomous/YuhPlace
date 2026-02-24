@@ -75,6 +75,7 @@ export default function PropertyDetailPage() {
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const property = getPropertyListing(params.id as string);
 
@@ -108,9 +109,12 @@ export default function PropertyDetailPage() {
 
   const handleDelete = async () => {
     setDeleting(true);
+    setDeleteError('');
     const { error } = await deletePropertyListing(property.id);
     setDeleting(false);
-    if (!error) {
+    if (error) {
+      setDeleteError(error);
+    } else {
       router.push('/property');
     }
   };
@@ -399,6 +403,9 @@ export default function PropertyDetailPage() {
             <p className="text-sm text-muted mb-4">
               This will permanently remove your property listing. This action cannot be undone.
             </p>
+            {deleteError && (
+              <p className="text-sm text-danger mb-3 bg-danger-light p-2 rounded-lg">{deleteError}</p>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}

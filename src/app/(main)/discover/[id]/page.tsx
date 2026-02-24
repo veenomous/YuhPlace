@@ -91,6 +91,7 @@ export default function PostDetailPage({
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const post = getDiscoverPost(id);
 
@@ -124,9 +125,12 @@ export default function PostDetailPage({
 
   const handleDelete = async () => {
     setDeleting(true);
+    setDeleteError('');
     const { error } = await deleteDiscoverPost(post.id);
     setDeleting(false);
-    if (!error) {
+    if (error) {
+      setDeleteError(error);
+    } else {
       router.push('/discover');
     }
   };
@@ -283,6 +287,9 @@ export default function PostDetailPage({
             <p className="text-sm text-muted mb-4">
               This will permanently remove your post from Discover. This action cannot be undone.
             </p>
+            {deleteError && (
+              <p className="text-sm text-danger mb-3 bg-danger-light p-2 rounded-lg">{deleteError}</p>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}

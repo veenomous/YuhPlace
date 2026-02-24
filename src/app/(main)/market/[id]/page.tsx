@@ -50,6 +50,7 @@ export default function ListingDetailPage() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const listing = getMarketListing(params.id as string);
   const listingIndex = marketListings.findIndex((l) => l.id === params.id);
@@ -90,9 +91,12 @@ export default function ListingDetailPage() {
 
   const handleDelete = async () => {
     setDeleting(true);
+    setDeleteError('');
     const { error } = await deleteMarketListing(listing.id);
     setDeleting(false);
-    if (!error) {
+    if (error) {
+      setDeleteError(error);
+    } else {
       router.push('/market');
     }
   };
@@ -313,6 +317,9 @@ export default function ListingDetailPage() {
             <p className="text-sm text-muted mb-4">
               This will permanently remove your listing. This action cannot be undone.
             </p>
+            {deleteError && (
+              <p className="text-sm text-danger mb-3 bg-danger-light p-2 rounded-lg">{deleteError}</p>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}

@@ -727,24 +727,54 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteDiscoverPost = useCallback(async (id: string): Promise<{ error: string | null }> => {
     const supabase = createClient();
-    const { error } = await supabase.from('discover_posts').update({ status: 'removed' }).eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'You must be signed in to delete a post.' };
+
+    const { data, error } = await supabase
+      .from('discover_posts')
+      .update({ status: 'removed' as const })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select('id');
+
     if (error) return { error: error.message };
+    if (!data || data.length === 0) return { error: 'Could not delete this post. It may have already been removed.' };
     setDiscoverPosts((prev) => prev.filter((p) => p.id !== id));
     return { error: null };
   }, []);
 
   const deleteMarketListing = useCallback(async (id: string): Promise<{ error: string | null }> => {
     const supabase = createClient();
-    const { error } = await supabase.from('market_listings').update({ status: 'removed' }).eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'You must be signed in to delete a listing.' };
+
+    const { data, error } = await supabase
+      .from('market_listings')
+      .update({ status: 'removed' as const })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select('id');
+
     if (error) return { error: error.message };
+    if (!data || data.length === 0) return { error: 'Could not delete this listing. It may have already been removed.' };
     setMarketListings((prev) => prev.filter((l) => l.id !== id));
     return { error: null };
   }, []);
 
   const deletePropertyListing = useCallback(async (id: string): Promise<{ error: string | null }> => {
     const supabase = createClient();
-    const { error } = await supabase.from('property_listings').update({ status: 'removed' }).eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'You must be signed in to delete a listing.' };
+
+    const { data, error } = await supabase
+      .from('property_listings')
+      .update({ status: 'removed' as const })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select('id');
+
     if (error) return { error: error.message };
+    if (!data || data.length === 0) return { error: 'Could not delete this listing. It may have already been removed.' };
     setPropertyListings((prev) => prev.filter((p) => p.id !== id));
     return { error: null };
   }, []);
