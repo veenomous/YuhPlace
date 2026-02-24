@@ -28,6 +28,7 @@ import { formatPrice, timeAgo, memberSince, formatWhatsAppLink, cn } from '@/lib
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import ReportModal from '@/components/ReportModal';
+import CommentSection from '@/components/CommentSection';
 
 const GRADIENTS = [
   'from-emerald-400 to-teal-500',
@@ -308,6 +309,9 @@ export default function ListingDetailPage() {
             Report this listing
           </button>
         )}
+
+        {/* Comments */}
+        <CommentSection targetType="market_listing" targetId={listing.id} />
       </div>
 
       {/* Delete Confirmation Modal */}

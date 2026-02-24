@@ -143,6 +143,21 @@ export interface AdminAction {
   created_at: string;
 }
 
+export interface Comment {
+  id: string;
+  user_id: string;
+  target_type: ReportTargetType;
+  target_id: string;
+  content: string;
+  status: ContentStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommentWithProfile extends Comment {
+  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business'>;
+}
+
 // Joined types for frontend display
 export interface DiscoverPostWithDetails extends DiscoverPost {
   profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'created_at'>;

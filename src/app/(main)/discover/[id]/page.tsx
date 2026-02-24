@@ -24,6 +24,7 @@ import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import type { PostType } from '@/types/database';
 import ReportModal from '@/components/ReportModal';
+import CommentSection from '@/components/CommentSection';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -281,6 +282,10 @@ export default function PostDetailPage({
               </div>
             </div>
           </div>
+        </div>
+        {/* Comments */}
+        <div className="p-4">
+          <CommentSection targetType="discover_post" targetId={post.id} />
         </div>
       </article>
 

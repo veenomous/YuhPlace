@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Users,
@@ -8,93 +8,43 @@ import {
   Flag,
   Compass,
   Home,
-  Star,
   ArrowRight,
   Eye,
   XCircle,
   Gavel,
+  Loader2,
 } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
-import type { Report, ReportStatus, ReportTargetType, ReportReason } from '@/types/database';
+import { createClient } from '@/lib/supabase/client';
+import type { ReportStatus, ReportTargetType, ReportReason } from '@/types/database';
 
 // ---------------------------------------------------------------------------
-// Mock Data
+// Types
 // ---------------------------------------------------------------------------
 
-const STATS = [
-  { label: 'Total Users', value: 247, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { label: 'Active Listings', value: 312, icon: ShoppingBag, color: 'text-primary-dark', bg: 'bg-primary-light' },
-  { label: 'Open Reports', value: 8, icon: Flag, color: 'text-danger', bg: 'bg-danger-light' },
-  { label: 'Discover Posts', value: 156, icon: Compass, color: 'text-purple-600', bg: 'bg-purple-50' },
-  { label: 'Property Listings', value: 64, icon: Home, color: 'text-teal-600', bg: 'bg-teal-50' },
-  { label: 'Featured Listings', value: 12, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
-];
+interface AdminStats {
+  total_users: number;
+  total_market: number;
+  total_property: number;
+  total_discover: number;
+  open_reports: number;
+  total_reports: number;
+}
 
-const RECENT_REPORTS: Report[] = [
-  {
-    id: 'rpt-001',
-    reporter_user_id: 'u12',
-    target_type: 'market_listing',
-    target_id: 'ml-042',
-    reason: 'scam_fraud',
-    notes: 'Seller asking for advance payment via wire transfer, suspicious pricing.',
-    status: 'open',
-    reviewed_by_admin_id: null,
-    reviewed_at: null,
-    created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-  },
-  {
-    id: 'rpt-002',
-    reporter_user_id: 'u08',
-    target_type: 'discover_post',
-    target_id: 'dp-118',
-    reason: 'spam',
-    notes: 'Same post copied 5 times with affiliate links.',
-    status: 'open',
-    reviewed_by_admin_id: null,
-    reviewed_at: null,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: 'rpt-003',
-    reporter_user_id: 'u19',
-    target_type: 'property_listing',
-    target_id: 'pl-029',
-    reason: 'misleading',
-    notes: 'Photos are from a different property. I visited and it looks nothing like the listing.',
-    status: 'reviewed',
-    reviewed_by_admin_id: 'admin-01',
-    reviewed_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-  },
-  {
-    id: 'rpt-004',
-    reporter_user_id: 'u31',
-    target_type: 'user',
-    target_id: 'u55',
-    reason: 'inappropriate',
-    notes: 'User sending harassing messages to multiple sellers.',
-    status: 'action_taken',
-    reviewed_by_admin_id: 'admin-01',
-    reviewed_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-  {
-    id: 'rpt-005',
-    reporter_user_id: 'u07',
-    target_type: 'market_listing',
-    target_id: 'ml-088',
-    reason: 'wrong_category',
-    notes: 'Vehicle listed under Buy & Sell instead of Vehicles category.',
-    status: 'dismissed',
-    reviewed_by_admin_id: 'admin-01',
-    reviewed_at: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
-  },
-];
+interface AdminReport {
+  id: string;
+  target_type: ReportTargetType;
+  target_id: string;
+  reason: ReportReason;
+  notes: string | null;
+  status: ReportStatus;
+  created_at: string;
+  reviewed_at: string | null;
+  reporter_name: string;
+}
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Config
 // ---------------------------------------------------------------------------
 
 const STATUS_CONFIG: Record<ReportStatus, { label: string; className: string }> = {
@@ -125,27 +75,57 @@ const REASON_LABELS: Record<ReportReason, string> = {
 // ---------------------------------------------------------------------------
 
 export default function AdminDashboardPage() {
-  const [reports, setReports] = useState<Report[]>(RECENT_REPORTS);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [reports, setReports] = useState<AdminReport[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  function handleDismiss(reportId: string) {
-    setReports((prev) =>
-      prev.map((r) =>
-        r.id === reportId
-          ? { ...r, status: 'dismissed' as ReportStatus, reviewed_by_admin_id: 'admin-01', reviewed_at: new Date().toISOString() }
-          : r,
-      ),
+  const fetchData = useCallback(async () => {
+    const supabase = createClient();
+    const [statsRes, reportsRes] = await Promise.all([
+      supabase.rpc('get_admin_stats'),
+      supabase.rpc('get_admin_reports'),
+    ]);
+    if (statsRes.data) setStats(statsRes.data as AdminStats);
+    if (reportsRes.data) setReports((reportsRes.data as AdminReport[]).slice(0, 5));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  async function handleDismiss(reportId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.rpc('admin_dismiss_report', { p_report_id: reportId });
+    if (!error) {
+      setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, status: 'dismissed' as ReportStatus } : r));
+      setStats((prev) => prev ? { ...prev, open_reports: Math.max(0, prev.open_reports - 1) } : prev);
+    }
+  }
+
+  async function handleTakeAction(reportId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.rpc('admin_action_report', { p_report_id: reportId });
+    if (!error) {
+      setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, status: 'action_taken' as ReportStatus } : r));
+      setStats((prev) => prev ? { ...prev, open_reports: Math.max(0, prev.open_reports - 1) } : prev);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 size={24} className="animate-spin text-muted" />
+      </div>
     );
   }
 
-  function handleTakeAction(reportId: string) {
-    setReports((prev) =>
-      prev.map((r) =>
-        r.id === reportId
-          ? { ...r, status: 'action_taken' as ReportStatus, reviewed_by_admin_id: 'admin-01', reviewed_at: new Date().toISOString() }
-          : r,
-      ),
-    );
-  }
+  const statCards = [
+    { label: 'Total Users', value: stats?.total_users ?? 0, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Market Listings', value: stats?.total_market ?? 0, icon: ShoppingBag, color: 'text-primary-dark', bg: 'bg-primary-light' },
+    { label: 'Open Reports', value: stats?.open_reports ?? 0, icon: Flag, color: 'text-danger', bg: 'bg-danger-light' },
+    { label: 'Discover Posts', value: stats?.total_discover ?? 0, icon: Compass, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Property Listings', value: stats?.total_property ?? 0, icon: Home, color: 'text-teal-600', bg: 'bg-teal-50' },
+    { label: 'Total Reports', value: stats?.total_reports ?? 0, icon: Flag, color: 'text-amber-600', bg: 'bg-amber-50' },
+  ];
 
   return (
     <div>
@@ -159,7 +139,7 @@ export default function AdminDashboardPage() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {STATS.map((stat) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
@@ -200,99 +180,113 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-surface/50">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
-                  Date
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
-                  Target
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
-                  Reason
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
-                  Status
-                </th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.map((report) => {
-                const statusCfg = STATUS_CONFIG[report.status];
-                const targetCfg = TARGET_TYPE_CONFIG[report.target_type];
+        {reports.length === 0 ? (
+          <div className="px-5 py-12 text-center text-muted text-sm">
+            No reports yet.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-surface/50">
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Date
+                  </th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Reporter
+                  </th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Target
+                  </th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Reason
+                  </th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Status
+                  </th>
+                  <th className="text-right px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.map((report) => {
+                  const statusCfg = STATUS_CONFIG[report.status];
+                  const targetCfg = TARGET_TYPE_CONFIG[report.target_type];
 
-                return (
-                  <tr
-                    key={report.id}
-                    className="border-b border-border last:border-b-0 hover:bg-surface/30 transition-colors"
-                  >
-                    <td className="px-5 py-3 text-muted whitespace-nowrap">
-                      {timeAgo(report.created_at)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <span
-                        className={cn(
-                          'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
-                          targetCfg.className,
-                        )}
-                      >
-                        {targetCfg.label}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-foreground">
-                      {REASON_LABELS[report.reason]}
-                    </td>
-                    <td className="px-5 py-3">
-                      <span
-                        className={cn(
-                          'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
-                          statusCfg.className,
-                        )}
-                      >
-                        {statusCfg.label}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        {report.status === 'open' && (
-                          <>
-                            <button
-                              onClick={() => handleDismiss(report.id)}
-                              className="p-1.5 text-muted hover:text-foreground hover:bg-surface rounded-lg transition-colors"
-                              title="Dismiss"
-                            >
-                              <XCircle size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleTakeAction(report.id)}
-                              className="p-1.5 text-danger hover:text-white hover:bg-danger rounded-lg transition-colors"
-                              title="Take Action"
-                            >
-                              <Gavel size={16} />
-                            </button>
-                          </>
-                        )}
-                        <Link
-                          href="/admin/reports"
-                          className="p-1.5 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors"
-                          title="View Details"
+                  return (
+                    <tr
+                      key={report.id}
+                      className={cn(
+                        'border-b border-border last:border-b-0 transition-colors',
+                        report.status === 'open' ? 'bg-yellow-50/30' : 'hover:bg-surface/30',
+                      )}
+                    >
+                      <td className="px-5 py-3 text-muted whitespace-nowrap">
+                        {timeAgo(report.created_at)}
+                      </td>
+                      <td className="px-5 py-3 text-foreground">
+                        {report.reporter_name}
+                      </td>
+                      <td className="px-5 py-3">
+                        <span
+                          className={cn(
+                            'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
+                            targetCfg.className,
+                          )}
                         >
-                          <Eye size={16} />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                          {targetCfg.label}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-foreground">
+                        {REASON_LABELS[report.reason]}
+                      </td>
+                      <td className="px-5 py-3">
+                        <span
+                          className={cn(
+                            'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
+                            statusCfg.className,
+                          )}
+                        >
+                          {statusCfg.label}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          {report.status === 'open' && (
+                            <>
+                              <button
+                                onClick={() => handleDismiss(report.id)}
+                                className="p-1.5 text-muted hover:text-foreground hover:bg-surface rounded-lg transition-colors"
+                                title="Dismiss"
+                              >
+                                <XCircle size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleTakeAction(report.id)}
+                                className="p-1.5 text-danger hover:text-white hover:bg-danger rounded-lg transition-colors"
+                                title="Take Action (remove content)"
+                              >
+                                <Gavel size={16} />
+                              </button>
+                            </>
+                          )}
+                          <Link
+                            href="/admin/reports"
+                            className="p-1.5 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors"
+                            title="View Details"
+                          >
+                            <Eye size={16} />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}
@@ -308,7 +302,7 @@ export default function AdminDashboardPage() {
             <Flag size={18} className="text-danger" />
             <div>
               <p className="text-sm font-medium text-foreground">Review Reports</p>
-              <p className="text-xs text-muted">8 open</p>
+              <p className="text-xs text-muted">{stats?.open_reports ?? 0} open</p>
             </div>
           </Link>
           <Link
@@ -318,7 +312,7 @@ export default function AdminDashboardPage() {
             <Compass size={18} className="text-purple-600" />
             <div>
               <p className="text-sm font-medium text-foreground">Manage Posts</p>
-              <p className="text-xs text-muted">156 posts</p>
+              <p className="text-xs text-muted">{stats?.total_discover ?? 0} posts</p>
             </div>
           </Link>
           <Link
@@ -328,7 +322,7 @@ export default function AdminDashboardPage() {
             <ShoppingBag size={18} className="text-primary" />
             <div>
               <p className="text-sm font-medium text-foreground">Market Listings</p>
-              <p className="text-xs text-muted">312 active</p>
+              <p className="text-xs text-muted">{stats?.total_market ?? 0} active</p>
             </div>
           </Link>
           <Link
@@ -338,7 +332,7 @@ export default function AdminDashboardPage() {
             <Users size={18} className="text-blue-600" />
             <div>
               <p className="text-sm font-medium text-foreground">Manage Users</p>
-              <p className="text-xs text-muted">247 users</p>
+              <p className="text-xs text-muted">{stats?.total_users ?? 0} users</p>
             </div>
           </Link>
         </div>

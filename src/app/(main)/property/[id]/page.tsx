@@ -32,6 +32,7 @@ import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import type { PropertyType } from '@/types/database';
 import ReportModal from '@/components/ReportModal';
+import CommentSection from '@/components/CommentSection';
 
 // ---------- Helpers ----------
 
@@ -394,6 +395,9 @@ export default function PropertyDetailPage() {
             Report this listing
           </button>
         )}
+
+        {/* Comments */}
+        <CommentSection targetType="property_listing" targetId={property.id} />
       </div>
 
       {/* Delete Confirmation Modal */}

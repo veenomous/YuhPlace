@@ -11,8 +11,11 @@ import {
   Users,
   Star,
   Settings,
+  Loader2,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 // ---------------------------------------------------------------------------
 // Sidebar Navigation Config
@@ -39,6 +42,37 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user, profile, loading } = useAuth();
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <Loader2 size={28} className="animate-spin text-muted" />
+      </div>
+    );
+  }
+
+  // Not logged in or not admin
+  if (!user || !profile || !profile.is_admin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface px-4">
+        <div className="text-center max-w-sm">
+          <ShieldAlert size={48} className="mx-auto text-danger mb-4" />
+          <h1 className="text-xl font-bold text-foreground mb-2">Access Denied</h1>
+          <p className="text-sm text-muted mb-6">
+            You don&apos;t have permission to access the admin panel.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition-colors"
+          >
+            Back to YuhPlace
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-surface">
@@ -91,7 +125,7 @@ export default function AdminLayout({
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border">
           <p className="text-xs text-muted">
-            Logged in as <span className="font-medium text-foreground">Admin</span>
+            Logged in as <span className="font-medium text-foreground">{profile.name}</span>
           </p>
           <Link
             href="/"
