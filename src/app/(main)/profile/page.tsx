@@ -45,7 +45,7 @@ const ACCOUNT_TYPE_CONFIG: Record<
 };
 
 const SETTINGS_ITEMS = [
-  { label: 'Edit Profile', icon: UserPen, href: '#', comingSoon: false },
+  { label: 'Edit Profile', icon: UserPen, href: '/profile/edit', comingSoon: false },
   { label: 'Notification Preferences', icon: Bell, href: '#', comingSoon: true },
   { label: 'Safety Tips', icon: ShieldCheck, href: '#', comingSoon: false },
   { label: 'Help & Support', icon: HelpCircle, href: '#', comingSoon: false },
