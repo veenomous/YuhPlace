@@ -14,6 +14,8 @@ import {
 import { cn, timeAgo } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useRegion } from '@/context/RegionContext';
+import { DiscoverFeedSkeleton } from '@/components/Skeletons';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { DiscoverPostWithDetails, PostType } from '@/types/database';
 
 // ---------------------------------------------------------------------------
@@ -150,7 +152,7 @@ function PostCard({ post }: { post: DiscoverPostWithDetails }) {
 
 export default function DiscoverPage() {
   const [activeFilter, setActiveFilter] = useState<PostType | 'all'>('all');
-  const { discoverPosts } = useData();
+  const { discoverPosts, loading } = useData();
   const { selectedRegion } = useRegion();
 
   const filteredPosts = discoverPosts.filter((p) => {
@@ -158,6 +160,8 @@ export default function DiscoverPage() {
     const matchesRegion = selectedRegion === 'all' || p.regions.slug === selectedRegion;
     return matchesType && matchesRegion;
   });
+
+  const { visibleItems, hasMore, sentinelRef } = useInfiniteScroll(filteredPosts);
 
   return (
     <div className="px-4 py-4">
@@ -191,15 +195,22 @@ export default function DiscoverPage() {
       </div>
 
       {/* Posts feed */}
-      <div className="flex flex-col gap-3">
-        {filteredPosts.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-sm text-muted">No posts in this category yet.</p>
-          </div>
-        ) : (
-          filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
-        )}
-      </div>
+      {loading ? (
+        <DiscoverFeedSkeleton />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filteredPosts.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-sm text-muted">No posts in this category yet.</p>
+            </div>
+          ) : (
+            <>
+              {visibleItems.map((post) => <PostCard key={post.id} post={post} />)}
+              {hasMore && <div ref={sentinelRef} className="h-4" />}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

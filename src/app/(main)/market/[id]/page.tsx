@@ -30,6 +30,8 @@ import { useAuth } from '@/context/AuthContext';
 import ReportModal from '@/components/ReportModal';
 import CommentSection from '@/components/CommentSection';
 import FavoriteButton from '@/components/FavoriteButton';
+import ReviewSection from '@/components/ReviewSection';
+import SellerRating from '@/components/SellerRating';
 
 const GRADIENTS = [
   'from-emerald-400 to-teal-500',
@@ -276,6 +278,7 @@ export default function ListingDetailPage() {
               <p className="text-xs text-muted mt-0.5">
                 Member since {memberSince(listing.profiles.created_at)}
               </p>
+              <SellerRating sellerId={listing.user_id} size="small" />
             </div>
           </div>
         </div>
@@ -310,6 +313,9 @@ export default function ListingDetailPage() {
             Report this listing
           </button>
         )}
+
+        {/* Reviews */}
+        <ReviewSection sellerId={listing.user_id} targetType="market_listing" targetId={listing.id} />
 
         {/* Comments */}
         <CommentSection targetType="market_listing" targetId={listing.id} />

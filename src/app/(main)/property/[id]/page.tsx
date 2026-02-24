@@ -34,6 +34,8 @@ import type { PropertyType } from '@/types/database';
 import ReportModal from '@/components/ReportModal';
 import CommentSection from '@/components/CommentSection';
 import FavoriteButton from '@/components/FavoriteButton';
+import ReviewSection from '@/components/ReviewSection';
+import SellerRating from '@/components/SellerRating';
 
 // ---------- Helpers ----------
 
@@ -362,6 +364,7 @@ export default function PropertyDetailPage() {
                 <CalendarDays size={12} />
                 Member since {memberSince(property.profiles.created_at)}
               </div>
+              <SellerRating sellerId={property.user_id} size="small" />
             </div>
           </div>
         </div>
@@ -396,6 +399,9 @@ export default function PropertyDetailPage() {
             Report this listing
           </button>
         )}
+
+        {/* Reviews */}
+        <ReviewSection sellerId={property.user_id} targetType="property_listing" targetId={property.id} />
 
         {/* Comments */}
         <CommentSection targetType="property_listing" targetId={property.id} />

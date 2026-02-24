@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, MapPin, X, LogOut, ChevronDown } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Search, MapPin, X, LogOut, ChevronDown, Bell } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRegion } from '@/context/RegionContext';
 import { useSearch } from '@/context/SearchContext';
 import { useAuth } from '@/context/AuthContext';
 import { REGIONS_WITH_ALL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 export default function TopNav() {
   const { selectedRegion, setSelectedRegion, regionName } = useRegion();
@@ -18,7 +19,22 @@ export default function TopNav() {
   const [regionOpen, setRegionOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) return;
+    const supabase = createClient();
+    const { data } = await supabase.rpc('get_unread_notification_count');
+    if (typeof data === 'number') setUnreadCount(data);
+  }, [user]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    // Poll every 30 seconds for new notifications
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
 
   useEffect(() => {
     if (searchOpen && inputRef.current) {
@@ -90,6 +106,21 @@ export default function TopNav() {
           >
             {searchOpen ? <X size={18} /> : <Search size={18} />}
           </button>
+
+          {/* Notifications bell */}
+          {user && (
+            <Link
+              href="/notifications"
+              className="relative p-1.5 text-muted hover:text-foreground hover:bg-surface transition-colors rounded-lg"
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[16px] h-4 px-1 bg-danger text-white text-[10px] font-bold rounded-full">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* Auth indicator */}
           {!loading && (

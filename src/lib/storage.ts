@@ -1,9 +1,62 @@
 import { createClient } from '@/lib/supabase/client';
 
 const BUCKET = 'listing-images';
+const MAX_WIDTH = 1200;
+const MAX_HEIGHT = 1200;
+const QUALITY = 0.8;
+const MAX_FILE_SIZE = 500 * 1024; // 500 KB — compress if larger
+
+/**
+ * Compress an image file using Canvas API.
+ * Resizes to fit within MAX_WIDTH x MAX_HEIGHT and outputs as JPEG.
+ */
+async function compressImage(file: File): Promise<File> {
+  // Skip small files and non-images
+  if (file.size <= MAX_FILE_SIZE || !file.type.startsWith('image/')) {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+
+      // Scale down proportionally
+      if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+        const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob && blob.size < file.size) {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
+              type: 'image/jpeg',
+            }));
+          } else {
+            // Compressed is bigger (rare), keep original
+            resolve(file);
+          }
+        },
+        'image/jpeg',
+        QUALITY,
+      );
+    };
+    img.onerror = () => resolve(file); // fallback to original on error
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 /**
  * Upload an array of image files to Supabase Storage and return their public URLs.
+ * Images are automatically compressed before upload.
  * Files are stored under: {folder}/{listingId}/{index}.{ext}
  */
 export async function uploadImages(
@@ -16,8 +69,11 @@ export async function uploadImages(
   const supabase = createClient();
   const urls: string[] = [];
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
+  // Compress all images in parallel
+  const compressed = await Promise.all(files.map(compressImage));
+
+  for (let i = 0; i < compressed.length; i++) {
+    const file = compressed[i];
     const ext = file.name.split('.').pop() || 'jpg';
     const path = `${folder}/${listingId}/${i}.${ext}`;
 

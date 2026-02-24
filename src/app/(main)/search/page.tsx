@@ -25,6 +25,7 @@ import {
 import { cn, formatPrice, timeAgo } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useRegion } from '@/context/RegionContext';
+import { SearchResultsSkeleton } from '@/components/Skeletons';
 import type { PostType, PropertyType } from '@/types/database';
 
 // ─── Config ─────────────────────────────────────────────────────────────────
@@ -243,8 +244,8 @@ function SearchResults() {
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <div className="px-4 py-16 text-center">
-        <p className="text-sm text-muted">Loading search...</p>
+      <div className="px-4 py-4">
+        <SearchResultsSkeleton />
       </div>
     }>
       <SearchResults />

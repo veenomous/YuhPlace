@@ -23,6 +23,7 @@ import { cn, memberSince, formatPrice, timeAgo } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import { createClient } from '@/lib/supabase/client';
+import { ProfileSkeleton } from '@/components/Skeletons';
 import type { AccountType, MarketListingWithDetails, PropertyListingWithDetails, DiscoverPostWithDetails } from '@/types/database';
 
 const ACCOUNT_TYPE_CONFIG: Record<
@@ -291,11 +292,7 @@ export default function ProfilePage() {
 
   // Loading
   if (loading) {
-    return (
-      <div className="px-4 py-16 text-center">
-        <p className="text-sm text-muted">Loading profile...</p>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const displayName = profile?.name || user?.user_metadata?.name || user?.email || 'User';

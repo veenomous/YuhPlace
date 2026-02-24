@@ -21,6 +21,8 @@ import {
 import { cn, formatPrice, timeAgo } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useRegion } from '@/context/RegionContext';
+import { PropertyFeedSkeleton } from '@/components/Skeletons';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { PropertyListingWithDetails, PropertyType, ListingMode } from '@/types/database';
 
 // ---------- Helpers ----------
@@ -76,7 +78,7 @@ const PRICE_RANGES_SALE = [
 // ---------- Component ----------
 
 export default function PropertyBrowsePage() {
-  const { propertyListings } = useData();
+  const { propertyListings, loading } = useData();
   const { selectedRegion } = useRegion();
 
   const [mode, setMode] = useState<ListingMode>('rent');
@@ -104,6 +106,8 @@ export default function PropertyBrowsePage() {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
   }, [propertyListings, selectedRegion, mode, selectedType, minBedrooms, currentPriceRange]);
+
+  const { visibleItems, hasMore, sentinelRef } = useInfiniteScroll(filtered);
 
   const activeFilterCount =
     (selectedType !== 'all' ? 1 : 0) + (minBedrooms > 0 ? 1 : 0) + (priceRangeIdx > 0 ? 1 : 0);
@@ -273,10 +277,14 @@ export default function PropertyBrowsePage() {
       )}
 
       {/* Listings */}
+      {loading ? (
+        <PropertyFeedSkeleton />
+      ) : (
       <div className="space-y-4">
-        {filtered.map((property) => (
+        {visibleItems.map((property) => (
           <PropertyCard key={property.id} property={property} />
         ))}
+        {hasMore && <div ref={sentinelRef} className="h-4" />}
 
         {filtered.length === 0 && (
           <div className="text-center py-16">
@@ -294,6 +302,7 @@ export default function PropertyBrowsePage() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

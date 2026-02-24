@@ -16,6 +16,8 @@ import {
 import { formatPrice, timeAgo, cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
 import { useRegion } from '@/context/RegionContext';
+import { MarketFeedSkeleton } from '@/components/Skeletons';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { MarketListingWithDetails } from '@/types/database';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -62,7 +64,7 @@ const GRADIENTS = [
 ];
 
 export default function MarketPage() {
-  const { marketListings } = useData();
+  const { marketListings, loading } = useData();
   const { selectedRegion: globalRegion } = useRegion();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -129,6 +131,8 @@ export default function MarketPage() {
 
     return results;
   }, [marketListings, searchQuery, selectedCategory, selectedRegion, sortBy]);
+
+  const { visibleItems, hasMore, sentinelRef } = useInfiniteScroll(filteredListings);
 
   return (
     <div className="px-4 py-4 space-y-4">
@@ -263,7 +267,9 @@ export default function MarketPage() {
       </p>
 
       {/* Listings Grid */}
-      {filteredListings.length === 0 ? (
+      {loading ? (
+        <MarketFeedSkeleton />
+      ) : filteredListings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <ShoppingBag size={48} className="text-border mb-3" />
           <p className="text-muted text-sm font-medium">No listings found</p>
@@ -273,7 +279,7 @@ export default function MarketPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {filteredListings.map((listing, index) => (
+          {visibleItems.map((listing, index) => (
             <Link
               key={listing.id}
               href={`/market/${listing.id}`}
@@ -357,7 +363,7 @@ export default function MarketPage() {
           ))}
         </div>
       )}
-
+      {hasMore && <div ref={sentinelRef} className="h-4" />}
     </div>
   );
 }
