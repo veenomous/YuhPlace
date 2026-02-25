@@ -13,6 +13,6 @@ export function useViewCount(targetTable: string, targetId: string | undefined) 
     supabase.rpc('increment_view_count', {
       target_table: targetTable,
       target_id: targetId,
-    });
+    }).then();
   }, [targetTable, targetId]);
 }
