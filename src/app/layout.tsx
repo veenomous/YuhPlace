@@ -17,6 +17,21 @@ export const metadata: Metadata = {
   title: "YuhPlace — Your place for Guyana",
   description:
     "Discover local updates, buy and sell nearby, and find rentals, homes, and services in Guyana.",
+  openGraph: {
+    title: "YuhPlace — Your place for Guyana",
+    description:
+      "Discover local updates, buy and sell nearby, and find rentals, homes, and services in Guyana.",
+    url: "https://yuhplace.vercel.app",
+    siteName: "YuhPlace",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary",
+    title: "YuhPlace — Your place for Guyana",
+    description:
+      "Discover local updates, buy and sell nearby, and find rentals, homes, and services in Guyana.",
+  },
 };
 
 export default function RootLayout({

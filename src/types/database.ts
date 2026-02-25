@@ -56,6 +56,7 @@ export interface DiscoverPost {
   title: string;
   description: string;
   status: ContentStatus;
+  view_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -81,6 +82,7 @@ export interface MarketListing {
   whatsapp_number: string;
   status: ListingStatus;
   is_featured: boolean;
+  view_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -109,6 +111,7 @@ export interface PropertyListing {
   whatsapp_number: string;
   status: PropertyStatus;
   is_featured: boolean;
+  view_count: number;
   created_at: string;
   updated_at: string;
 }
