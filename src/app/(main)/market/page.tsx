@@ -13,6 +13,7 @@ import {
   Car,
   Package,
   MessageSquare,
+  Plus,
 } from 'lucide-react';
 import { formatPrice, timeAgo, cn } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
@@ -138,6 +139,21 @@ export default function MarketPage() {
 
   return (
     <div className="px-4 py-4 space-y-4">
+      {/* Page header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-foreground">Market</h1>
+          <p className="text-xs text-muted mt-0.5">Buy, sell, and find services</p>
+        </div>
+        <Link
+          href="/market/create"
+          className="flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition-colors"
+        >
+          <Plus size={16} />
+          Sell Item
+        </Link>
+      </div>
+
       {/* Search Bar */}
       <div className="relative">
         <Search

@@ -194,7 +194,7 @@ export default function DiscoverPage() {
                 'flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-primary text-white'
-                  : 'bg-surface text-muted border border-border hover:border-primary hover:text-primary',
+                  : 'bg-surface text-muted border border-border hover:border-primary/30 hover:text-primary',
               )}
             >
               {tab.label}

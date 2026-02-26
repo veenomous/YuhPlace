@@ -124,7 +124,10 @@ export default function PropertyBrowsePage() {
     <div className="px-4 py-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-foreground">Property</h1>
+        <div>
+          <h1 className="text-lg font-bold text-foreground">Property</h1>
+          <p className="text-xs text-muted mt-0.5">Rentals, homes, land, and more</p>
+        </div>
         <Link
           href="/property/create"
           className="flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition-colors"
@@ -161,14 +164,14 @@ export default function PropertyBrowsePage() {
       </div>
 
       {/* Property Type Filter Chips */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 -mx-4 px-4">
         <button
           onClick={() => setSelectedType('all')}
           className={cn(
             'flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border',
             selectedType === 'all'
-              ? 'bg-primary text-white border-primary'
-              : 'bg-white text-muted border-border hover:border-primary hover:text-primary'
+              ? 'bg-primary text-white border-primary shadow-sm'
+              : 'bg-surface text-muted border-border hover:border-primary/30 hover:text-primary'
           )}
         >
           All
@@ -182,8 +185,8 @@ export default function PropertyBrowsePage() {
               className={cn(
                 'flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border',
                 selectedType === type
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white text-muted border-border hover:border-primary hover:text-primary'
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-surface text-muted border-border hover:border-primary/30 hover:text-primary'
               )}
             >
               <Icon size={14} />
@@ -227,7 +230,7 @@ export default function PropertyBrowsePage() {
 
       {/* Expandable Filters */}
       {showFilters && (
-        <div className="bg-white border border-border rounded-2xl p-4 mb-4 space-y-4">
+        <div className="bg-white border border-border/50 rounded-2xl p-4 mb-4 space-y-4 shadow-card">
           {/* Price Range */}
           <div>
             <label className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">

@@ -59,7 +59,7 @@ export default function TopNav() {
     .toUpperCase();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-border">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-soft">
       <div className="mx-auto max-w-lg flex items-center justify-between h-14 px-4">
         {/* Logo */}
         <Link href="/" className="flex-shrink-0">
@@ -178,7 +178,7 @@ export default function TopNav() {
 
       {/* Search bar (expandable) */}
       {searchOpen && (
-        <form onSubmit={handleSearch} className="border-t border-border px-4 py-2 bg-white">
+        <form onSubmit={handleSearch} className="border-t border-border/30 px-4 py-2 bg-white">
           <div className="mx-auto max-w-lg">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />

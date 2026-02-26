@@ -29,7 +29,7 @@ export default function BottomNav() {
   const actionButton = getActionButton(pathname);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-soft-up">
       <div className="mx-auto max-w-lg flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isAction = item.href === '__action__';
@@ -50,7 +50,7 @@ export default function BottomNav() {
               )}
             >
               {isAction ? (
-                <span className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white shadow-lg">
+                <span className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white shadow-lg ring-4 ring-primary/10">
                   <Icon size={24} />
                 </span>
               ) : (

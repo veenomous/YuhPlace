@@ -304,9 +304,10 @@ export default function LandingPage() {
 
       {/* ────────── Section 1: Hero ────────── */}
       <section className="relative overflow-hidden bg-gradient-to-b from-primary-light via-background to-background">
-        {/* Decorative background circles */}
-        <div className="absolute top-[-120px] right-[-80px] w-[300px] h-[300px] rounded-full bg-primary/5" />
-        <div className="absolute bottom-[-60px] left-[-60px] w-[200px] h-[200px] rounded-full bg-primary/5" />
+        {/* Decorative background orbs */}
+        <div className="absolute top-[-80px] right-[-60px] w-[250px] h-[250px] rounded-full bg-primary/[0.04] blur-xl" />
+        <div className="absolute bottom-[-40px] left-[-40px] w-[180px] h-[180px] rounded-full bg-accent/[0.06] blur-xl" />
+        <div className="absolute top-[40%] left-[10%] w-[100px] h-[100px] rounded-full bg-success/[0.04] blur-2xl" />
 
         <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-12 md:pt-24 md:pb-20 text-center">
           {/* Logo / Wordmark */}
@@ -327,7 +328,7 @@ export default function LandingPage() {
 
           {/* Search Bar */}
           <form
-            className="relative max-w-md mx-auto mb-6"
+            className="relative max-w-md mx-auto"
             onSubmit={(e) => {
               e.preventDefault();
               if (searchQuery.trim()) router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -346,8 +347,34 @@ export default function LandingPage() {
             />
           </form>
 
+          {/* Region indicator */}
+          <div className="flex items-center justify-center gap-1.5 text-sm text-muted mt-3 mb-4">
+            <MapPin size={14} className="text-primary" />
+            <span>Starting in <span className="font-medium text-foreground">Georgetown</span></span>
+          </div>
+
+          {/* Search suggestion pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-6 max-w-md mx-auto">
+            {[
+              { label: 'Apartments in Georgetown', q: 'apartments georgetown' },
+              { label: 'Used Cars', q: 'used cars' },
+              { label: 'Local Events', q: 'events' },
+            ].map((s) => (
+              <button
+                key={s.q}
+                onClick={() => {
+                  setSearchQuery(s.q);
+                  router.push(`/search?q=${encodeURIComponent(s.q)}`);
+                }}
+                className="px-3 py-1.5 text-xs font-medium text-primary bg-white/80 border border-primary/15 rounded-full hover:bg-white hover:border-primary/30 transition-all"
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/discover"
               className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors shadow-sm"
@@ -361,12 +388,6 @@ export default function LandingPage() {
             >
               Post on YuhPlace
             </Link>
-          </div>
-
-          {/* Region indicator */}
-          <div className="flex items-center justify-center gap-1.5 text-sm text-muted">
-            <MapPin size={14} className="text-primary" />
-            <span>Starting in <span className="font-medium text-foreground">Georgetown</span></span>
           </div>
         </div>
       </section>
