@@ -317,6 +317,8 @@ export default function LandingPage() {
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 80 Q50 60 100 80 T200 80' fill='none' stroke='%231667B7' stroke-width='0.8'/%3E%3Cpath d='M0 100 Q50 85 100 100 T200 100' fill='none' stroke='%231667B7' stroke-width='0.6'/%3E%3Cpath d='M0 120 Q50 105 100 120 T200 120' fill='none' stroke='%231667B7' stroke-width='0.8'/%3E%3Cpath d='M0 50 Q60 35 120 55 T200 50' fill='none' stroke='%231667B7' stroke-width='0.5'/%3E%3Cpath d='M0 150 Q40 135 100 150 T200 150' fill='none' stroke='%231667B7' stroke-width='0.5'/%3E%3C/svg%3E")`,
             backgroundSize: '200px 200px',
+            maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
           }}
         />
 
@@ -360,7 +362,7 @@ export default function LandingPage() {
 
           {/* Region indicator pill */}
           <div className="flex items-center justify-center mt-3 mb-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary-light border border-primary/15 rounded-full text-sm font-semibold text-primary">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold text-primary-dark">
               <MapPin size={13} />
               Georgetown
             </span>
@@ -405,7 +407,7 @@ export default function LandingPage() {
 
           {/* Quick Access Cards — docked inside hero */}
           <div className="relative mt-6 md:mt-8 max-w-3xl mx-auto text-left">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-3 border border-border/30 shadow-soft">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-border/40 shadow-card">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {QUICK_ACCESS.map((item) => {
                   const Icon = item.icon;
