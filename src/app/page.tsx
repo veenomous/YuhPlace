@@ -310,11 +310,8 @@ export default function LandingPage() {
 
         <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-12 md:pt-24 md:pb-20 text-center">
           {/* Logo / Wordmark */}
-          <div className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <MapPin size={20} className="text-white" />
-            </div>
-            <span className="text-xl font-bold text-foreground tracking-tight">YuhPlace</span>
+          <div className="inline-flex items-center mb-6">
+            <img src="/logo.png" alt="YuhPlace" className="h-10" />
           </div>
 
           {/* Heading */}

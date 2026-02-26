@@ -9,7 +9,7 @@ export default function AuthLayout({
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-4 py-8">
       {/* Logo */}
       <Link href="/" className="mb-8">
-        <span className="text-3xl font-bold text-primary">YuhPlace</span>
+        <img src="/logo.png" alt="YuhPlace" className="h-10" />
       </Link>
 
       {/* Card container */}

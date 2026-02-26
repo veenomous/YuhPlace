@@ -63,7 +63,7 @@ export default function TopNav() {
       <div className="mx-auto max-w-lg flex items-center justify-between h-14 px-4">
         {/* Logo */}
         <Link href="/" className="flex-shrink-0">
-          <span className="text-xl font-bold text-primary">YuhPlace</span>
+          <img src="/logo.png" alt="YuhPlace" className="h-7" />
         </Link>
 
         {/* Region selector + Search + Auth */}
