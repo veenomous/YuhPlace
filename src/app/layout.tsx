@@ -1,11 +1,21 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Poppins, Inter, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
+import ServiceWorkerRegister from "./sw-register";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -32,6 +42,16 @@ export const metadata: Metadata = {
     description:
       "Discover local updates, buy and sell nearby, and find rentals, homes, and services in Guyana.",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "YuhPlace",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1667B7",
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -42,9 +62,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${poppins.variable} ${inter.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>{children}</AuthProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

@@ -106,7 +106,7 @@ export default function CommentSection({
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="text-xs font-semibold text-foreground">{comment.profiles.name}</span>
                     {comment.profiles.is_verified_business && (
-                      <BadgeCheck size={12} className="text-amber-500 flex-shrink-0" />
+                      <BadgeCheck size={12} className="text-accent flex-shrink-0" />
                     )}
                     <span className="text-[10px] text-muted">{timeAgo(comment.created_at)}</span>
                     {isOwner && (

@@ -12,7 +12,7 @@ export async function generateMetadata({
 
   const { data: property } = await supabase
     .from('property_listings')
-    .select('title, description, price_amount, currency, listing_mode, property_listing_images(image_url)')
+    .select('title, description, price_amount, currency, listing_mode, property_type, bedrooms, bathrooms, neighborhood_text, property_listing_images(image_url)')
     .eq('id', id)
     .eq('status', 'active')
     .single();
@@ -21,26 +21,40 @@ export async function generateMetadata({
     return { title: 'Property not found — YuhPlace' };
   }
 
-  const image = (property.property_listing_images as { image_url: string }[])?.[0]?.image_url;
+  const DEFAULT_OG = 'https://yuhplace.vercel.app/opengraph-image';
+  const image = (property.property_listing_images as { image_url: string }[])?.[0]?.image_url ?? DEFAULT_OG;
   const price = `$${property.price_amount.toLocaleString()} ${property.currency}`;
-  const suffix = property.listing_mode === 'rent' ? '/mo' : '';
-  const description = `${price}${suffix} — ${property.description.slice(0, 140)}`;
+  const mode = property.listing_mode === 'rent' ? 'Rent' : 'Sale';
+  const priceSuffix = property.listing_mode === 'rent' ? '/mo' : '';
+  const type = (property.property_type as string).replace(/_/g, ' ');
+  const location = property.neighborhood_text ? ` in ${property.neighborhood_text}` : '';
+  const beds = property.bedrooms ? `${property.bedrooms} bed` : '';
+  const baths = property.bathrooms ? `${property.bathrooms} bath` : '';
+  const specs = [beds, baths].filter(Boolean).join(', ');
+  const suffix = ' | YuhPlace';
+  const full = `${property.title} — for ${mode}${suffix}`;
+  const ogTitle = full.length <= 60
+    ? full
+    : `${property.title}${suffix}`.length <= 60
+      ? `${property.title}${suffix}`
+      : `${property.title.slice(0, 60 - suffix.length - 3)}...${suffix}`;
+  const description = `${price}${priceSuffix}. ${specs ? specs + ' ' : ''}${type} for ${mode.toLowerCase()}${location} on YuhPlace. ${property.description.slice(0, 100)}`;
 
   return {
-    title: `${property.title} — YuhPlace`,
+    title: ogTitle,
     description,
     openGraph: {
-      title: property.title,
+      title: ogTitle,
       description,
       url: `https://yuhplace.vercel.app/property/${id}`,
       type: 'article',
-      ...(image && { images: [{ url: image }] }),
+      images: [{ url: image, width: 1200, height: 630 }],
     },
     twitter: {
-      card: image ? 'summary_large_image' : 'summary',
-      title: property.title,
+      card: 'summary_large_image',
+      title: ogTitle,
       description,
-      ...(image && { images: [image] }),
+      images: [image],
     },
   };
 }

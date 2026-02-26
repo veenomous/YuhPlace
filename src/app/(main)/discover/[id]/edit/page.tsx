@@ -10,10 +10,10 @@ import { REGIONS } from '@/lib/constants';
 import type { PostType } from '@/types/database';
 
 const POST_TYPES: { value: PostType; label: string; icon: typeof AlertTriangle; activeClasses: string }[] = [
-  { value: 'alert', label: 'Alert', icon: AlertTriangle, activeClasses: 'bg-danger-light text-danger border-danger' },
-  { value: 'event', label: 'Event', icon: Calendar, activeClasses: 'bg-blue-50 text-blue-600 border-blue-400' },
-  { value: 'business', label: 'Business', icon: Briefcase, activeClasses: 'bg-accent-light text-amber-700 border-amber-400' },
-  { value: 'community', label: 'Community', icon: Users, activeClasses: 'bg-primary-light text-primary-dark border-primary' },
+  { value: 'alert', label: 'Alert', icon: AlertTriangle, activeClasses: 'bg-tag-alert-light text-tag-alert border-tag-alert' },
+  { value: 'event', label: 'Event', icon: Calendar, activeClasses: 'bg-tag-event-light text-tag-event border-tag-event' },
+  { value: 'business', label: 'Business', icon: Briefcase, activeClasses: 'bg-tag-business-light text-tag-business border-tag-business' },
+  { value: 'community', label: 'Community', icon: Users, activeClasses: 'bg-tag-community-light text-tag-community border-tag-community' },
 ];
 
 export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {

@@ -1,26 +1,56 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #0B8457;
-  --color-primary-dark: #096E48;
-  --color-primary-light: #E8F5EF;
-  --color-accent: #E8A317;
-  --color-accent-light: #FFF5DD;
+  /* Core brand */
+  --color-primary: #1667B7;
+  --color-primary-dark: #114B8A;
+  --color-primary-light: #EFF6FF;
+  --color-accent: #F2B134;
+  --color-accent-light: #FFF8E7;
   --color-background: #FFFFFF;
   --color-foreground: #1A1A1A;
   --color-muted: #6B7280;
   --color-border: #E5E7EB;
-  --color-surface: #F9FAFB;
+  --color-surface: #FAFBFC;
   --color-danger: #DC2626;
   --color-danger-light: #FEE2E2;
-  --font-sans: var(--font-geist-sans);
+
+  /* New semantic tokens */
+  --color-success: #4CAF63;
+  --color-success-light: #F1FBF4;
+  --color-success-dark: #327C44;
+  --color-featured: #F2B134;
+  --color-surface-warm: #F7F4EE;
+
+  /* Content-type tag colors */
+  --color-tag-alert: #E9792E;
+  --color-tag-alert-light: #FFF4EC;
+  --color-tag-event: #7C5CFA;
+  --color-tag-event-light: #EEE9FF;
+  --color-tag-business: #4CAF63;
+  --color-tag-business-light: #F1FBF4;
+  --color-tag-community: #1667B7;
+  --color-tag-community-light: #EFF6FF;
+
+  /* Shadow tokens */
+  --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 10px 30px rgba(15, 23, 42, 0.10);
+  --shadow-soft: 0 2px 10px rgba(15, 23, 42, 0.05);
+
+  /* Typography */
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading), var(--font-sans), sans-serif;
 }
 
 /* Hide scrollbar for cleaner mobile feel */

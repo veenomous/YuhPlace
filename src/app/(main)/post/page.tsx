@@ -35,28 +35,28 @@ const POST_TYPES: {
     label: 'Alert',
     description: 'Safety or urgent updates',
     icon: AlertTriangle,
-    activeClasses: 'bg-danger-light text-danger border-danger',
+    activeClasses: 'bg-tag-alert-light text-tag-alert border-tag-alert',
   },
   {
     value: 'event',
     label: 'Event',
     description: 'Happenings & gatherings',
     icon: Calendar,
-    activeClasses: 'bg-blue-50 text-blue-600 border-blue-400',
+    activeClasses: 'bg-tag-event-light text-tag-event border-tag-event',
   },
   {
     value: 'business',
     label: 'Business',
     description: 'Promotions & openings',
     icon: Briefcase,
-    activeClasses: 'bg-accent-light text-amber-700 border-amber-400',
+    activeClasses: 'bg-tag-business-light text-tag-business border-tag-business',
   },
   {
     value: 'community',
     label: 'Community',
     description: 'General community posts',
     icon: Users,
-    activeClasses: 'bg-primary-light text-primary-dark border-primary',
+    activeClasses: 'bg-tag-community-light text-tag-community border-tag-community',
   },
 ];
 

@@ -61,7 +61,7 @@ export default function EditMarketListingPage() {
       category_name: CATEGORIES.find(c => c.slug === category)?.name || category,
       price_amount: price ? parseFloat(price.replace(/,/g, '')) : null,
       condition: (isService ? 'na' : condition) as ItemCondition,
-      whatsapp_number: whatsapp,
+      whatsapp_number: whatsapp.trim() || null,
       region_slug: region,
       region_name: REGIONS.find(r => r.slug === region)?.name || region,
     });
@@ -147,7 +147,7 @@ export default function EditMarketListingPage() {
 
         {/* WhatsApp */}
         <div>
-          <label className="block text-sm font-semibold text-foreground mb-1.5">WhatsApp Number</label>
+          <label className="block text-sm font-semibold text-foreground mb-1.5">WhatsApp Number <span className="text-muted text-xs font-normal">(optional)</span></label>
           <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)}
             className="w-full px-3.5 py-2.5 bg-white border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
         </div>

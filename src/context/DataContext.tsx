@@ -348,7 +348,7 @@ export interface CreateMarketListingInput {
   price_amount: number | null;
   condition: ItemCondition;
   seller_type: SellerType;
-  whatsapp_number: string;
+  whatsapp_number: string | null;
   region_slug: string;
   region_name: string;
   photos?: File[];
@@ -364,7 +364,7 @@ export interface CreatePropertyListingInput {
   bathrooms: number | null;
   neighborhood_text: string;
   owner_type: OwnerType;
-  whatsapp_number: string;
+  whatsapp_number: string | null;
   region_slug: string;
   region_name: string;
   photos?: File[];
@@ -573,7 +573,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         price_amount: input.price_amount,
         condition: input.condition,
         seller_type: input.seller_type,
-        whatsapp_number: input.whatsapp_number,
+        whatsapp_number: input.whatsapp_number || null,
       })
       .select('id')
       .single();
@@ -629,7 +629,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         bathrooms: input.bathrooms,
         neighborhood_text: input.neighborhood_text || null,
         owner_type: input.owner_type,
-        whatsapp_number: input.whatsapp_number,
+        whatsapp_number: input.whatsapp_number || null,
       })
       .select('id')
       .single();

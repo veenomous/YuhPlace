@@ -31,10 +31,10 @@ import type { PostType, PropertyType } from '@/types/database';
 // ─── Config ─────────────────────────────────────────────────────────────────
 
 const POST_TYPE_CONFIG: Record<PostType, { label: string; bgClass: string; textClass: string; icon: typeof AlertTriangle }> = {
-  alert: { label: 'Alert', bgClass: 'bg-danger-light', textClass: 'text-danger', icon: AlertTriangle },
-  event: { label: 'Event', bgClass: 'bg-blue-50', textClass: 'text-blue-600', icon: Calendar },
-  business: { label: 'Business', bgClass: 'bg-accent-light', textClass: 'text-amber-700', icon: Briefcase },
-  community: { label: 'Community', bgClass: 'bg-primary-light', textClass: 'text-primary-dark', icon: Users },
+  alert: { label: 'Alert', bgClass: 'bg-tag-alert-light', textClass: 'text-tag-alert', icon: AlertTriangle },
+  event: { label: 'Event', bgClass: 'bg-tag-event-light', textClass: 'text-tag-event', icon: Calendar },
+  business: { label: 'Business', bgClass: 'bg-tag-business-light', textClass: 'text-tag-business', icon: Briefcase },
+  community: { label: 'Community', bgClass: 'bg-tag-community-light', textClass: 'text-tag-community', icon: Users },
 };
 
 const PROPERTY_TYPE_ICONS: Record<PropertyType, typeof Home> = {
@@ -155,8 +155,8 @@ function SearchResults() {
       {matchedListings.length > 0 && (
         <section className="mb-6">
           <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-accent-light flex items-center justify-center">
-              <ShoppingBag size={12} className="text-amber-700" />
+            <span className="w-5 h-5 rounded bg-success-light flex items-center justify-center">
+              <ShoppingBag size={12} className="text-success" />
             </span>
             Market Listings ({matchedListings.length})
           </h2>
@@ -192,8 +192,8 @@ function SearchResults() {
       {matchedProperties.length > 0 && (
         <section className="mb-6">
           <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-blue-50 flex items-center justify-center">
-              <Home size={12} className="text-blue-600" />
+            <span className="w-5 h-5 rounded bg-accent-light flex items-center justify-center">
+              <Home size={12} className="text-accent" />
             </span>
             Properties ({matchedProperties.length})
           </h2>
@@ -210,7 +210,7 @@ function SearchResults() {
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className={cn(
                           'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                          prop.listing_mode === 'rent' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
+                          prop.listing_mode === 'rent' ? 'bg-primary-light text-primary' : 'bg-success-light text-success'
                         )}>
                           {prop.listing_mode === 'rent' ? 'Rent' : 'Sale'}
                         </span>

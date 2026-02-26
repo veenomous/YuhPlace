@@ -79,6 +79,7 @@ export default function PropertyListingClient({ id }: { id: string }) {
   const { user } = useAuth();
   const [showReportModal, setShowReportModal] = useState(false);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const [whatsappRevealed, setWhatsappRevealed] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -111,8 +112,11 @@ export default function PropertyListingClient({ id }: { id: string }) {
   const hasRealImages = images.length > 0;
   const galleryCount = hasRealImages ? images.length : 1;
 
-  const whatsappMessage = `Hi, I'm interested in your property listing on YuhPlace: "${property.title}" (${formatPrice(property.price_amount, property.currency)}${isRent ? '/mo' : ''})`;
-  const whatsappLink = formatWhatsAppLink(property.whatsapp_number, whatsappMessage);
+  const hasWhatsapp = !!(property.whatsapp_number && property.whatsapp_number.trim());
+  const whatsappMessage = hasWhatsapp
+    ? `Hi, I'm interested in your property listing on YuhPlace: "${property.title}" (${formatPrice(property.price_amount, property.currency)}${isRent ? '/mo' : ''})`
+    : '';
+  const whatsappLink = hasWhatsapp ? formatWhatsAppLink(property.whatsapp_number!, whatsappMessage) : '';
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -220,13 +224,13 @@ export default function PropertyListingClient({ id }: { id: string }) {
           <span
             className={cn(
               'px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide',
-              isRent ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
+              isRent ? 'bg-primary-light text-primary' : 'bg-success-light text-success'
             )}
           >
             For {property.listing_mode}
           </span>
           {property.is_featured && (
-            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-700">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-accent-light text-accent">
               <Star size={10} fill="currentColor" />
               Featured
             </span>
@@ -356,7 +360,7 @@ export default function PropertyListingClient({ id }: { id: string }) {
               <div className="flex items-center gap-2 mb-0.5">
                 <h3 className="font-semibold text-foreground truncate">{property.profiles.name}</h3>
                 {property.profiles.is_verified_business && (
-                  <BadgeCheck size={16} className="text-amber-500 shrink-0" />
+                  <BadgeCheck size={16} className="text-accent shrink-0" />
                 )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -364,7 +368,7 @@ export default function PropertyListingClient({ id }: { id: string }) {
                   {OWNER_TYPE_LABELS[property.owner_type]}
                 </span>
                 {property.profiles.is_verified_business && (
-                  <BadgeCheck size={14} className="text-amber-500 flex-shrink-0" />
+                  <BadgeCheck size={14} className="text-accent flex-shrink-0" />
                 )}
               </div>
               <div className="flex items-center gap-1.5 mt-2 text-xs text-muted">
@@ -411,7 +415,9 @@ export default function PropertyListingClient({ id }: { id: string }) {
         <ReviewSection sellerId={property.user_id} targetType="property_listing" targetId={property.id} />
 
         {/* Comments */}
-        <CommentSection targetType="property_listing" targetId={property.id} />
+        <div id="comments-section">
+          <CommentSection targetType="property_listing" targetId={property.id} />
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -464,15 +470,43 @@ export default function PropertyListingClient({ id }: { id: string }) {
               {isRent && <span className="text-sm font-normal text-muted">/mo</span>}
             </p>
           </div>
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-5 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors"
-          >
-            <MessageCircle size={18} />
-            Contact on WhatsApp
-          </a>
+          {hasWhatsapp ? (
+            isOwner || whatsappRevealed ? (
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-5 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors"
+              >
+                <MessageCircle size={18} />
+                Contact on WhatsApp
+              </a>
+            ) : (
+              <button
+                onClick={() => {
+                  if (!user) {
+                    router.push('/login');
+                    return;
+                  }
+                  setWhatsappRevealed(true);
+                }}
+                className="flex items-center gap-2 px-5 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors"
+              >
+                <MessageCircle size={18} />
+                Show WhatsApp
+              </button>
+            )
+          ) : (
+            <button
+              onClick={() => {
+                document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex items-center gap-2 px-5 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors"
+            >
+              <MessageCircle size={18} />
+              Contact via Comments
+            </button>
+          )}
         </div>
         <div className="h-[env(safe-area-inset-bottom)]" />
       </div>

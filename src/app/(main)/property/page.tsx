@@ -345,14 +345,14 @@ function PropertyCard({ property, commentCount }: { property: PropertyListingWit
             className={cn(
               'px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide',
               isRent
-                ? 'bg-blue-600 text-white'
-                : 'bg-emerald-600 text-white'
+                ? 'bg-primary text-white'
+                : 'bg-success text-white'
             )}
           >
             For {property.listing_mode}
           </span>
           {property.is_featured && (
-            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-white">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-featured text-white">
               <Star size={10} fill="currentColor" />
               Featured
             </span>
@@ -427,7 +427,7 @@ function PropertyCard({ property, commentCount }: { property: PropertyListingWit
               {property.profiles.name}
             </span>
             {property.profiles.is_verified_business && (
-              <BadgeCheck size={14} className="text-amber-500 flex-shrink-0" />
+              <BadgeCheck size={14} className="text-accent flex-shrink-0" />
             )}
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">

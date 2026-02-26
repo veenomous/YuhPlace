@@ -136,26 +136,26 @@ const FEATURED_PROPERTIES = [
 const POST_TYPE_CONFIG = {
   alert: {
     label: 'Alert',
-    bgClass: 'bg-danger-light',
-    textClass: 'text-danger',
+    bgClass: 'bg-tag-alert-light',
+    textClass: 'text-tag-alert',
     icon: AlertTriangle,
   },
   event: {
     label: 'Event',
-    bgClass: 'bg-blue-50',
-    textClass: 'text-blue-600',
+    bgClass: 'bg-tag-event-light',
+    textClass: 'text-tag-event',
     icon: Calendar,
   },
   business: {
     label: 'Business',
-    bgClass: 'bg-accent-light',
-    textClass: 'text-amber-700',
+    bgClass: 'bg-tag-business-light',
+    textClass: 'text-tag-business',
     icon: Briefcase,
   },
   community: {
     label: 'Community',
-    bgClass: 'bg-primary-light',
-    textClass: 'text-primary-dark',
+    bgClass: 'bg-tag-community-light',
+    textClass: 'text-tag-community',
     icon: Users,
   },
 } as const;
@@ -189,23 +189,23 @@ const QUICK_ACCESS = [
     title: 'Discover',
     description: 'Local alerts, events, and community updates',
     href: '/discover',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
+    color: 'text-primary',
+    bgColor: 'bg-primary-light',
   },
   {
     icon: ShoppingBag,
     title: 'Market',
     description: 'Buy, sell, and find services',
     href: '/market',
-    color: 'text-primary',
-    bgColor: 'bg-primary-light',
+    color: 'text-success',
+    bgColor: 'bg-success-light',
   },
   {
     icon: Home,
     title: 'Property',
     description: 'Rentals, homes, land, and more',
     href: '/property',
-    color: 'text-amber-600',
+    color: 'text-accent',
     bgColor: 'bg-accent-light',
   },
 ];
@@ -329,7 +329,13 @@ export default function LandingPage() {
           </p>
 
           {/* Search Bar */}
-          <div className="relative max-w-md mx-auto mb-6">
+          <form
+            className="relative max-w-md mx-auto mb-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.trim()) router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+            }}
+          >
             <Search
               size={18}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-muted"
@@ -339,9 +345,9 @@ export default function LandingPage() {
               placeholder="Search listings, rentals, services, or updates..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 bg-white border border-border rounded-2xl text-sm text-foreground placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all"
+              className="w-full pl-11 pr-4 py-3.5 bg-white border border-border rounded-2xl text-base text-foreground placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all"
             />
-          </div>
+          </form>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
@@ -398,7 +404,7 @@ export default function LandingPage() {
       </section>
 
       {/* ────────── Section 3: Featured Market Listings ────────── */}
-      <section className="bg-surface py-12 md:py-16">
+      <section className="bg-surface-warm py-12 md:py-16">
         <div className="max-w-3xl mx-auto px-5">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-foreground">What&apos;s on the Market</h2>
@@ -527,7 +533,7 @@ export default function LandingPage() {
                       <span
                         className={cn(
                           'px-2 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wide',
-                          isRent ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'
+                          isRent ? 'bg-primary text-white' : 'bg-success text-white'
                         )}
                       >
                         For {property.mode}
@@ -575,7 +581,7 @@ export default function LandingPage() {
       </section>
 
       {/* ────────── Section 6: Why YuhPlace ────────── */}
-      <section className="py-12 md:py-16">
+      <section className="bg-surface-warm py-12 md:py-16">
         <div className="max-w-3xl mx-auto px-5">
           <div className="text-center mb-10">
             <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">Why YuhPlace?</h2>
@@ -638,7 +644,7 @@ export default function LandingPage() {
           {/* Divider */}
           <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-white/40">
-              &copy; 2024 YuhPlace. All rights reserved.
+              &copy; {new Date().getFullYear()} YuhPlace. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-white/40 hover:text-white transition-colors">

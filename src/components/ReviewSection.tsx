@@ -212,7 +212,7 @@ export default function ReviewSection({ sellerId, targetType, targetId }: Review
                   {review.reviewer_name}
                 </span>
                 {review.reviewer_verified && (
-                  <BadgeCheck size={13} className="text-amber-500" />
+                  <BadgeCheck size={13} className="text-accent" />
                 )}
                 <StarRating value={review.rating} readonly size={12} />
               </div>

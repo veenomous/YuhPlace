@@ -79,7 +79,7 @@ export interface MarketListing {
   currency: string;
   condition: ItemCondition;
   seller_type: SellerType;
-  whatsapp_number: string;
+  whatsapp_number: string | null;
   status: ListingStatus;
   is_featured: boolean;
   view_count: number;
@@ -108,7 +108,7 @@ export interface PropertyListing {
   bathrooms: number | null;
   neighborhood_text: string | null;
   owner_type: OwnerType;
-  whatsapp_number: string;
+  whatsapp_number: string | null;
   status: PropertyStatus;
   is_featured: boolean;
   view_count: number;

@@ -32,18 +32,18 @@ const ACCOUNT_TYPE_CONFIG: Record<
 > = {
   individual: {
     label: 'Individual',
-    bgClass: 'bg-blue-50',
-    textClass: 'text-blue-600',
+    bgClass: 'bg-primary-light',
+    textClass: 'text-primary',
   },
   business: {
     label: 'Business',
-    bgClass: 'bg-accent-light',
-    textClass: 'text-amber-700',
+    bgClass: 'bg-tag-business-light',
+    textClass: 'text-tag-business',
   },
   agent_landlord: {
     label: 'Agent / Landlord',
-    bgClass: 'bg-primary-light',
-    textClass: 'text-primary-dark',
+    bgClass: 'bg-accent-light',
+    textClass: 'text-accent',
   },
 };
 
@@ -324,7 +324,7 @@ export default function ProfilePage() {
                 {displayName}
               </h1>
               {profile?.is_verified_business && (
-                <BadgeCheck size={18} className="text-amber-500 flex-shrink-0" />
+                <BadgeCheck size={18} className="text-accent flex-shrink-0" />
               )}
             </div>
 

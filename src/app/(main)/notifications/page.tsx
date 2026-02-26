@@ -32,11 +32,11 @@ interface Notification {
 }
 
 const TYPE_CONFIG: Record<NotificationType, { icon: typeof Bell; iconClass: string }> = {
-  comment_on_post: { icon: MessageSquare, iconClass: 'text-blue-500 bg-blue-50' },
-  comment_on_market: { icon: MessageSquare, iconClass: 'text-primary bg-primary-light' },
-  comment_on_property: { icon: MessageSquare, iconClass: 'text-emerald-500 bg-emerald-50' },
+  comment_on_post: { icon: MessageSquare, iconClass: 'text-primary bg-primary-light' },
+  comment_on_market: { icon: MessageSquare, iconClass: 'text-success bg-success-light' },
+  comment_on_property: { icon: MessageSquare, iconClass: 'text-primary bg-primary-light' },
   content_removed: { icon: ShieldAlert, iconClass: 'text-danger bg-danger-light' },
-  content_restored: { icon: ShieldCheck, iconClass: 'text-emerald-600 bg-emerald-50' },
+  content_restored: { icon: ShieldCheck, iconClass: 'text-success-dark bg-success-light' },
 };
 
 function getTargetLink(targetType: string | null, targetId: string | null): string | null {

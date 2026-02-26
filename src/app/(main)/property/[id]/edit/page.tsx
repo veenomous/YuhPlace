@@ -54,7 +54,7 @@ export default function EditPropertyPage() {
   }
 
   const showBedsAndBaths = propertyType !== 'land';
-  const isFormValid = title.trim() && price.trim() && region && description.trim() && whatsapp.trim();
+  const isFormValid = title.trim() && price.trim() && region && description.trim();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -72,7 +72,7 @@ export default function EditPropertyPage() {
       bathrooms: bathrooms ? parseInt(bathrooms) : null,
       neighborhood_text: neighborhood.trim(),
       owner_type: ownerType,
-      whatsapp_number: whatsapp,
+      whatsapp_number: whatsapp.trim() || null,
       region_slug: region,
       region_name: REGIONS.find(r => r.slug === region)?.name || region,
     });
@@ -203,7 +203,7 @@ export default function EditPropertyPage() {
 
         {/* WhatsApp */}
         <div>
-          <label className="text-sm font-semibold text-foreground mb-2 block">WhatsApp Number</label>
+          <label className="text-sm font-semibold text-foreground mb-2 block">WhatsApp Number <span className="text-muted text-xs font-normal">(optional)</span></label>
           <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)}
             className="w-full px-4 py-3 bg-white border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
         </div>

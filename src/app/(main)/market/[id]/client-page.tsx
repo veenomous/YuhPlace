@@ -53,6 +53,7 @@ export default function MarketListingClient({ id }: { id: string }) {
   const { user } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [whatsappRevealed, setWhatsappRevealed] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -85,8 +86,11 @@ export default function MarketListingClient({ id }: { id: string }) {
   const hasRealImages = images.length > 0;
   const imageCount = hasRealImages ? images.length : 1;
 
-  const whatsappMessage = `Hi, I'm interested in your listing on YuhPlace: "${listing.title}" (${formatPrice(listing.price_amount, listing.currency)})`;
-  const whatsappUrl = formatWhatsAppLink(listing.whatsapp_number, whatsappMessage);
+  const hasWhatsapp = !!(listing.whatsapp_number && listing.whatsapp_number.trim());
+  const whatsappMessage = hasWhatsapp
+    ? `Hi, I'm interested in your listing on YuhPlace: "${listing.title}" (${formatPrice(listing.price_amount, listing.currency)})`
+    : '';
+  const whatsappUrl = hasWhatsapp ? formatWhatsAppLink(listing.whatsapp_number!, whatsappMessage) : '';
 
   const CategoryIcon =
     listing.market_categories.slug === 'vehicles'
@@ -216,7 +220,7 @@ export default function MarketListingClient({ id }: { id: string }) {
         <div className="flex flex-wrap gap-2">
           <span className="flex items-center gap-1 px-2.5 py-1 bg-surface border border-border rounded-full text-xs font-medium text-foreground">
             <Tag size={12} className="text-muted" />
-            {listing.market_categories.name}
+            {listing.market_categories.slug === 'buy-sell' ? 'For Sale' : listing.market_categories.name}
           </span>
           {listing.condition !== 'na' && (
             <span
@@ -279,7 +283,7 @@ export default function MarketListingClient({ id }: { id: string }) {
                   {listing.profiles.name}
                 </span>
                 {listing.profiles.is_verified_business && (
-                  <BadgeCheck size={16} className="text-amber-500 shrink-0" />
+                  <BadgeCheck size={16} className="text-accent shrink-0" />
                 )}
               </div>
               <p className="text-xs text-muted mt-0.5">
@@ -325,7 +329,9 @@ export default function MarketListingClient({ id }: { id: string }) {
         <ReviewSection sellerId={listing.user_id} targetType="market_listing" targetId={listing.id} />
 
         {/* Comments */}
-        <CommentSection targetType="market_listing" targetId={listing.id} />
+        <div id="comments-section">
+          <CommentSection targetType="market_listing" targetId={listing.id} />
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -372,15 +378,43 @@ export default function MarketListingClient({ id }: { id: string }) {
       <div className="fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-border">
         <div className="mx-auto max-w-lg flex items-center gap-3 px-4 py-3">
           <FavoriteButton targetType="market_listing" targetId={listing.id} />
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#25D366] text-white font-semibold text-sm rounded-xl hover:bg-[#20BD5A] transition-colors active:scale-[0.98]"
-          >
-            <MessageCircle size={18} />
-            Chat on WhatsApp
-          </a>
+          {hasWhatsapp ? (
+            isOwner || whatsappRevealed ? (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#25D366] text-white font-semibold text-sm rounded-xl hover:bg-[#20BD5A] transition-colors active:scale-[0.98]"
+              >
+                <MessageCircle size={18} />
+                Chat on WhatsApp
+              </a>
+            ) : (
+              <button
+                onClick={() => {
+                  if (!user) {
+                    router.push('/login');
+                    return;
+                  }
+                  setWhatsappRevealed(true);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#25D366] text-white font-semibold text-sm rounded-xl hover:bg-[#20BD5A] transition-colors active:scale-[0.98]"
+              >
+                <MessageCircle size={18} />
+                Show WhatsApp
+              </button>
+            )
+          ) : (
+            <button
+              onClick={() => {
+                document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white font-semibold text-sm rounded-xl hover:bg-primary-dark transition-colors active:scale-[0.98]"
+            >
+              <MessageCircle size={18} />
+              Contact via Comments
+            </button>
+          )}
         </div>
         <div className="h-[env(safe-area-inset-bottom)]" />
       </div>

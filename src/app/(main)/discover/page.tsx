@@ -29,26 +29,26 @@ const POST_TYPE_CONFIG: Record<
 > = {
   alert: {
     label: 'Alert',
-    bgClass: 'bg-danger-light',
-    textClass: 'text-danger',
+    bgClass: 'bg-tag-alert-light',
+    textClass: 'text-tag-alert',
     icon: AlertTriangle,
   },
   event: {
     label: 'Event',
-    bgClass: 'bg-blue-50',
-    textClass: 'text-blue-600',
+    bgClass: 'bg-tag-event-light',
+    textClass: 'text-tag-event',
     icon: Calendar,
   },
   business: {
     label: 'Business',
-    bgClass: 'bg-accent-light',
-    textClass: 'text-amber-700',
+    bgClass: 'bg-tag-business-light',
+    textClass: 'text-tag-business',
     icon: Briefcase,
   },
   community: {
     label: 'Community',
-    bgClass: 'bg-primary-light',
-    textClass: 'text-primary-dark',
+    bgClass: 'bg-tag-community-light',
+    textClass: 'text-tag-community',
     icon: Users,
   },
 };
@@ -136,7 +136,7 @@ function PostCard({ post, commentCount }: { post: DiscoverPostWithDetails; comme
             {post.profiles.name}
           </span>
           {post.profiles.is_verified_business && (
-            <BadgeCheck size={14} className="text-amber-500 flex-shrink-0" />
+            <BadgeCheck size={14} className="text-accent flex-shrink-0" />
           )}
           <div className="flex items-center gap-3 ml-auto flex-shrink-0">
             {commentCount > 0 && (

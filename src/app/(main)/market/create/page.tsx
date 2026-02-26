@@ -48,7 +48,7 @@ export default function CreateListingPage() {
   const [condition, setCondition] = useState<ItemCondition | ''>('');
   const [description, setDescription] = useState('');
   const [region, setRegion] = useState('');
-  const [whatsapp, setWhatsapp] = useState('+592');
+  const [whatsapp, setWhatsapp] = useState('');
   const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
 
   // UI state
@@ -77,8 +77,8 @@ export default function CreateListingPage() {
     if (description.trim().length > 0 && description.trim().length < 20)
       newErrors.description = 'Description must be at least 20 characters';
     if (!region) newErrors.region = 'Select a region';
-    if (!whatsapp.trim() || whatsapp.trim().length < 6)
-      newErrors.whatsapp = 'Enter your WhatsApp number';
+    if (whatsapp.trim() && whatsapp.trim().length < 6)
+      newErrors.whatsapp = 'Enter a valid WhatsApp number (at least 6 digits)';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -101,7 +101,7 @@ export default function CreateListingPage() {
       price_amount: price ? parseFloat(price.replace(/,/g, '')) : null,
       condition: (isService ? 'na' : condition) as ItemCondition,
       seller_type: 'individual',
-      whatsapp_number: whatsapp,
+      whatsapp_number: whatsapp.trim() || null,
       region_slug: region,
       region_name: regionObj?.name || region,
       photos: photos.map(p => p.file),
@@ -172,7 +172,7 @@ export default function CreateListingPage() {
         </div>
         <h2 className="text-xl font-bold text-foreground">Listing Published!</h2>
         <p className="text-sm text-muted mt-2 max-w-[280px]">
-          Your listing is now live on YuhPlace Market. Buyers can reach you via WhatsApp.
+          Your listing is now live on YuhPlace Market.
         </p>
         <div className="flex flex-col gap-2 mt-6 w-full max-w-[260px]">
           <button
@@ -196,7 +196,7 @@ export default function CreateListingPage() {
               setCondition('');
               setDescription('');
               setRegion('');
-              setWhatsapp('+592');
+              setWhatsapp('');
               photos.forEach((p) => URL.revokeObjectURL(p.preview));
               setPhotos([]);
               setErrors({});
@@ -547,10 +547,10 @@ export default function CreateListingPage() {
         {/* ─── WhatsApp Number ────────────────────────────────────────── */}
         <div>
           <label className="block text-sm font-semibold text-foreground mb-1.5">
-            WhatsApp Number <span className="text-danger">*</span>
+            WhatsApp Number <span className="text-muted text-xs font-normal">(optional)</span>
           </label>
           <p className="text-xs text-muted mb-2">
-            Buyers will contact you on WhatsApp
+            Buyers will contact you on WhatsApp. Leave empty to be contacted via comments only.
           </p>
           <input
             type="tel"

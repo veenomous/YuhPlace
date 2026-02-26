@@ -12,7 +12,7 @@ export async function generateMetadata({
 
   const { data: listing } = await supabase
     .from('market_listings')
-    .select('title, description, price_amount, currency, market_listing_images(image_url)')
+    .select('title, description, price_amount, currency, condition, market_listing_images(image_url)')
     .eq('id', id)
     .eq('status', 'active')
     .single();
@@ -21,27 +21,36 @@ export async function generateMetadata({
     return { title: 'Listing not found — YuhPlace' };
   }
 
-  const image = (listing.market_listing_images as { image_url: string }[])?.[0]?.image_url;
+  const DEFAULT_OG = 'https://yuhplace.vercel.app/opengraph-image';
+  const image = (listing.market_listing_images as { image_url: string }[])?.[0]?.image_url ?? DEFAULT_OG;
   const price = listing.price_amount
     ? `$${listing.price_amount.toLocaleString()} ${listing.currency}`
     : 'Contact for price';
-  const description = `${price} — ${listing.description.slice(0, 140)}`;
+  const cond = (listing.condition as string).replace(/_/g, ' ');
+  const suffix = ' | YuhPlace';
+  const full = `${listing.title} — ${price}${suffix}`;
+  const ogTitle = full.length <= 60
+    ? full
+    : `${listing.title}${suffix}`.length <= 60
+      ? `${listing.title}${suffix}`
+      : `${listing.title.slice(0, 60 - suffix.length - 3)}...${suffix}`;
+  const description = `${price}. ${cond} item for sale on YuhPlace — Guyana's marketplace. ${listing.description.slice(0, 100)}`;
 
   return {
-    title: `${listing.title} — YuhPlace`,
+    title: ogTitle,
     description,
     openGraph: {
-      title: listing.title,
+      title: ogTitle,
       description,
       url: `https://yuhplace.vercel.app/market/${id}`,
       type: 'article',
-      ...(image && { images: [{ url: image }] }),
+      images: [{ url: image, width: 1200, height: 630 }],
     },
     twitter: {
-      card: image ? 'summary_large_image' : 'summary',
-      title: listing.title,
+      card: 'summary_large_image',
+      title: ogTitle,
       description,
-      ...(image && { images: [image] }),
+      images: [image],
     },
   };
 }

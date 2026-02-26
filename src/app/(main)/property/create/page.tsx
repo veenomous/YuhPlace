@@ -105,7 +105,7 @@ export default function CreatePropertyPage() {
       bathrooms: bathrooms ? parseInt(bathrooms) : null,
       neighborhood_text: neighborhood.trim(),
       owner_type: ownerType as OwnerType,
-      whatsapp_number: whatsapp,
+      whatsapp_number: whatsapp.trim() ? `+592${whatsapp.trim()}` : null,
       region_slug: region,
       region_name: regionObj?.name || region,
       photos: photos.map(p => p.file),
@@ -123,8 +123,7 @@ export default function CreatePropertyPage() {
     title.trim().length > 0 &&
     price.trim().length > 0 &&
     region.length > 0 &&
-    description.trim().length > 0 &&
-    whatsapp.trim().length > 0;
+    description.trim().length > 0;
 
   // Auth guard
   if (!authLoading && !user) {
@@ -425,7 +424,7 @@ export default function CreatePropertyPage() {
         {/* WhatsApp Number */}
         <div>
           <label htmlFor="whatsapp" className="text-sm font-semibold text-foreground mb-2 block">
-            WhatsApp Number <span className="text-danger">*</span>
+            WhatsApp Number <span className="text-muted text-xs font-normal">(optional)</span>
           </label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted">
@@ -446,7 +445,7 @@ export default function CreatePropertyPage() {
             />
           </div>
           <p className="text-xs text-muted mt-1">
-            Buyers/renters will contact you on this number
+            Leave empty to be contacted via comments only.
           </p>
         </div>
 
