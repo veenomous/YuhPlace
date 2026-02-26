@@ -52,6 +52,8 @@ body {
 
 h1, h2, h3 {
   font-family: var(--font-heading), var(--font-sans), sans-serif;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 /* Hide scrollbar for cleaner mobile feel */

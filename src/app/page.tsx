@@ -614,7 +614,7 @@ export default function LandingPage() {
               return (
                 <div
                   key={prop.title}
-                  className="flex items-start gap-3.5 p-5 bg-white border border-border/50 rounded-2xl shadow-card"
+                  className="flex items-start gap-3.5 p-5 bg-white border border-border/50 rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
                 >
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center">
                     <Icon size={20} className="text-primary" />
@@ -650,12 +650,12 @@ export default function LandingPage() {
 
             {/* Links */}
             <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm">
-              <Link href="#" className="text-white/60 hover:text-white transition-colors">About</Link>
-              <Link href="#" className="text-white/60 hover:text-white transition-colors">Safety Tips</Link>
-              <Link href="#" className="text-white/60 hover:text-white transition-colors">Contact</Link>
-              <Link href="#" className="text-white/60 hover:text-white transition-colors">Terms</Link>
-              <Link href="#" className="text-white/60 hover:text-white transition-colors">Privacy</Link>
-              <Link href="#" className="text-white/60 hover:text-white transition-colors">Report Content</Link>
+              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">About</Link>
+              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Safety Tips</Link>
+              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Contact</Link>
+              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Terms</Link>
+              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Privacy</Link>
+              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Report Content</Link>
             </div>
           </div>
 
@@ -665,13 +665,13 @@ export default function LandingPage() {
               &copy; {new Date().getFullYear()} YuhPlace. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="text-white/40 hover:text-white transition-colors">
+              <a href="#" className="text-white/40 hover:text-white hover:scale-110 transition-all">
                 <Facebook size={18} />
               </a>
-              <a href="#" className="text-white/40 hover:text-white transition-colors">
+              <a href="#" className="text-white/40 hover:text-white hover:scale-110 transition-all">
                 <Instagram size={18} />
               </a>
-              <a href="#" className="text-white/40 hover:text-white transition-colors">
+              <a href="#" className="text-white/40 hover:text-white hover:scale-110 transition-all">
                 <Twitter size={18} />
               </a>
             </div>

@@ -86,9 +86,12 @@ export default function NotificationsPage() {
   if (!authLoading && !user) {
     return (
       <div className="px-4 py-16 text-center">
-        <Bell size={32} className="text-border mx-auto mb-3" />
-        <p className="text-sm text-muted mb-4">Log in to see your notifications</p>
-        <Link href="/login?redirect=%2Fnotifications" className="text-sm text-primary font-semibold hover:underline">
+        <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
+          <Bell size={24} className="text-muted" />
+        </div>
+        <p className="text-sm font-medium text-foreground mb-1">Log in to see your notifications</p>
+        <p className="text-xs text-muted mb-4">Stay updated on comments and activity</p>
+        <Link href="/login?redirect=%2Fnotifications" className="text-xs text-primary font-semibold hover:underline">
           Log in
         </Link>
       </div>
@@ -103,9 +106,9 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-lg font-bold text-foreground">Notifications</h1>
-          {unreadCount > 0 && (
-            <p className="text-xs text-muted">{unreadCount} unread</p>
-          )}
+          <p className="text-xs text-muted mt-0.5">
+            {unreadCount > 0 ? `${unreadCount} unread` : 'Stay updated on activity'}
+          </p>
         </div>
         {unreadCount > 0 && (
           <button
@@ -135,7 +138,9 @@ export default function NotificationsPage() {
         </div>
       ) : notifications.length === 0 ? (
         <div className="text-center py-16">
-          <Bell size={40} className="text-border mx-auto mb-3" />
+          <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
+            <Bell size={24} className="text-muted" />
+          </div>
           <p className="text-sm font-medium text-foreground mb-1">No notifications yet</p>
           <p className="text-xs text-muted">
             You&apos;ll get notified when someone comments on your posts or listings

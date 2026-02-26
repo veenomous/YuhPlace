@@ -7,6 +7,7 @@ import {
   Calendar,
   Briefcase,
   Users,
+  Compass,
   MapPin,
   Image as ImageIcon,
   BadgeCheck,
@@ -210,7 +211,11 @@ export default function DiscoverPage() {
         <div className="flex flex-col gap-3">
           {filteredPosts.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-sm text-muted">No posts in this category yet.</p>
+              <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
+                <Compass size={24} className="text-muted" />
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1">No posts yet</p>
+              <p className="text-xs text-muted">Try switching to a different category</p>
             </div>
           ) : (
             <>

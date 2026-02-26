@@ -288,12 +288,12 @@ export default function MarketPage() {
       {loading ? (
         <MarketFeedSkeleton />
       ) : filteredListings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <ShoppingBag size={48} className="text-border mb-3" />
-          <p className="text-muted text-sm font-medium">No listings found</p>
-          <p className="text-muted/60 text-xs mt-1">
-            Try adjusting your filters or search
-          </p>
+        <div className="text-center py-16">
+          <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
+            <ShoppingBag size={24} className="text-muted" />
+          </div>
+          <p className="text-sm font-medium text-foreground mb-1">No listings found</p>
+          <p className="text-xs text-muted">Try adjusting your filters or search</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">

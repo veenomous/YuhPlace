@@ -67,8 +67,11 @@ function SearchResults() {
   if (!q.trim()) {
     return (
       <div className="px-4 py-16 text-center">
-        <Search size={40} className="text-border mx-auto mb-3" />
-        <p className="text-sm text-muted">Type something to search across YuhPlace</p>
+        <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
+          <Search size={24} className="text-muted" />
+        </div>
+        <p className="text-sm font-medium text-foreground mb-1">Search YuhPlace</p>
+        <p className="text-xs text-muted">Type something to search listings, posts, and properties</p>
       </div>
     );
   }
@@ -101,9 +104,11 @@ function SearchResults() {
   if (totalResults === 0) {
     return (
       <div className="px-4 py-16 text-center">
-        <Search size={40} className="text-border mx-auto mb-3" />
-        <h2 className="text-base font-semibold text-foreground mb-1">No results for &quot;{q}&quot;</h2>
-        <p className="text-sm text-muted">Try different keywords or change the region filter</p>
+        <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
+          <Search size={24} className="text-muted" />
+        </div>
+        <p className="text-sm font-medium text-foreground mb-1">No results for &quot;{q}&quot;</p>
+        <p className="text-xs text-muted">Try different keywords or change the region filter</p>
       </div>
     );
   }

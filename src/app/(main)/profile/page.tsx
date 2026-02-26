@@ -265,11 +265,11 @@ export default function ProfilePage() {
   if (!loading && !user) {
     return (
       <div className="px-4 py-16 text-center">
-        <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mx-auto mb-4">
-          <UserPen size={28} className="text-muted" />
+        <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
+          <UserPen size={24} className="text-muted" />
         </div>
-        <h2 className="text-lg font-bold text-foreground mb-1">Sign in to view your profile</h2>
-        <p className="text-sm text-muted mb-6">
+        <p className="text-sm font-medium text-foreground mb-1">Sign in to view your profile</p>
+        <p className="text-xs text-muted mb-6">
           Create an account or log in to manage your listings and posts.
         </p>
         <div className="flex flex-col items-center gap-3">
@@ -378,7 +378,9 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="px-4 py-6 text-center">
-            <ShoppingBag size={24} className="text-border mx-auto mb-2" />
+            <div className="w-10 h-10 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-2">
+              <ShoppingBag size={18} className="text-muted" />
+            </div>
             <p className="text-xs text-muted mb-2">No market listings yet</p>
             <Link href="/market/create" className="text-xs text-primary font-semibold hover:underline">
               Create a listing
@@ -409,7 +411,9 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="px-4 py-6 text-center">
-            <Home size={24} className="text-border mx-auto mb-2" />
+            <div className="w-10 h-10 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-2">
+              <Home size={18} className="text-muted" />
+            </div>
             <p className="text-xs text-muted mb-2">No property listings yet</p>
             <Link href="/property/create" className="text-xs text-primary font-semibold hover:underline">
               List a property
@@ -440,7 +444,9 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="px-4 py-6 text-center">
-            <MessageSquare size={24} className="text-border mx-auto mb-2" />
+            <div className="w-10 h-10 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-2">
+              <MessageSquare size={18} className="text-muted" />
+            </div>
             <p className="text-xs text-muted mb-2">No posts yet</p>
             <Link href="/post" className="text-xs text-primary font-semibold hover:underline">
               Create a post
@@ -470,7 +476,9 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="px-4 py-6 text-center">
-            <Heart size={24} className="text-border mx-auto mb-2" />
+            <div className="w-10 h-10 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-2">
+              <Heart size={18} className="text-muted" />
+            </div>
             <p className="text-xs text-muted">No saved items yet</p>
             <p className="text-xs text-muted mt-1">Tap the heart on any listing or post to save it</p>
           </div>

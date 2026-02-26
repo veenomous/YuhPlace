@@ -293,14 +293,16 @@ export default function PropertyBrowsePage() {
 
         {filtered.length === 0 && (
           <div className="text-center py-16">
-            <Home size={48} className="mx-auto text-border mb-4" />
-            <p className="text-muted font-medium mb-1">No properties found</p>
-            <p className="text-sm text-muted">
+            <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
+              <Home size={24} className="text-muted" />
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">No properties found</p>
+            <p className="text-xs text-muted">
               Try adjusting your filters or switching between Rent and Sale.
             </p>
             <button
               onClick={resetFilters}
-              className="mt-4 text-sm text-primary font-semibold hover:underline"
+              className="mt-4 text-xs text-primary font-semibold hover:underline"
             >
               Clear all filters
             </button>
