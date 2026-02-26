@@ -144,7 +144,7 @@ export default function DiscoverPostClient({ id }: { id: string }) {
       </Link>
 
       {/* Post card */}
-      <article className="bg-white border border-border rounded-xl overflow-hidden">
+      <article className="bg-white border border-border/50 rounded-2xl overflow-hidden shadow-card">
         {/* Image gallery */}
         {hasImages && (
           <div className="relative w-full aspect-video bg-surface">

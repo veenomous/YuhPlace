@@ -122,7 +122,7 @@ export default function NotificationsPage() {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="animate-pulse bg-white border border-border rounded-xl p-4">
+            <div key={i} className="animate-pulse bg-white border border-border/50 rounded-xl p-4 shadow-card">
               <div className="flex gap-3">
                 <div className="w-9 h-9 rounded-full bg-border/60" />
                 <div className="flex-1 space-y-2">
@@ -151,9 +151,9 @@ export default function NotificationsPage() {
             const content = (
               <div
                 className={cn(
-                  'flex gap-3 p-3 rounded-xl border transition-colors',
+                  'flex gap-3 p-3 rounded-xl border shadow-soft transition-all duration-200',
                   notif.is_read
-                    ? 'bg-white border-border'
+                    ? 'bg-white border-border/50'
                     : 'bg-primary-light/30 border-primary/20',
                 )}
               >

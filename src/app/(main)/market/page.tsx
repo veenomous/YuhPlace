@@ -285,7 +285,10 @@ export default function MarketPage() {
             <Link
               key={listing.id}
               href={`/market/${listing.id}`}
-              className="group bg-white border border-border rounded-xl overflow-hidden hover:shadow-md transition-all hover:border-primary/20"
+              className={cn(
+                'group bg-white border rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200',
+                listing.is_featured ? 'border-featured/40 ring-1 ring-featured/20' : 'border-border/50'
+              )}
             >
               {/* Image */}
               <div

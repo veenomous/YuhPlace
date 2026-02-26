@@ -87,7 +87,7 @@ function PostCard({ post, commentCount }: { post: DiscoverPostWithDetails; comme
 
   return (
     <Link href={`/discover/${post.id}`} className="block">
-      <article className="bg-white border border-border rounded-xl p-4 hover:shadow-sm transition-shadow">
+      <article className="bg-white border border-border/50 rounded-2xl p-4 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
         {/* Top row: badge + region */}
         <div className="flex items-center justify-between mb-2">
           <PostTypeBadge type={post.post_type} />

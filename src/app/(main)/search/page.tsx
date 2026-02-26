@@ -129,7 +129,7 @@ function SearchResults() {
               const Icon = config.icon;
               return (
                 <Link key={post.id} href={`/discover/${post.id}`} className="block">
-                  <div className="bg-white border border-border rounded-xl p-3 hover:shadow-sm transition-shadow">
+                  <div className="bg-white border border-border/50 rounded-xl p-3 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold', config.bgClass, config.textClass)}>
                         <Icon size={11} />
@@ -163,7 +163,10 @@ function SearchResults() {
           <div className="grid grid-cols-2 gap-2">
             {matchedListings.map((listing, i) => (
               <Link key={listing.id} href={`/market/${listing.id}`} className="block">
-                <div className="bg-white border border-border rounded-xl overflow-hidden hover:shadow-sm transition-shadow">
+                <div className={cn(
+                  'bg-white border rounded-xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200',
+                  listing.is_featured ? 'border-featured/40 ring-1 ring-featured/20' : 'border-border/50'
+                )}>
                   <div className={cn('aspect-[4/3] bg-gradient-to-br flex items-center justify-center relative', GRADIENTS[i % GRADIENTS.length])}>
                     <ShoppingBag size={24} className="text-white/40" />
                     {listing.is_featured && (
@@ -202,7 +205,7 @@ function SearchResults() {
               const TypeIcon = PROPERTY_TYPE_ICONS[prop.property_type];
               return (
                 <Link key={prop.id} href={`/property/${prop.id}`} className="block">
-                  <div className="bg-white border border-border rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex">
+                  <div className="bg-white border border-border/50 rounded-xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 flex">
                     <div className={cn('w-28 flex-shrink-0 bg-gradient-to-br flex items-center justify-center', PROP_GRADIENTS[prop.property_type])}>
                       <TypeIcon size={24} className="text-white/40" />
                     </div>

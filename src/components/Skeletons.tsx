@@ -17,7 +17,7 @@ function Bone({ className }: { className?: string }) {
 
 export function DiscoverPostSkeleton() {
   return (
-    <div className="bg-white border border-border rounded-xl p-4">
+    <div className="bg-white border border-border/50 rounded-2xl p-4 shadow-card">
       {/* Badge row */}
       <div className="flex items-center justify-between mb-3">
         <Bone className="h-6 w-20 rounded-full" />
@@ -58,7 +58,7 @@ export function DiscoverFeedSkeleton({ count = 4 }: { count?: number }) {
 
 export function MarketCardSkeleton() {
   return (
-    <div className="bg-white border border-border rounded-xl overflow-hidden">
+    <div className="bg-white border border-border/50 rounded-2xl overflow-hidden shadow-card">
       {/* Image */}
       <Bone className="aspect-[4/3] w-full rounded-none" />
       {/* Details */}
@@ -86,7 +86,7 @@ export function MarketFeedSkeleton({ count = 6 }: { count?: number }) {
 
 export function PropertyCardSkeleton() {
   return (
-    <div className="bg-white border border-border rounded-2xl overflow-hidden">
+    <div className="bg-white border border-border/50 rounded-2xl overflow-hidden shadow-card">
       {/* Image */}
       <Bone className="h-48 w-full rounded-none" />
       {/* Content */}
@@ -132,7 +132,7 @@ export function SearchResultsSkeleton() {
       <div className="space-y-2">
         <Bone className="h-5 w-32 mb-2" />
         {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="bg-white border border-border rounded-xl p-3 space-y-2">
+          <div key={i} className="bg-white border border-border/50 rounded-xl p-3 shadow-card space-y-2">
             <div className="flex items-center justify-between">
               <Bone className="h-5 w-16 rounded-full" />
               <Bone className="h-3 w-12" />
@@ -187,7 +187,7 @@ export function ProfileSkeleton() {
   return (
     <div className="px-4 py-4 space-y-4">
       {/* Header card */}
-      <div className="bg-white border border-border rounded-xl p-5">
+      <div className="bg-white border border-border/50 rounded-xl p-5 shadow-card">
         <div className="flex items-center gap-4">
           <Bone className="w-16 h-16 rounded-full" />
           <div className="flex-1 space-y-2">
@@ -209,7 +209,7 @@ export function ProfileSkeleton() {
       </div>
       {/* Sections */}
       {[1, 2].map((i) => (
-        <div key={i} className="bg-white border border-border rounded-xl overflow-hidden">
+        <div key={i} className="bg-white border border-border/50 rounded-xl overflow-hidden shadow-card">
           <div className="px-4 py-3 border-b border-border">
             <Bone className="h-4 w-32" />
           </div>

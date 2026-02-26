@@ -46,7 +46,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="bg-white border border-border rounded-2xl p-6">
+    <div className="bg-white border border-border/50 rounded-2xl p-6 shadow-card">
       {/* Header */}
       <div className="text-center mb-6">
         <h1 className="text-xl font-bold text-foreground">Welcome back</h1>

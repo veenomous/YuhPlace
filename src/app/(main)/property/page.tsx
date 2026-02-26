@@ -319,7 +319,10 @@ function PropertyCard({ property, commentCount }: { property: PropertyListingWit
   return (
     <Link
       href={`/property/${property.id}`}
-      className="block bg-white rounded-2xl border border-border overflow-hidden hover:shadow-md transition-shadow"
+      className={cn(
+        'block bg-white rounded-2xl border overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200',
+        property.is_featured ? 'border-featured/40 ring-1 ring-featured/20' : 'border-border/50'
+      )}
     >
       {/* Image */}
       <div className={cn(

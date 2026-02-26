@@ -64,7 +64,7 @@ function StatCard({
   icon: typeof Package;
 }) {
   return (
-    <div className="flex-1 flex flex-col items-center gap-1 py-3 bg-surface rounded-xl border border-border">
+    <div className="flex-1 flex flex-col items-center gap-1 py-3 bg-surface rounded-xl border border-border/50 shadow-soft">
       <Icon size={18} className="text-muted" />
       <span className="text-lg font-bold text-foreground">{value}</span>
       <span className="text-xs text-muted">{label}</span>
@@ -308,7 +308,7 @@ export default function ProfilePage() {
   return (
     <div className="px-4 py-4">
       {/* Profile header card */}
-      <div className="bg-white border border-border rounded-xl p-5 mb-4">
+      <div className="bg-white border border-border/50 rounded-2xl p-5 mb-4 shadow-card">
         <div className="flex items-center gap-4">
           {/* Avatar */}
           <div className="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
@@ -357,7 +357,7 @@ export default function ProfilePage() {
       </div>
 
       {/* My Market Listings */}
-      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+      <div className="bg-white border border-border/50 rounded-2xl overflow-hidden mb-4 shadow-card">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <ShoppingBag size={16} className="text-primary" />
@@ -388,7 +388,7 @@ export default function ProfilePage() {
       </div>
 
       {/* My Property Listings */}
-      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+      <div className="bg-white border border-border/50 rounded-2xl overflow-hidden mb-4 shadow-card">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <Home size={16} className="text-primary" />
@@ -419,7 +419,7 @@ export default function ProfilePage() {
       </div>
 
       {/* My Posts */}
-      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+      <div className="bg-white border border-border/50 rounded-2xl overflow-hidden mb-4 shadow-card">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <MessageSquare size={16} className="text-primary" />
@@ -450,7 +450,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Saved Items */}
-      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+      <div className="bg-white border border-border/50 rounded-2xl overflow-hidden mb-4 shadow-card">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
           <Heart size={16} className="text-red-500" />
           <h3 className="text-sm font-semibold text-foreground">Saved</h3>
@@ -478,7 +478,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Settings section */}
-      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+      <div className="bg-white border border-border/50 rounded-2xl overflow-hidden mb-4 shadow-card">
         <div className="px-4 py-3 border-b border-border">
           <h3 className="text-sm font-semibold text-foreground">Settings</h3>
         </div>
@@ -496,7 +496,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Log out */}
-      <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
+      <div className="bg-white border border-border/50 rounded-2xl overflow-hidden mb-4 shadow-card">
         <SettingsRow
           label="Log Out"
           icon={LogOut}

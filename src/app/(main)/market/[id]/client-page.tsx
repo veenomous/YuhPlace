@@ -273,7 +273,7 @@ export default function MarketListingClient({ id }: { id: string }) {
         {/* Seller Card */}
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-3">Seller</h2>
-          <div className="flex items-center gap-3 p-3 bg-surface border border-border rounded-xl">
+          <div className="flex items-center gap-3 p-3 bg-surface border border-border/50 rounded-xl shadow-soft">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary-light text-primary font-bold text-lg shrink-0">
               {listing.profiles.name.charAt(0).toUpperCase()}
             </div>

@@ -380,7 +380,7 @@ export default function LandingPage() {
               <Link
                 key={item.title}
                 href={item.href}
-                className="group flex items-start gap-3 p-4 bg-white border border-border rounded-2xl hover:shadow-md hover:border-primary/20 transition-all"
+                className="group flex items-start gap-3 p-4 bg-white border border-border/50 rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
               >
                 <div className={cn('flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center', item.bgColor)}>
                   <Icon size={20} className={item.color} />
@@ -419,7 +419,7 @@ export default function LandingPage() {
               <Link
                 key={listing.id}
                 href={`/market/${listing.id}`}
-                className="group flex-shrink-0 w-[200px] bg-white border border-border rounded-xl overflow-hidden hover:shadow-md hover:border-primary/20 transition-all"
+                className="group flex-shrink-0 w-[200px] bg-white border border-border/50 rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
               >
                 {/* Image Placeholder */}
                 <div className={cn('w-full h-32 bg-gradient-to-br relative', listing.gradient)}>
@@ -468,7 +468,7 @@ export default function LandingPage() {
                 <Link
                   key={post.id}
                   href={`/discover/${post.id}`}
-                  className="group flex flex-col p-4 bg-white border border-border rounded-xl hover:shadow-sm hover:border-primary/20 transition-all"
+                  className="group flex flex-col p-4 bg-white border border-border/50 rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between mb-2.5">
                     <span
@@ -518,7 +518,7 @@ export default function LandingPage() {
                 <Link
                   key={property.id}
                   href={`/property/${property.id}`}
-                  className="group bg-white border border-border rounded-2xl overflow-hidden hover:shadow-md hover:border-primary/20 transition-all"
+                  className="group bg-white border border-border/50 rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
                 >
                   {/* Image Placeholder */}
                   <div className={cn('relative w-full h-36 bg-gradient-to-br', property.gradient)}>
@@ -593,7 +593,7 @@ export default function LandingPage() {
               return (
                 <div
                   key={prop.title}
-                  className="flex items-start gap-3.5 p-5 bg-white border border-border rounded-2xl"
+                  className="flex items-start gap-3.5 p-5 bg-white border border-border/50 rounded-2xl shadow-card"
                 >
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center">
                     <Icon size={20} className="text-primary" />

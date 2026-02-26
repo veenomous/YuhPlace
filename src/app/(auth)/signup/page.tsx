@@ -97,7 +97,7 @@ function SignupForm() {
 
   if (isSuccess) {
     return (
-      <div className="bg-white border border-border rounded-2xl p-8 text-center">
+      <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-card">
         <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
           <CheckCircle size={28} className="text-primary" />
         </div>
@@ -118,7 +118,7 @@ function SignupForm() {
   }
 
   return (
-    <div className="bg-white border border-border rounded-2xl p-6">
+    <div className="bg-white border border-border/50 rounded-2xl p-6 shadow-card">
       {/* Header */}
       <div className="text-center mb-6">
         <h1 className="text-xl font-bold text-foreground">Join YuhPlace</h1>
