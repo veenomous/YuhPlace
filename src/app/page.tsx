@@ -320,7 +320,7 @@ export default function LandingPage() {
           }}
         />
 
-        <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-8 md:pt-24 md:pb-14 text-center">
+        <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-10 md:pt-24 md:pb-14 text-center">
           {/* Logo / Wordmark */}
           <div className="inline-flex items-center mb-5">
             <img src="/logo.png" alt="YuhPlace" className="h-14 md:h-16" />
@@ -402,38 +402,40 @@ export default function LandingPage() {
               Post on YuhPlace
             </Link>
           </div>
-        </div>
-      </section>
 
-      {/* ────────── Section 2: Quick Access Cards ────────── */}
-      <section className="relative z-[1] max-w-3xl mx-auto px-5 -mt-8 md:-mt-12 pb-12 md:pb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {QUICK_ACCESS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.title}
-                href={item.href}
-                className={cn(
-                  'group flex items-start gap-3 p-4 bg-white border border-border/50 border-l-[3px] rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200',
-                  item.borderAccent,
-                )}
-              >
-                <div className={cn('flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center', item.bgColor)}>
-                  <Icon size={20} className={item.color} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {item.title}
-                    </h3>
-                    <ChevronRight size={16} className="text-border group-hover:text-primary transition-colors flex-shrink-0" />
-                  </div>
-                  <p className="text-xs text-muted leading-relaxed mt-0.5">{item.description}</p>
-                </div>
-              </Link>
-            );
-          })}
+          {/* Quick Access Cards — docked inside hero */}
+          <div className="relative mt-8 md:mt-10 max-w-3xl mx-auto">
+            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-3 border border-white/60 shadow-soft">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {QUICK_ACCESS.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className={cn(
+                        'group flex items-start gap-3 p-4 bg-white border border-border/50 border-l-[3px] rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200',
+                        item.borderAccent,
+                      )}
+                    >
+                      <div className={cn('flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center', item.bgColor)}>
+                        <Icon size={20} className={item.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                            {item.title}
+                          </h3>
+                          <ChevronRight size={16} className="text-border group-hover:text-primary transition-colors flex-shrink-0" />
+                        </div>
+                        <p className="text-xs text-muted leading-relaxed mt-0.5">{item.description}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
