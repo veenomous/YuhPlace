@@ -404,8 +404,8 @@ export default function LandingPage() {
           </div>
 
           {/* Quick Access Cards — docked inside hero */}
-          <div className="relative mt-8 md:mt-10 max-w-3xl mx-auto text-left">
-            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-3 border border-white/60 shadow-soft">
+          <div className="relative mt-6 md:mt-8 max-w-3xl mx-auto text-left">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-3 border border-border/30 shadow-soft">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {QUICK_ACCESS.map((item) => {
                   const Icon = item.icon;
