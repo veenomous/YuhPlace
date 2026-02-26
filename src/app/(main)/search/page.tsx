@@ -108,7 +108,10 @@ function SearchResults() {
           <Search size={24} className="text-muted" />
         </div>
         <p className="text-sm font-medium text-foreground mb-1">No results for &quot;{q}&quot;</p>
-        <p className="text-xs text-muted">Try different keywords or change the region filter</p>
+        <p className="text-xs text-muted mb-4">Try different keywords or change the region filter</p>
+        <Link href="/" className="text-xs text-primary font-semibold hover:underline">
+          Back to home
+        </Link>
       </div>
     );
   }
