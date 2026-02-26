@@ -191,6 +191,7 @@ const QUICK_ACCESS = [
     href: '/discover',
     color: 'text-primary',
     bgColor: 'bg-primary-light',
+    borderAccent: 'border-l-primary',
   },
   {
     icon: ShoppingBag,
@@ -199,6 +200,7 @@ const QUICK_ACCESS = [
     href: '/market',
     color: 'text-success',
     bgColor: 'bg-success-light',
+    borderAccent: 'border-l-success',
   },
   {
     icon: Home,
@@ -207,6 +209,7 @@ const QUICK_ACCESS = [
     href: '/property',
     color: 'text-accent',
     bgColor: 'bg-accent-light',
+    borderAccent: 'border-l-accent',
   },
 ];
 
@@ -308,10 +311,18 @@ export default function LandingPage() {
         <div className="absolute top-[-40px] right-[-30px] w-[300px] h-[300px] rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute bottom-[-20px] left-[-40px] w-[250px] h-[250px] rounded-full bg-accent/15 blur-3xl" />
         <div className="absolute top-[35%] left-[5%] w-[200px] h-[200px] rounded-full bg-success/10 blur-3xl" />
+        {/* Subtle contour/topographic texture overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 80 Q50 60 100 80 T200 80' fill='none' stroke='%231667B7' stroke-width='0.8'/%3E%3Cpath d='M0 100 Q50 85 100 100 T200 100' fill='none' stroke='%231667B7' stroke-width='0.6'/%3E%3Cpath d='M0 120 Q50 105 100 120 T200 120' fill='none' stroke='%231667B7' stroke-width='0.8'/%3E%3Cpath d='M0 50 Q60 35 120 55 T200 50' fill='none' stroke='%231667B7' stroke-width='0.5'/%3E%3Cpath d='M0 150 Q40 135 100 150 T200 150' fill='none' stroke='%231667B7' stroke-width='0.5'/%3E%3C/svg%3E")`,
+            backgroundSize: '200px 200px',
+          }}
+        />
 
-        <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-12 md:pt-24 md:pb-20 text-center">
+        <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-8 md:pt-24 md:pb-14 text-center">
           {/* Logo / Wordmark */}
-          <div className="inline-flex items-center mb-6">
+          <div className="inline-flex items-center mb-5">
             <img src="/logo.png" alt="YuhPlace" className="h-14 md:h-16" />
           </div>
 
@@ -322,7 +333,7 @@ export default function LandingPage() {
           </h1>
 
           {/* Subheading */}
-          <p className="text-base md:text-lg text-muted max-w-lg mx-auto leading-relaxed mb-8">
+          <p className="text-base md:text-lg text-muted max-w-lg mx-auto leading-relaxed mb-6">
             Discover local updates, buy and sell nearby, and find rentals, homes, and services.
           </p>
 
@@ -343,14 +354,16 @@ export default function LandingPage() {
               placeholder="Search listings, rentals, services, or updates..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 bg-white border border-border rounded-2xl text-base text-foreground placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all"
+              className="w-full pl-11 pr-4 py-3.5 bg-white border border-border rounded-2xl text-base text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all"
             />
           </form>
 
-          {/* Region indicator */}
-          <div className="flex items-center justify-center gap-1.5 text-sm text-muted mt-3 mb-4">
-            <MapPin size={14} className="text-primary" />
-            <span>Starting in <span className="font-medium text-foreground">Georgetown</span></span>
+          {/* Region indicator pill */}
+          <div className="flex items-center justify-center mt-3 mb-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary-light border border-primary/15 rounded-full text-sm font-semibold text-primary">
+              <MapPin size={13} />
+              Georgetown
+            </span>
           </div>
 
           {/* Search suggestion pills */}
@@ -393,7 +406,7 @@ export default function LandingPage() {
       </section>
 
       {/* ────────── Section 2: Quick Access Cards ────────── */}
-      <section className="max-w-3xl mx-auto px-5 -mt-2 pb-12 md:pb-16">
+      <section className="relative z-[1] max-w-3xl mx-auto px-5 -mt-8 md:-mt-12 pb-12 md:pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {QUICK_ACCESS.map((item) => {
             const Icon = item.icon;
@@ -401,7 +414,10 @@ export default function LandingPage() {
               <Link
                 key={item.title}
                 href={item.href}
-                className="group flex items-start gap-3 p-4 bg-white border border-border/50 rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
+                className={cn(
+                  'group flex items-start gap-3 p-4 bg-white border border-border/50 border-l-[3px] rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200',
+                  item.borderAccent,
+                )}
               >
                 <div className={cn('flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center', item.bgColor)}>
                   <Icon size={20} className={item.color} />
