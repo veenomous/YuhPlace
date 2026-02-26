@@ -404,7 +404,7 @@ export default function LandingPage() {
           </div>
 
           {/* Quick Access Cards — docked inside hero */}
-          <div className="relative mt-8 md:mt-10 max-w-3xl mx-auto">
+          <div className="relative mt-8 md:mt-10 max-w-3xl mx-auto text-left">
             <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-3 border border-white/60 shadow-soft">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {QUICK_ACCESS.map((item) => {
