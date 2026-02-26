@@ -305,9 +305,9 @@ export default function LandingPage() {
       {/* ────────── Section 1: Hero ────────── */}
       <section className="relative overflow-hidden bg-gradient-to-b from-primary-light via-background to-background">
         {/* Decorative background orbs */}
-        <div className="absolute top-[-80px] right-[-60px] w-[250px] h-[250px] rounded-full bg-primary/[0.04] blur-xl" />
-        <div className="absolute bottom-[-40px] left-[-40px] w-[180px] h-[180px] rounded-full bg-accent/[0.06] blur-xl" />
-        <div className="absolute top-[40%] left-[10%] w-[100px] h-[100px] rounded-full bg-success/[0.04] blur-2xl" />
+        <div className="absolute top-[-40px] right-[-30px] w-[300px] h-[300px] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-[-20px] left-[-40px] w-[250px] h-[250px] rounded-full bg-accent/15 blur-3xl" />
+        <div className="absolute top-[35%] left-[5%] w-[200px] h-[200px] rounded-full bg-success/10 blur-3xl" />
 
         <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-12 md:pt-24 md:pb-20 text-center">
           {/* Logo / Wordmark */}
