@@ -1,0 +1,65 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<svg width="800" height="250" viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Main Gradient -->
+    <linearGradient id="baseGradient" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#1F5FAF"></stop>
+      <stop offset="55%" stop-color="#2D7BC3"></stop>
+      <stop offset="70%" stop-color="#4FAE5E"></stop>
+      <stop offset="100%" stop-color="#57B947"></stop>
+    </linearGradient>
+
+    <!-- Soft Highlight -->
+    <radialGradient id="highlight" cx="35%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.35"></stop>
+      <stop offset="100%" stop-color="white" stop-opacity="0"></stop>
+    </radialGradient>
+
+    <!-- Bottom Shadow -->
+    <radialGradient id="shadow" cx="50%" cy="100%" r="70%">
+      <stop offset="0%" stop-color="black" stop-opacity="0.25"></stop>
+      <stop offset="100%" stop-color="black" stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+
+  <!-- Pin Shape -->
+  <g>
+    <path d="M125 20
+         C80 20 50 55 50 95
+         C50 150 125 220 125 220
+         C125 220 200 150 200 95
+         C200 55 170 20 125 20 Z" fill="url(#baseGradient)"></path>
+
+    <!-- Highlight Overlay -->
+    <path d="M125 20
+         C80 20 50 55 50 95
+         C50 150 125 220 125 220
+         C125 220 200 150 200 95
+         C200 55 170 20 125 20 Z" fill="url(#highlight)"></path>
+
+    <!-- Bottom Shadow -->
+    <path d="M125 20
+         C80 20 50 55 50 95
+         C50 150 125 220 125 220
+         C125 220 200 150 200 95
+         C200 55 170 20 125 20 Z" fill="url(#shadow)"></path>
+  </g>
+
+  <!-- White Y -->
+  <path d="M105 70
+           L125 100
+           L145 70
+           L160 70
+           L135 110
+           L135 145
+           L115 145
+           L115 110
+           L90 70 Z" fill="white"></path>
+
+  <!-- White Wordmark -->
+  <text x="240" y="135" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="600" fill="white">
+    YuhPlace
+  </text>
+
+</svg>

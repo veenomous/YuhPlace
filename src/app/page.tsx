@@ -657,11 +657,8 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-8">
             {/* Brand */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                  <MapPin size={18} className="text-white" />
-                </div>
-                <span className="text-lg font-bold tracking-tight">YuhPlace</span>
+              <div className="mb-3">
+                <img src="/whitelogo.svg" alt="YuhPlace" className="h-12" />
               </div>
               <p className="text-sm text-white/60 max-w-xs leading-relaxed">
                 Your local platform for Guyana. Discover, buy, sell, rent, and connect with your community.
