@@ -325,7 +325,7 @@ export default function LandingPage() {
         <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-10 md:pt-24 md:pb-14 text-center">
           {/* Logo / Wordmark */}
           <div className="inline-flex items-center mb-5">
-            <img src="/logo.png" alt="YuhPlace" className="h-14 md:h-16" />
+            <img src="/logo.svg" alt="YuhPlace" className="h-14 md:h-16" />
           </div>
 
           {/* Heading */}

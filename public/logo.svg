@@ -1,0 +1,35 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<svg width="800" height="250" viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="pinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F5FAF"></stop>
+      <stop offset="100%" stop-color="#57B947"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- Location Pin -->
+  <path d="M125 20
+           C80 20 50 55 50 95
+           C50 150 125 220 125 220
+           C125 220 200 150 200 95
+           C200 55 170 20 125 20 Z" fill="url(#pinGradient)"></path>
+
+  <!-- Inner White Y -->
+  <path d="M105 70
+           L125 100
+           L145 70
+           L160 70
+           L135 110
+           L135 145
+           L115 145
+           L115 110
+           L90 70 Z" fill="white"></path>
+
+  <!-- Wordmark -->
+  <text x="240" y="135" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="600" fill="#2B2F33">
+    YuhPlace
+  </text>
+
+</svg>
