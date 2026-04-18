@@ -14,12 +14,21 @@ import type {
   DiscoverPostWithDetails,
   MarketListingWithDetails,
   PropertyListingWithDetails,
+  JobWithDetails,
+  RideDriverWithDetails,
+  RideRequestWithDetails,
+  RideSeatWithDriver,
+  RideFareZone,
+  RideSavedPlace,
+  RideServiceType,
   PostType,
   ItemCondition,
   SellerType,
   ListingMode,
   PropertyType,
   OwnerType,
+  JobType,
+  JobIntent,
 } from '@/types/database';
 
 // ─── Fallback mock data (shown when Supabase DB is empty) ───────────────────
@@ -32,7 +41,7 @@ const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     status: 'active', view_count: 0,
     created_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-    profiles: { id: 'u1', name: 'Ramesh Doobay', avatar_url: null, is_verified_business: false, created_at: '2024-06-15T00:00:00Z' },
+    profiles: { id: 'u1', name: 'Ramesh Doobay', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-06-15T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     discover_post_images: [],
   },
@@ -43,7 +52,7 @@ const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     status: 'active', view_count: 0,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    profiles: { id: 'u2', name: 'Ministry of Culture', avatar_url: null, is_verified_business: true, created_at: '2024-01-10T00:00:00Z' },
+    profiles: { id: 'u2', name: 'Ministry of Culture', avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-01-10T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     discover_post_images: [{ id: 'img1', post_id: 'd2', image_url: '/placeholder-event.jpg', sort_order: 0 }],
   },
@@ -54,7 +63,7 @@ const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     status: 'active', view_count: 0,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-    profiles: { id: 'u3', name: "Aunty Savi's Roti", avatar_url: null, is_verified_business: true, created_at: '2025-11-01T00:00:00Z' },
+    profiles: { id: 'u3', name: "Aunty Savi's Roti", avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-11-01T00:00:00Z' },
     regions: { name: 'Berbice', slug: 'berbice' },
     discover_post_images: [{ id: 'img2', post_id: 'd3', image_url: '/placeholder-food.jpg', sort_order: 0 }],
   },
@@ -65,7 +74,7 @@ const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     status: 'active', view_count: 0,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
-    profiles: { id: 'u4', name: 'Sharon Williams', avatar_url: null, is_verified_business: false, created_at: '2024-09-20T00:00:00Z' },
+    profiles: { id: 'u4', name: 'Sharon Williams', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-09-20T00:00:00Z' },
     regions: { name: 'East Coast Demerara', slug: 'east-coast-demerara' },
     discover_post_images: [],
   },
@@ -76,7 +85,7 @@ const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     status: 'active', view_count: 0,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 20).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 20).toISOString(),
-    profiles: { id: 'u5', name: 'David Singh', avatar_url: null, is_verified_business: false, created_at: '2025-03-08T00:00:00Z' },
+    profiles: { id: 'u5', name: 'David Singh', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-03-08T00:00:00Z' },
     regions: { name: 'West Coast Demerara', slug: 'west-coast-demerara' },
     discover_post_images: [],
   },
@@ -87,7 +96,7 @@ const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     status: 'active', view_count: 0,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString(),
-    profiles: { id: 'u6', name: 'Linden Events Committee', avatar_url: null, is_verified_business: false, created_at: '2024-04-12T00:00:00Z' },
+    profiles: { id: 'u6', name: 'Linden Events Committee', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-04-12T00:00:00Z' },
     regions: { name: 'Linden', slug: 'linden' },
     discover_post_images: [{ id: 'img3', post_id: 'd6', image_url: '/placeholder-culture.jpg', sort_order: 0 }],
   },
@@ -98,7 +107,7 @@ const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     status: 'active', view_count: 0,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    profiles: { id: 'u7', name: 'Bartica Town Council', avatar_url: null, is_verified_business: true, created_at: '2024-02-01T00:00:00Z' },
+    profiles: { id: 'u7', name: 'Bartica Town Council', avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-02-01T00:00:00Z' },
     regions: { name: 'Bartica', slug: 'bartica' },
     discover_post_images: [],
   },
@@ -109,7 +118,7 @@ const FALLBACK_DISCOVER_POSTS: DiscoverPostWithDetails[] = [
     status: 'active', view_count: 0,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-    profiles: { id: 'u8', name: 'Patricia Ramjattan', avatar_url: null, is_verified_business: false, created_at: '2024-07-22T00:00:00Z' },
+    profiles: { id: 'u8', name: 'Patricia Ramjattan', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-07-22T00:00:00Z' },
     regions: { name: 'Anna Regina', slug: 'anna-regina' },
     discover_post_images: [],
   },
@@ -120,10 +129,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm1', user_id: 'u1', region_id: 'r1', category_id: 'c1',
     title: 'Samsung Galaxy S24 Ultra - 256GB',
     description: 'Brand new Samsung Galaxy S24 Ultra, factory unlocked, 256GB Phantom Black. Comes with original box, charger, and receipt from Courts Guyana.',
-    price_amount: 385000, currency: 'GYD', condition: 'new', seller_type: 'individual',
+    price_amount: 385000, currency: 'GYD', condition: 'new', seller_type: 'individual', listing_intent: 'offering',
     whatsapp_number: '+5926001234', status: 'active', is_featured: true, view_count: 0,
     created_at: '2026-02-21T10:00:00Z', updated_at: '2026-02-21T10:00:00Z',
-    profiles: { id: 'u1', name: 'Anil Persaud', avatar_url: null, is_verified_business: false, created_at: '2025-06-01T00:00:00Z' },
+    profiles: { id: 'u1', name: 'Anil Persaud', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-06-01T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img1', listing_id: 'm1', image_url: '', sort_order: 0 }],
@@ -132,10 +141,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm2', user_id: 'u2', region_id: 'r2', category_id: 'c3',
     title: '2019 Honda Civic LX - Low Mileage',
     description: 'Excellent condition 2019 Honda Civic LX, automatic transmission. Only 28,000 km. Full service history at Massy Motors.',
-    price_amount: 6500000, currency: 'GYD', condition: 'used', seller_type: 'individual',
+    price_amount: 6500000, currency: 'GYD', condition: 'used', seller_type: 'individual', listing_intent: 'offering',
     whatsapp_number: '+5926112233', status: 'active', is_featured: true, view_count: 0,
     created_at: '2026-02-20T14:30:00Z', updated_at: '2026-02-20T14:30:00Z',
-    profiles: { id: 'u2', name: 'Devi Ramnauth', avatar_url: null, is_verified_business: false, created_at: '2025-03-15T00:00:00Z' },
+    profiles: { id: 'u2', name: 'Devi Ramnauth', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-03-15T00:00:00Z' },
     regions: { name: 'East Bank Demerara', slug: 'east-bank-demerara' },
     market_categories: { name: 'Vehicles', slug: 'vehicles' },
     market_listing_images: [{ id: 'img2', listing_id: 'm2', image_url: '', sort_order: 0 }],
@@ -144,10 +153,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm3', user_id: 'u3', region_id: 'r3', category_id: 'c1',
     title: 'L-Shape Sectional Couch - Grey Fabric',
     description: 'Comfortable L-shape sectional sofa in grey fabric. Bought from Furniture Plus last year. Minor wear, no stains or tears.',
-    price_amount: 180000, currency: 'GYD', condition: 'used', seller_type: 'individual',
+    price_amount: 180000, currency: 'GYD', condition: 'used', seller_type: 'individual', listing_intent: 'offering',
     whatsapp_number: '+5926223344', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-19T09:15:00Z', updated_at: '2026-02-19T09:15:00Z',
-    profiles: { id: 'u3', name: 'Shanna Williams', avatar_url: null, is_verified_business: false, created_at: '2025-08-20T00:00:00Z' },
+    profiles: { id: 'u3', name: 'Shanna Williams', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-08-20T00:00:00Z' },
     regions: { name: 'East Bank Demerara', slug: 'east-bank-demerara' },
     market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img3', listing_id: 'm3', image_url: '', sort_order: 0 }],
@@ -156,10 +165,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm4', user_id: 'u4', region_id: 'r1', category_id: 'c2',
     title: 'Professional Plumbing Services - 24/7',
     description: 'Licensed plumber with 15+ years experience. Available across Georgetown and surrounding areas. Pipe repairs, bathroom installations, drainage.',
-    price_amount: null, currency: 'GYD', condition: 'na', seller_type: 'business',
+    price_amount: null, currency: 'GYD', condition: 'na', seller_type: 'business', listing_intent: 'offering',
     whatsapp_number: '+5926334455', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-18T16:00:00Z', updated_at: '2026-02-18T16:00:00Z',
-    profiles: { id: 'u4', name: "Singh's Plumbing", avatar_url: null, is_verified_business: true, created_at: '2024-11-01T00:00:00Z' },
+    profiles: { id: 'u4', name: "Singh's Plumbing", avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-11-01T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     market_categories: { name: 'Services', slug: 'services' },
     market_listing_images: [],
@@ -168,10 +177,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm5', user_id: 'u5', region_id: 'r4', category_id: 'c2',
     title: 'Moving & Trucking Service - Island Wide',
     description: 'Reliable moving and trucking service covering all of Guyana. Household moves, office relocations, cargo transport.',
-    price_amount: null, currency: 'GYD', condition: 'na', seller_type: 'business',
+    price_amount: null, currency: 'GYD', condition: 'na', seller_type: 'business', listing_intent: 'offering',
     whatsapp_number: '+5926445566', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-17T11:45:00Z', updated_at: '2026-02-17T11:45:00Z',
-    profiles: { id: 'u5', name: 'QuickMove GY', avatar_url: null, is_verified_business: true, created_at: '2025-01-10T00:00:00Z' },
+    profiles: { id: 'u5', name: 'QuickMove GY', avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-01-10T00:00:00Z' },
     regions: { name: 'Berbice', slug: 'berbice' },
     market_categories: { name: 'Services', slug: 'services' },
     market_listing_images: [],
@@ -180,10 +189,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm6', user_id: 'u6', region_id: 'r1', category_id: 'c1',
     title: '55" TCL Smart TV - 4K Android',
     description: 'TCL 55-inch 4K Android Smart TV. Model P735. Bought 3 months ago, selling because I upgraded to 65".',
-    price_amount: 145000, currency: 'GYD', condition: 'used', seller_type: 'individual',
+    price_amount: 145000, currency: 'GYD', condition: 'used', seller_type: 'individual', listing_intent: 'offering',
     whatsapp_number: '+5926556677', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-16T08:30:00Z', updated_at: '2026-02-16T08:30:00Z',
-    profiles: { id: 'u6', name: 'Marcus James', avatar_url: null, is_verified_business: false, created_at: '2025-09-05T00:00:00Z' },
+    profiles: { id: 'u6', name: 'Marcus James', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-09-05T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img6', listing_id: 'm6', image_url: '', sort_order: 0 }],
@@ -192,10 +201,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm7', user_id: 'u7', region_id: 'r5', category_id: 'c1',
     title: 'Kipor 8kVA Generator - Like New',
     description: 'Kipor 8kVA diesel generator in excellent condition. Used only during power outages, very low hours.',
-    price_amount: 520000, currency: 'GYD', condition: 'used', seller_type: 'individual',
+    price_amount: 520000, currency: 'GYD', condition: 'used', seller_type: 'individual', listing_intent: 'offering',
     whatsapp_number: '+5926667788', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-15T13:20:00Z', updated_at: '2026-02-15T13:20:00Z',
-    profiles: { id: 'u7', name: 'Rajesh Doodnauth', avatar_url: null, is_verified_business: false, created_at: '2025-05-22T00:00:00Z' },
+    profiles: { id: 'u7', name: 'Rajesh Doodnauth', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-05-22T00:00:00Z' },
     regions: { name: 'Linden', slug: 'linden' },
     market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img7', listing_id: 'm7', image_url: '', sort_order: 0 }],
@@ -204,10 +213,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm8', user_id: 'u8', region_id: 'r2', category_id: 'c1',
     title: 'Construction Materials - Cement, Sand, Gravel',
     description: 'Supplying construction materials across Demerara. Cement (bags), white sand, gravel, hardcore, 3/4 stone, crusher run.',
-    price_amount: null, currency: 'GYD', condition: 'new', seller_type: 'business',
+    price_amount: null, currency: 'GYD', condition: 'new', seller_type: 'business', listing_intent: 'offering',
     whatsapp_number: '+5926778899', status: 'active', is_featured: true, view_count: 0,
     created_at: '2026-02-14T07:00:00Z', updated_at: '2026-02-14T07:00:00Z',
-    profiles: { id: 'u8', name: 'D&R Supplies', avatar_url: null, is_verified_business: true, created_at: '2024-08-15T00:00:00Z' },
+    profiles: { id: 'u8', name: 'D&R Supplies', avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-08-15T00:00:00Z' },
     regions: { name: 'East Coast Demerara', slug: 'east-coast-demerara' },
     market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [],
@@ -216,10 +225,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm9', user_id: 'u9', region_id: 'r1', category_id: 'c1',
     title: '6-Seater Dining Table Set - Solid Wood',
     description: 'Beautiful solid wood dining table with 6 matching chairs. Mahogany finish, very sturdy.',
-    price_amount: 95000, currency: 'GYD', condition: 'used', seller_type: 'individual',
+    price_amount: 95000, currency: 'GYD', condition: 'used', seller_type: 'individual', listing_intent: 'offering',
     whatsapp_number: '+5926889900', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-13T15:45:00Z', updated_at: '2026-02-13T15:45:00Z',
-    profiles: { id: 'u9', name: 'Camille Chen', avatar_url: null, is_verified_business: false, created_at: '2025-12-01T00:00:00Z' },
+    profiles: { id: 'u9', name: 'Camille Chen', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-12-01T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     market_categories: { name: 'Buy & Sell', slug: 'buy-sell' },
     market_listing_images: [{ id: 'img9', listing_id: 'm9', image_url: '', sort_order: 0 }],
@@ -228,10 +237,10 @@ const FALLBACK_MARKET_LISTINGS: MarketListingWithDetails[] = [
     id: 'm10', user_id: 'u10', region_id: 'r3', category_id: 'c3',
     title: '2021 Toyota Hilux Double Cab 4x4',
     description: 'Toyota Hilux 2021 double cab 4x4, diesel, automatic. 45,000 km. Full option: leather seats, reverse camera, push start.',
-    price_amount: 14500000, currency: 'GYD', condition: 'used', seller_type: 'individual',
+    price_amount: 14500000, currency: 'GYD', condition: 'used', seller_type: 'individual', listing_intent: 'offering',
     whatsapp_number: '+5926990011', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-12T10:10:00Z', updated_at: '2026-02-12T10:10:00Z',
-    profiles: { id: 'u10', name: 'Kevin Bacchus', avatar_url: null, is_verified_business: false, created_at: '2025-04-18T00:00:00Z' },
+    profiles: { id: 'u10', name: 'Kevin Bacchus', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-04-18T00:00:00Z' },
     regions: { name: 'West Coast Demerara', slug: 'west-coast-demerara' },
     market_categories: { name: 'Vehicles', slug: 'vehicles' },
     market_listing_images: [{ id: 'img10', listing_id: 'm10', image_url: '', sort_order: 0 }],
@@ -246,7 +255,7 @@ const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
     price_amount: 120000, currency: 'GYD', bedrooms: 2, bathrooms: 1, neighborhood_text: 'Cummingsburg',
     owner_type: 'landlord', whatsapp_number: '5926001234', status: 'active', is_featured: true, view_count: 0,
     created_at: '2026-02-20T10:00:00Z', updated_at: '2026-02-20T10:00:00Z',
-    profiles: { id: 'user-1', name: 'Renee Singh', avatar_url: null, is_verified_business: true, created_at: '2024-06-01T00:00:00Z' },
+    profiles: { id: 'user-1', name: 'Renee Singh', avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-06-01T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     property_listing_images: [],
   },
@@ -257,7 +266,7 @@ const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
     price_amount: 45000000, currency: 'GYD', bedrooms: 3, bathrooms: 2, neighborhood_text: 'Bel Air Park',
     owner_type: 'owner', whatsapp_number: '5926112233', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-18T14:30:00Z', updated_at: '2026-02-18T14:30:00Z',
-    profiles: { id: 'user-2', name: 'Marcus Thomas', avatar_url: null, is_verified_business: false, created_at: '2025-01-10T00:00:00Z' },
+    profiles: { id: 'user-2', name: 'Marcus Thomas', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-01-10T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     property_listing_images: [],
   },
@@ -268,7 +277,7 @@ const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
     price_amount: 12000000, currency: 'GYD', bedrooms: null, bathrooms: null, neighborhood_text: 'Herstelling',
     owner_type: 'owner', whatsapp_number: '5926223344', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-15T09:00:00Z', updated_at: '2026-02-15T09:00:00Z',
-    profiles: { id: 'user-3', name: 'David Persaud', avatar_url: null, is_verified_business: false, created_at: '2025-03-20T00:00:00Z' },
+    profiles: { id: 'user-3', name: 'David Persaud', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-03-20T00:00:00Z' },
     regions: { name: 'East Bank Demerara', slug: 'east-bank-demerara' },
     property_listing_images: [],
   },
@@ -279,7 +288,7 @@ const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
     price_amount: 35000, currency: 'GYD', bedrooms: 1, bathrooms: 1, neighborhood_text: 'Turkeyen',
     owner_type: 'landlord', whatsapp_number: '5926334455', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-21T16:00:00Z', updated_at: '2026-02-21T16:00:00Z',
-    profiles: { id: 'user-4', name: 'Nalini Ramphal', avatar_url: null, is_verified_business: false, created_at: '2025-07-12T00:00:00Z' },
+    profiles: { id: 'user-4', name: 'Nalini Ramphal', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-07-12T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     property_listing_images: [],
   },
@@ -290,7 +299,7 @@ const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
     price_amount: 200000, currency: 'GYD', bedrooms: null, bathrooms: 1, neighborhood_text: 'Stabroek',
     owner_type: 'agent', whatsapp_number: '5926445566', status: 'active', is_featured: true, view_count: 0,
     created_at: '2026-02-19T11:00:00Z', updated_at: '2026-02-19T11:00:00Z',
-    profiles: { id: 'user-5', name: 'GY Realty Group', avatar_url: null, is_verified_business: true, created_at: '2024-02-01T00:00:00Z' },
+    profiles: { id: 'user-5', name: 'GY Realty Group', avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2024-02-01T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     property_listing_images: [],
   },
@@ -301,7 +310,7 @@ const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
     price_amount: 65000000, currency: 'GYD', bedrooms: 4, bathrooms: 3, neighborhood_text: 'Providence',
     owner_type: 'owner', whatsapp_number: '5926556677', status: 'active', is_featured: true, view_count: 0,
     created_at: '2026-02-17T08:00:00Z', updated_at: '2026-02-17T08:00:00Z',
-    profiles: { id: 'user-6', name: 'Kamini Narine', avatar_url: null, is_verified_business: false, created_at: '2025-05-18T00:00:00Z' },
+    profiles: { id: 'user-6', name: 'Kamini Narine', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-05-18T00:00:00Z' },
     regions: { name: 'East Bank Demerara', slug: 'east-bank-demerara' },
     property_listing_images: [],
   },
@@ -312,7 +321,7 @@ const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
     price_amount: 75000, currency: 'GYD', bedrooms: 1, bathrooms: 1, neighborhood_text: 'Kitty',
     owner_type: 'landlord', whatsapp_number: '5926667788', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-22T07:30:00Z', updated_at: '2026-02-22T07:30:00Z',
-    profiles: { id: 'user-7', name: 'Sherry Adams', avatar_url: null, is_verified_business: false, created_at: '2025-11-01T00:00:00Z' },
+    profiles: { id: 'user-7', name: 'Sherry Adams', avatar_url: null, is_verified_business: false, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2025-11-01T00:00:00Z' },
     regions: { name: 'Georgetown', slug: 'georgetown' },
     property_listing_images: [],
   },
@@ -323,7 +332,7 @@ const FALLBACK_PROPERTY_LISTINGS: PropertyListingWithDetails[] = [
     price_amount: 25000000, currency: 'GYD', bedrooms: null, bathrooms: null, neighborhood_text: 'Uitvlugt',
     owner_type: 'agent', whatsapp_number: '5926778899', status: 'active', is_featured: false, view_count: 0,
     created_at: '2026-02-14T13:00:00Z', updated_at: '2026-02-14T13:00:00Z',
-    profiles: { id: 'user-8', name: 'Premier Land Sales', avatar_url: null, is_verified_business: true, created_at: '2023-09-15T00:00:00Z' },
+    profiles: { id: 'user-8', name: 'Premier Land Sales', avatar_url: null, is_verified_business: true, is_verified_partner: false, partner_name: null, partner_logo_url: null, created_at: '2023-09-15T00:00:00Z' },
     regions: { name: 'West Coast Demerara', slug: 'west-coast-demerara' },
     property_listing_images: [],
   },
@@ -349,6 +358,7 @@ export interface CreateMarketListingInput {
   condition: ItemCondition;
   seller_type: SellerType;
   whatsapp_number: string | null;
+  listing_intent?: 'offering' | 'seeking';
   region_slug: string;
   region_name: string;
   photos?: File[];
@@ -370,29 +380,78 @@ export interface CreatePropertyListingInput {
   photos?: File[];
 }
 
+export interface CreateJobInput {
+  title: string;
+  description: string;
+  job_type: JobType;
+  intent: JobIntent;
+  salary_min: number | null;
+  salary_max: number | null;
+  whatsapp_number: string | null;
+  region_slug: string;
+  region_name: string;
+  photos?: File[];
+}
+
+export interface CreateRideRequestInput {
+  pickup_area: string;
+  destination: string;
+  passengers: number;
+  preferred_time: string | null;
+  note: string | null;
+  budget: number | null;
+  region_slug: string;
+}
+
+export interface RegisterDriverInput {
+  service_type: RideServiceType;
+  vehicle_info: string | null;
+  areas_covered: string | null;
+  license_plate: string | null;
+  whatsapp_number: string;
+  vehicle_photo?: File;
+}
+
 // ─── Context type ───────────────────────────────────────────────────────────
 
 interface DataContextValue {
   discoverPosts: DiscoverPostWithDetails[];
   marketListings: MarketListingWithDetails[];
   propertyListings: PropertyListingWithDetails[];
+  jobs: JobWithDetails[];
   loading: boolean;
 
   getDiscoverPost: (id: string) => DiscoverPostWithDetails | undefined;
   getMarketListing: (id: string) => MarketListingWithDetails | undefined;
   getPropertyListing: (id: string) => PropertyListingWithDetails | undefined;
+  getJob: (id: string) => JobWithDetails | undefined;
 
   addDiscoverPost: (input: CreateDiscoverPostInput) => Promise<{ error: string | null }>;
   addMarketListing: (input: CreateMarketListingInput) => Promise<{ error: string | null }>;
   addPropertyListing: (input: CreatePropertyListingInput) => Promise<{ error: string | null }>;
+  addJob: (input: CreateJobInput) => Promise<{ error: string | null }>;
 
   deleteDiscoverPost: (id: string) => Promise<{ error: string | null }>;
   deleteMarketListing: (id: string) => Promise<{ error: string | null }>;
   deletePropertyListing: (id: string) => Promise<{ error: string | null }>;
+  deleteJob: (id: string) => Promise<{ error: string | null }>;
 
   updateDiscoverPost: (id: string, input: Partial<CreateDiscoverPostInput>) => Promise<{ error: string | null }>;
   updateMarketListing: (id: string, input: Partial<CreateMarketListingInput>) => Promise<{ error: string | null }>;
   updatePropertyListing: (id: string, input: Partial<CreatePropertyListingInput>) => Promise<{ error: string | null }>;
+  updateJob: (id: string, input: Partial<CreateJobInput>) => Promise<{ error: string | null }>;
+
+  // Rides
+  rideDrivers: RideDriverWithDetails[];
+  rideRequests: RideRequestWithDetails[];
+  rideSeats: RideSeatWithDriver[];
+  rideFareZones: RideFareZone[];
+  rideSavedPlaces: RideSavedPlace[];
+  addRideRequest: (input: CreateRideRequestInput) => Promise<{ id: string | null; error: string | null }>;
+  refreshRides: () => Promise<void>;
+  addSavedPlace: (label: string, placeName: string) => Promise<{ error: string | null }>;
+  deleteSavedPlace: (id: string) => Promise<void>;
+  estimateFare: (pickup: string, destination: string) => { min: number; max: number } | null;
 
   regionMap: Map<string, string>;
   categoryMap: Map<string, string>;
@@ -407,14 +466,25 @@ interface DataContextValue {
 const DataContext = createContext<DataContextValue | null>(null);
 
 // Select queries shared between initial fetch and post-insert refetch
-const DISCOVER_POST_SELECT = '*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), discover_post_images(*)';
-const MARKET_LISTING_SELECT = '*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), market_categories(name, slug), market_listing_images(*)';
-const PROPERTY_LISTING_SELECT = '*, profiles(id, name, avatar_url, is_verified_business, created_at), regions(name, slug), property_listing_images(*)';
+const PROFILE_JOIN = 'id, name, avatar_url, is_verified_business, is_verified_partner, partner_name, partner_logo_url, created_at';
+const DISCOVER_POST_SELECT = `*, profiles(${PROFILE_JOIN}), regions(name, slug), discover_post_images(*)`;
+const MARKET_LISTING_SELECT = `*, profiles(${PROFILE_JOIN}), regions(name, slug), market_categories(name, slug), market_listing_images(*)`;
+const PROPERTY_LISTING_SELECT = `*, profiles(${PROFILE_JOIN}), regions(name, slug), property_listing_images(*)`;
+const JOB_SELECT = `*, profiles(${PROFILE_JOIN}), regions(name, slug), job_images(*)`;
+const RIDE_DRIVER_SELECT = `*, profiles(${PROFILE_JOIN})`;
+const RIDE_REQUEST_SELECT = `*, profiles(${PROFILE_JOIN}), regions(name, slug)`;
+const RIDE_SEAT_SELECT = `*, ride_drivers(*, profiles(${PROFILE_JOIN})), regions(name, slug)`;
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [discoverPosts, setDiscoverPosts] = useState(FALLBACK_DISCOVER_POSTS);
   const [marketListings, setMarketListings] = useState(FALLBACK_MARKET_LISTINGS);
   const [propertyListings, setPropertyListings] = useState(FALLBACK_PROPERTY_LISTINGS);
+  const [jobs, setJobs] = useState<JobWithDetails[]>([]);
+  const [rideDrivers, setRideDrivers] = useState<RideDriverWithDetails[]>([]);
+  const [rideRequests, setRideRequests] = useState<RideRequestWithDetails[]>([]);
+  const [rideSeats, setRideSeats] = useState<RideSeatWithDriver[]>([]);
+  const [rideFareZones, setRideFareZones] = useState<RideFareZone[]>([]);
+  const [rideSavedPlaces, setRideSavedPlaces] = useState<RideSavedPlace[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Lookup maps: slug → UUID (populated on mount)
@@ -430,7 +500,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       try {
         const supabase = createClient();
 
-        const [postsRes, listingsRes, propertiesRes, regionsRes, categoriesRes, commentsRes] = await Promise.all([
+        // Expire stale ride requests before fetching
+        try { await supabase.rpc('expire_stale_ride_requests'); } catch {}
+
+        const [postsRes, listingsRes, propertiesRes, jobsRes, driversRes, requestsRes, seatsRes, regionsRes, categoriesRes, commentsRes, fareZonesRes] = await Promise.all([
           supabase
             .from('discover_posts')
             .select(DISCOVER_POST_SELECT)
@@ -446,9 +519,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
             .select(PROPERTY_LISTING_SELECT)
             .eq('status', 'active')
             .order('created_at', { ascending: false }),
+          supabase
+            .from('jobs')
+            .select(JOB_SELECT)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('ride_drivers')
+            .select(RIDE_DRIVER_SELECT)
+            .order('is_available', { ascending: false }),
+          supabase
+            .from('ride_requests')
+            .select(RIDE_REQUEST_SELECT)
+            .in('status', ['open', 'accepted'])
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('ride_seats')
+            .select(RIDE_SEAT_SELECT)
+            .in('status', ['open', 'full'])
+            .gte('departure_time', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+            .order('departure_time', { ascending: true }),
           supabase.from('regions').select('id, slug'),
           supabase.from('market_categories').select('id, slug'),
           supabase.from('comments').select('target_id').eq('status', 'active'),
+          supabase.from('ride_fare_zones').select('*'),
         ]);
 
         // Build lookup maps
@@ -477,6 +571,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         const realProperties = (propertiesRes.data ?? []) as unknown as PropertyListingWithDetails[];
         setPropertyListings([...realProperties, ...FALLBACK_PROPERTY_LISTINGS]);
+
+        const realJobs = (jobsRes.data ?? []) as unknown as JobWithDetails[];
+        setJobs(realJobs);
+
+        setRideDrivers((driversRes.data ?? []) as unknown as RideDriverWithDetails[]);
+        setRideRequests((requestsRes.data ?? []) as unknown as RideRequestWithDetails[]);
+        setRideSeats((seatsRes.data ?? []) as unknown as RideSeatWithDriver[]);
+        setRideFareZones((fareZonesRes.data ?? []) as unknown as RideFareZone[]);
+
+        // Fetch saved places for authenticated user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: places } = await supabase
+            .from('ride_saved_places')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at');
+          setRideSavedPlaces((places ?? []) as unknown as RideSavedPlace[]);
+        }
       } catch {
         // Silently keep fallback data on error
       } finally {
@@ -485,6 +598,51 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
 
     fetchData();
+  }, []);
+
+  // Supabase Realtime: live ride request + offer updates
+  useEffect(() => {
+    const supabase = createClient();
+
+    const requestChannel = supabase
+      .channel('ride-requests-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'ride_requests',
+      }, async (payload) => {
+        // Fetch full record with joins
+        const { data } = await supabase
+          .from('ride_requests')
+          .select(RIDE_REQUEST_SELECT)
+          .eq('id', payload.new.id)
+          .single();
+        if (data) {
+          setRideRequests((prev) => {
+            if (prev.some((r) => r.id === data.id)) return prev;
+            return [data as unknown as RideRequestWithDetails, ...prev];
+          });
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'ride_requests',
+      }, (payload) => {
+        const updated = payload.new as { id: string; status: string };
+        if (['completed', 'cancelled', 'expired'].includes(updated.status)) {
+          setRideRequests((prev) => prev.filter((r) => r.id !== updated.id));
+        } else {
+          setRideRequests((prev) =>
+            prev.map((r) => r.id === updated.id ? { ...r, ...updated } as RideRequestWithDetails : r)
+          );
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(requestChannel);
+    };
   }, []);
 
   const getDiscoverPost = useCallback(
@@ -500,6 +658,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const getPropertyListing = useCallback(
     (id: string) => propertyListings.find((p) => p.id === id),
     [propertyListings],
+  );
+
+  const getJob = useCallback(
+    (id: string) => jobs.find((j) => j.id === id),
+    [jobs],
   );
 
   const addDiscoverPost = useCallback(async (input: CreateDiscoverPostInput): Promise<{ error: string | null }> => {
@@ -574,6 +737,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         condition: input.condition,
         seller_type: input.seller_type,
         whatsapp_number: input.whatsapp_number || null,
+        listing_intent: input.listing_intent || 'offering',
       })
       .select('id')
       .single();
@@ -663,6 +827,57 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }, [regionMap]);
 
+  const addJob = useCallback(async (input: CreateJobInput): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'You must be signed in to post a job.' };
+
+    const regionId = regionMap.get(input.region_slug);
+    if (!regionId) return { error: 'Invalid region selected.' };
+
+    const { data: inserted, error: insertError } = await supabase
+      .from('jobs')
+      .insert({
+        user_id: user.id,
+        region_id: regionId,
+        title: input.title,
+        description: input.description,
+        job_type: input.job_type,
+        intent: input.intent,
+        salary_min: input.salary_min,
+        salary_max: input.salary_max,
+        whatsapp_number: input.whatsapp_number || null,
+      })
+      .select('id')
+      .single();
+
+    if (insertError) return { error: insertError.message };
+
+    if (input.photos && input.photos.length > 0) {
+      const { urls } = await uploadImages(input.photos, 'jobs', inserted.id);
+      if (urls.length > 0) {
+        const imageRecords = urls.map((url, idx) => ({
+          job_id: inserted.id,
+          image_url: url,
+          sort_order: idx,
+        }));
+        await supabase.from('job_images').insert(imageRecords);
+      }
+    }
+
+    const { data: full } = await supabase
+      .from('jobs')
+      .select(JOB_SELECT)
+      .eq('id', inserted.id)
+      .single();
+
+    if (full) {
+      setJobs((prev) => [full as unknown as JobWithDetails, ...prev]);
+    }
+
+    return { error: null };
+  }, [regionMap]);
+
   const updateDiscoverPost = useCallback(async (id: string, input: Partial<CreateDiscoverPostInput>): Promise<{ error: string | null }> => {
     const supabase = createClient();
     const rpcParams: Record<string, unknown> = { post_id: id };
@@ -694,6 +909,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (input.condition !== undefined) rpcParams.p_condition = input.condition;
     if (input.seller_type !== undefined) rpcParams.p_seller_type = input.seller_type;
     if (input.whatsapp_number !== undefined) rpcParams.p_whatsapp_number = input.whatsapp_number;
+    if (input.listing_intent !== undefined) rpcParams.p_listing_intent = input.listing_intent;
     if (input.region_slug) {
       const regionId = regionMap.get(input.region_slug);
       if (regionId) rpcParams.p_region_id = regionId;
@@ -741,6 +957,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }, [regionMap]);
 
+  const updateJob = useCallback(async (id: string, input: Partial<CreateJobInput>): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const rpcParams: Record<string, unknown> = { p_job_id: id };
+    if (input.title !== undefined) rpcParams.p_title = input.title;
+    if (input.description !== undefined) rpcParams.p_description = input.description;
+    if (input.job_type !== undefined) rpcParams.p_job_type = input.job_type;
+    if (input.intent !== undefined) rpcParams.p_intent = input.intent;
+    if (input.salary_min !== undefined) rpcParams.p_salary_min = input.salary_min;
+    if (input.salary_max !== undefined) rpcParams.p_salary_max = input.salary_max;
+    if (input.whatsapp_number !== undefined) rpcParams.p_whatsapp_number = input.whatsapp_number;
+    if (input.region_slug) {
+      const regionId = regionMap.get(input.region_slug);
+      if (regionId) rpcParams.p_region_id = regionId;
+    }
+
+    const { error } = await supabase.rpc('update_job', rpcParams);
+    if (error) return { error: error.message };
+
+    const { data: full } = await supabase.from('jobs').select(JOB_SELECT).eq('id', id).single();
+    if (full) {
+      setJobs((prev) => prev.map((j) => j.id === id ? full as unknown as JobWithDetails : j));
+    }
+    return { error: null };
+  }, [regionMap]);
+
   const deleteDiscoverPost = useCallback(async (id: string): Promise<{ error: string | null }> => {
     const supabase = createClient();
     const { error } = await supabase.rpc('soft_delete_discover_post', { post_id: id });
@@ -765,25 +1006,167 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }, []);
 
+  const deleteJob = useCallback(async (id: string): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { error } = await supabase.rpc('soft_delete_job', { p_job_id: id });
+    if (error) return { error: error.message };
+    setJobs((prev) => prev.filter((j) => j.id !== id));
+    return { error: null };
+  }, []);
+
+  // ─── Rides ──────────────────────────────────────────────────────────────────
+
+  const addRideRequest = useCallback(async (input: CreateRideRequestInput): Promise<{ id: string | null; error: string | null }> => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { id: null, error: 'You must be signed in to request a ride.' };
+
+    const regionId = regionMap.get(input.region_slug);
+    if (!regionId) return { id: null, error: 'Invalid region selected.' };
+
+    const { data: inserted, error: insertError } = await supabase
+      .from('ride_requests')
+      .insert({
+        rider_id: user.id,
+        region_id: regionId,
+        pickup_area: input.pickup_area,
+        destination: input.destination,
+        passengers: input.passengers,
+        preferred_time: input.preferred_time || null,
+        note: input.note || null,
+        budget: input.budget,
+      })
+      .select('id')
+      .single();
+
+    if (insertError) return { id: null, error: insertError.message };
+
+    // Refetch with joins
+    const { data: full } = await supabase
+      .from('ride_requests')
+      .select(RIDE_REQUEST_SELECT)
+      .eq('id', inserted.id)
+      .single();
+
+    if (full) {
+      setRideRequests((prev) => [full as unknown as RideRequestWithDetails, ...prev]);
+    }
+
+    // Fire-and-forget: notify available drivers in region
+    fetch('/api/rides/notify-drivers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requestId: inserted.id,
+        pickup: input.pickup_area,
+        destination: input.destination,
+        regionSlug: input.region_slug,
+      }),
+    }).catch(() => {});
+
+    return { id: inserted.id, error: null };
+  }, [regionMap]);
+
+  const refreshRides = useCallback(async () => {
+    const supabase = createClient();
+    // Expire stale requests before fetching
+    try { await supabase.rpc('expire_stale_ride_requests'); } catch {}
+    const [driversRes, requestsRes, seatsRes] = await Promise.all([
+      supabase
+        .from('ride_drivers')
+        .select(RIDE_DRIVER_SELECT)
+        .order('is_available', { ascending: false }),
+      supabase
+        .from('ride_requests')
+        .select(RIDE_REQUEST_SELECT)
+        .in('status', ['open', 'accepted'])
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('ride_seats')
+        .select(RIDE_SEAT_SELECT)
+        .in('status', ['open', 'full'])
+        .gte('departure_time', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+        .order('departure_time', { ascending: true }),
+    ]);
+    setRideDrivers((driversRes.data ?? []) as unknown as RideDriverWithDetails[]);
+    setRideRequests((requestsRes.data ?? []) as unknown as RideRequestWithDetails[]);
+    setRideSeats((seatsRes.data ?? []) as unknown as RideSeatWithDriver[]);
+  }, []);
+
+  const addSavedPlace = useCallback(async (label: string, placeName: string): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc('upsert_ride_saved_place', {
+      p_label: label,
+      p_place_name: placeName,
+    });
+    if (error) return { error: error.message };
+    // Refetch saved places
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: places } = await supabase
+        .from('ride_saved_places')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at');
+      setRideSavedPlaces((places ?? []) as unknown as RideSavedPlace[]);
+    }
+    return { error: null };
+  }, []);
+
+  const deleteSavedPlace = useCallback(async (id: string) => {
+    const supabase = createClient();
+    await supabase.from('ride_saved_places').delete().eq('id', id);
+    setRideSavedPlaces((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const estimateFare = useCallback((pickup: string, destination: string): { min: number; max: number } | null => {
+    if (!pickup || !destination) return null;
+    const p = pickup.toLowerCase();
+    const d = destination.toLowerCase();
+    // Try both directions
+    const match = rideFareZones.find((z) =>
+      (p.includes(z.zone_from.toLowerCase()) && d.includes(z.zone_to.toLowerCase())) ||
+      (p.includes(z.zone_to.toLowerCase()) && d.includes(z.zone_from.toLowerCase())) ||
+      (z.zone_from.toLowerCase().includes(p) && z.zone_to.toLowerCase().includes(d)) ||
+      (z.zone_to.toLowerCase().includes(p) && z.zone_from.toLowerCase().includes(d))
+    );
+    return match ? { min: Number(match.min_fare), max: Number(match.max_fare) } : null;
+  }, [rideFareZones]);
+
   return (
     <DataContext.Provider
       value={{
         discoverPosts,
         marketListings,
         propertyListings,
+        jobs,
         loading,
         getDiscoverPost,
         getMarketListing,
         getPropertyListing,
+        getJob,
         addDiscoverPost,
         addMarketListing,
         addPropertyListing,
+        addJob,
         deleteDiscoverPost,
         deleteMarketListing,
         deletePropertyListing,
+        deleteJob,
         updateDiscoverPost,
         updateMarketListing,
         updatePropertyListing,
+        updateJob,
+        rideDrivers,
+        rideRequests,
+        rideSeats,
+        rideFareZones,
+        rideSavedPlaces,
+        addRideRequest,
+        refreshRides,
+        addSavedPlace,
+        deleteSavedPlace,
+        estimateFare,
         regionMap,
         categoryMap,
         commentCounts,

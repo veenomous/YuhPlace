@@ -1,700 +1,449 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import {
-  Search,
-  MapPin,
-  Compass,
-  ShoppingBag,
-  Home,
   ArrowRight,
-  ChevronRight,
-  AlertTriangle,
-  Calendar,
-  Briefcase,
-  Users,
-  Globe,
-  Zap,
-  Heart,
+  Home,
+  ShoppingBasket,
+  Wrench,
   ShieldCheck,
-  BedDouble,
-  Bath,
-  Car,
+  Plane,
   Building2,
-  LandPlot,
-  Facebook,
-  Instagram,
-  Twitter,
-  User,
-  LogOut,
+  MapPin,
+  Bell,
+  ShoppingBag,
 } from 'lucide-react';
-import { cn, formatPrice } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import HomeServiceRequestModal from '@/components/HomeServiceRequestModal';
+import type { HomeServiceType } from '@/types/database';
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
+// ─── Animation ───────────────────────────────────────────────────────────────
 
-const FEATURED_LISTINGS = [
-  {
-    id: 'm1',
-    title: 'Samsung Galaxy S24 Ultra - 256GB',
-    price: 385000,
-    region: 'Georgetown',
-    gradient: 'from-emerald-400 to-teal-500',
-  },
-  {
-    id: 'm2',
-    title: '2019 Honda Civic LX - Low Mileage',
-    price: 6500000,
-    region: 'East Bank Demerara',
-    gradient: 'from-blue-400 to-indigo-500',
-  },
-  {
-    id: 'm6',
-    title: '55" TCL Smart TV - 4K Android',
-    price: 145000,
-    region: 'Georgetown',
-    gradient: 'from-purple-400 to-pink-500',
-  },
-  {
-    id: 'm7',
-    title: 'Kipor 8kVA Generator - Like New',
-    price: 520000,
-    region: 'Linden',
-    gradient: 'from-orange-400 to-red-500',
-  },
-];
-
-const DISCOVER_POSTS = [
-  {
-    id: 'd1',
-    type: 'alert' as const,
-    title: 'Flooding on Sheriff Street - Avoid the Area',
-    region: 'Georgetown',
-    time: '25m ago',
-  },
-  {
-    id: 'd2',
-    type: 'event' as const,
-    title: 'Mashramani Float Parade - Route & Schedule',
-    region: 'Georgetown',
-    time: '3h ago',
-  },
-  {
-    id: 'd3',
-    type: 'business' as const,
-    title: 'New Roti Shop Opening in Berbice!',
-    region: 'Berbice',
-    time: '8h ago',
-  },
-  {
-    id: 'd4',
-    type: 'community' as const,
-    title: 'Community Clean-Up Day - East Coast Demerara',
-    region: 'East Coast Demerara',
-    time: '14h ago',
-  },
-];
-
-const FEATURED_PROPERTIES = [
-  {
-    id: 'p1',
-    title: 'Modern 2-Bedroom Apartment in Georgetown',
-    price: 120000,
-    mode: 'rent' as const,
-    type: 'Apartment',
-    bedrooms: 2,
-    bathrooms: 1,
-    region: 'Georgetown',
-    gradient: 'from-sky-400 to-blue-600',
-  },
-  {
-    id: 'p2',
-    title: 'Elegant 3-Bedroom House in Bel Air Park',
-    price: 45000000,
-    mode: 'sale' as const,
-    type: 'House',
-    bedrooms: 3,
-    bathrooms: 2,
-    region: 'Georgetown',
-    gradient: 'from-emerald-400 to-teal-600',
-  },
-  {
-    id: 'p6',
-    title: 'Modern 4-Bedroom House in Providence',
-    price: 65000000,
-    mode: 'sale' as const,
-    type: 'House',
-    bedrooms: 4,
-    bathrooms: 3,
-    region: 'East Bank Demerara',
-    gradient: 'from-lime-400 to-green-600',
-  },
-];
-
-const POST_TYPE_CONFIG = {
-  alert: {
-    label: 'Alert',
-    bgClass: 'bg-tag-alert-light',
-    textClass: 'text-tag-alert',
-    icon: AlertTriangle,
-  },
-  event: {
-    label: 'Event',
-    bgClass: 'bg-tag-event-light',
-    textClass: 'text-tag-event',
-    icon: Calendar,
-  },
-  business: {
-    label: 'Business',
-    bgClass: 'bg-tag-business-light',
-    textClass: 'text-tag-business',
-    icon: Briefcase,
-  },
-  community: {
-    label: 'Community',
-    bgClass: 'bg-tag-community-light',
-    textClass: 'text-tag-community',
-    icon: Users,
-  },
-} as const;
-
-const VALUE_PROPS = [
-  {
-    icon: Globe,
-    title: 'Local-First',
-    description: 'Built specifically for Guyana. Content, categories, and regions made for your community.',
-  },
-  {
-    icon: Zap,
-    title: 'Easy to Post',
-    description: 'List in under 60 seconds. No complicated forms, just what matters.',
-  },
-  {
-    icon: Heart,
-    title: 'Community-Powered',
-    description: 'Real updates from real people. Alerts, events, and news from your neighbours.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Trusted',
-    description: 'Verified profiles and active moderation to keep the community safe.',
-  },
-];
-
-const QUICK_ACCESS = [
-  {
-    icon: Compass,
-    title: 'Discover',
-    description: 'Local alerts, events, and community updates',
-    href: '/discover',
-    color: 'text-primary',
-    bgColor: 'bg-primary-light',
-    borderAccent: 'border-l-primary',
-  },
-  {
-    icon: ShoppingBag,
-    title: 'Market',
-    description: 'Buy, sell, and find services',
-    href: '/market',
-    color: 'text-success',
-    bgColor: 'bg-success-light',
-    borderAccent: 'border-l-success',
-  },
-  {
-    icon: Home,
-    title: 'Property',
-    description: 'Rentals, homes, land, and more',
-    href: '/property',
-    color: 'text-accent',
-    bgColor: 'bg-accent-light',
-    borderAccent: 'border-l-accent',
-  },
-];
-
-// ─── Page ───────────────────────────────────────────────────────────────────
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
+};
+const stagger = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
+const cardFade = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
+};
 
 export default function LandingPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [serviceChoice, setServiceChoice] = useState<HomeServiceType>('property_viewing');
 
-  const displayName = profile?.name || user?.user_metadata?.name || user?.email || '';
-  const initials = displayName
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    if (menuOpen) document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [menuOpen]);
-
-  async function handleSignOut() {
-    setMenuOpen(false);
-    await signOut();
-    router.refresh();
+  function openService(s: HomeServiceType) {
+    setServiceChoice(s);
+    setModalOpen(true);
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* ────────── Top Bar ────────── */}
-      <div className="absolute top-0 left-0 right-0 z-10">
-        <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-end">
-          {!loading && (
-            user ? (
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-border hover:bg-white transition-colors"
-                >
-                  <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-primary-dark">{initials}</span>
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{displayName.split(' ')[0]}</span>
-                </button>
+    <div className="min-h-screen" style={{ backgroundColor: '#fcf9f8', color: '#1c1b1b' }}>
 
-                {menuOpen && (
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded-xl shadow-lg py-1 min-w-[160px] z-50">
-                    <Link
-                      href="/profile"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface transition-colors"
-                    >
-                      <User size={15} className="text-muted" />
-                      Profile
-                    </Link>
-                    <button
-                      onClick={handleSignOut}
-                      className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-danger hover:bg-surface transition-colors"
-                    >
-                      <LogOut size={15} />
-                      Sign out
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
+      {/* ── TopNav ── */}
+      <nav className="fixed top-0 w-full z-50 backdrop-blur-xl shadow-sm" style={{ backgroundColor: 'rgba(252,249,248,0.85)' }}>
+        <div className="flex justify-between items-center px-4 sm:px-6 h-12 sm:h-14 w-full max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 sm:gap-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="YuhPlace" className="h-5 sm:h-6" />
+            <div className="hidden sm:flex gap-4">
+              {[
+                { label: 'Services', href: '/home-services' },
+                { label: 'Property', href: '/property' },
+                { label: 'Market', href: '/market' },
+                { label: 'Discover', href: '/discover' },
+              ].map((item) => (
                 <Link
-                  href="/login"
-                  className="px-4 py-1.5 text-sm font-semibold text-primary hover:text-primary-dark transition-colors"
+                  key={item.label}
+                  href={item.href}
+                  className="text-xs font-semibold tracking-tight transition-colors hover:text-[#196a24]"
+                  style={{ color: '#40493d', fontFamily: 'var(--font-headline)' }}
                 >
-                  Log in
+                  {item.label}
                 </Link>
-                <Link
-                  href="/signup"
-                  className="px-4 py-1.5 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors"
-                >
-                  Sign up
-                </Link>
-              </div>
-            )
-          )}
-        </div>
-      </div>
-
-      {/* ────────── Section 1: Hero ────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-primary-light via-background to-background">
-        {/* Decorative background orbs */}
-        <div className="absolute top-[-40px] right-[-30px] w-[300px] h-[300px] rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-[-20px] left-[-40px] w-[250px] h-[250px] rounded-full bg-accent/15 blur-3xl" />
-        <div className="absolute top-[35%] left-[5%] w-[200px] h-[200px] rounded-full bg-success/10 blur-3xl" />
-        {/* Subtle contour/topographic texture overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 80 Q50 60 100 80 T200 80' fill='none' stroke='%231667B7' stroke-width='0.8'/%3E%3Cpath d='M0 100 Q50 85 100 100 T200 100' fill='none' stroke='%231667B7' stroke-width='0.6'/%3E%3Cpath d='M0 120 Q50 105 100 120 T200 120' fill='none' stroke='%231667B7' stroke-width='0.8'/%3E%3Cpath d='M0 50 Q60 35 120 55 T200 50' fill='none' stroke='%231667B7' stroke-width='0.5'/%3E%3Cpath d='M0 150 Q40 135 100 150 T200 150' fill='none' stroke='%231667B7' stroke-width='0.5'/%3E%3C/svg%3E")`,
-            backgroundSize: '200px 200px',
-            maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
-          }}
-        />
-
-        <div className="relative max-w-3xl mx-auto px-5 pt-16 pb-10 md:pt-24 md:pb-14 text-center">
-          {/* Logo / Wordmark */}
-          <div className="inline-flex items-center mb-5">
-            <img src="/logo.svg" alt="YuhPlace" className="h-16 md:h-20" />
-          </div>
-
-          {/* Heading */}
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground leading-tight tracking-tight mb-4">
-            Your place for{' '}
-            <span className="text-primary">Guyana.</span>
-          </h1>
-
-          {/* Subheading */}
-          <p className="text-base md:text-lg text-muted max-w-lg mx-auto leading-relaxed mb-6">
-            Discover local updates, buy and sell nearby, and find rentals, homes, and services.
-          </p>
-
-          {/* Search Bar */}
-          <form
-            className="relative max-w-md mx-auto"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (searchQuery.trim()) router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-            }}
-          >
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted"
-            />
-            <input
-              type="text"
-              placeholder="Search listings, rentals, services, or updates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 bg-white border border-border rounded-2xl text-base text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all"
-            />
-          </form>
-
-          {/* Region indicator pill */}
-          <div className="flex items-center justify-center mt-3 mb-4">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold text-primary-dark">
-              <MapPin size={13} />
-              Georgetown
-            </span>
-          </div>
-
-          {/* Search suggestion pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-6 max-w-md mx-auto">
-            {[
-              { label: 'Apartments in Georgetown', q: 'apartments georgetown' },
-              { label: 'Used Cars', q: 'used cars' },
-              { label: 'Local Events', q: 'events' },
-            ].map((s) => (
-              <button
-                key={s.q}
-                onClick={() => {
-                  setSearchQuery(s.q);
-                  router.push(`/search?q=${encodeURIComponent(s.q)}`);
-                }}
-                className="px-3 py-1.5 text-xs font-medium text-primary bg-white/80 border border-primary/15 rounded-full hover:bg-white hover:border-primary/30 transition-all"
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/discover"
-              className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-colors shadow-sm"
-            >
-              Browse YuhPlace
-              <ArrowRight size={16} />
-            </Link>
-            <Link
-              href="/post"
-              className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-white text-primary text-sm font-semibold rounded-xl border-2 border-primary/20 hover:border-primary hover:bg-primary-light transition-all"
-            >
-              Post on YuhPlace
-            </Link>
-          </div>
-
-          {/* Quick Access Cards — docked inside hero */}
-          <div className="relative mt-6 md:mt-8 max-w-3xl mx-auto text-left">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-border/40 shadow-card">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {QUICK_ACCESS.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.title}
-                      href={item.href}
-                      className={cn(
-                        'group flex items-start gap-3 p-4 bg-white border border-border/50 border-l-[3px] rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200',
-                        item.borderAccent,
-                      )}
-                    >
-                      <div className={cn('flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center', item.bgColor)}>
-                        <Icon size={20} className={item.color} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                            {item.title}
-                          </h3>
-                          <ChevronRight size={16} className="text-border group-hover:text-primary transition-colors flex-shrink-0" />
-                        </div>
-                        <p className="text-xs text-muted leading-relaxed mt-0.5">{item.description}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ────────── Section 3: Featured Market Listings ────────── */}
-      <section className="bg-surface-warm py-12 md:py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">What&apos;s on the Market</h2>
-            <Link
-              href="/market"
-              className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
-            >
-              View all
-              <ArrowRight size={14} />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/notifications" className="p-1.5 rounded-full transition-all hover:bg-[#ebe7e7]/50">
+              <Bell size={16} style={{ color: '#40493d' }} />
             </Link>
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-5 px-5 pb-2">
-            {FEATURED_LISTINGS.map((listing) => (
-              <Link
-                key={listing.id}
-                href={`/market/${listing.id}`}
-                className="group flex-shrink-0 w-[200px] bg-white border border-border/50 rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
-              >
-                {/* Image Placeholder */}
-                <div className={cn('w-full h-32 bg-gradient-to-br relative', listing.gradient)}>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ShoppingBag size={28} className="text-white/40" />
-                  </div>
-                </div>
-                {/* Details */}
-                <div className="p-3">
-                  <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors mb-1.5">
-                    {listing.title}
-                  </h3>
-                  <p className="text-sm font-bold text-primary mb-1">
-                    {formatPrice(listing.price)}
-                  </p>
-                  <span className="flex items-center gap-0.5 text-xs text-muted">
-                    <MapPin size={10} />
-                    {listing.region}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ────────── Section 4: Latest in Discover ────────── */}
-      <section className="py-12 md:py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">What&apos;s Happening</h2>
-            <Link
-              href="/discover"
-              className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
-            >
-              View all
-              <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {DISCOVER_POSTS.map((post) => {
-              const config = POST_TYPE_CONFIG[post.type];
-              const TypeIcon = config.icon;
-              return (
-                <Link
-                  key={post.id}
-                  href={`/discover/${post.id}`}
-                  className="group flex flex-col p-4 bg-white border border-border/50 rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  <div className="flex items-center justify-between mb-2.5">
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold',
-                        config.bgClass,
-                        config.textClass
-                      )}
-                    >
-                      <TypeIcon size={12} />
-                      {config.label}
-                    </span>
-                    <span className="text-xs text-muted">{post.time}</span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground leading-snug group-hover:text-primary transition-colors mb-2">
-                    {post.title}
-                  </h3>
-                  <span className="flex items-center gap-1 text-xs text-muted mt-auto">
-                    <MapPin size={11} />
-                    {post.region}
+            {!loading && (
+              user ? (
+                <Link href="/profile" className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e5e2e1' }}>
+                  <span className="text-[10px] font-bold" style={{ color: '#196a24' }}>
+                    {(user.user_metadata?.name || user.email || '?')[0].toUpperCase()}
                   </span>
                 </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ────────── Section 5: Featured Properties ────────── */}
-      <section className="bg-surface py-12 md:py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">Find Your Place</h2>
-            <Link
-              href="/property"
-              className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
-            >
-              View all
-              <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {FEATURED_PROPERTIES.map((property) => {
-              const isRent = property.mode === 'rent';
-              return (
-                <Link
-                  key={property.id}
-                  href={`/property/${property.id}`}
-                  className="group bg-white border border-border/50 rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  {/* Image Placeholder */}
-                  <div className={cn('relative w-full h-36 bg-gradient-to-br', property.gradient)}>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Home size={32} className="text-white/40" />
-                    </div>
-                    {/* Badge */}
-                    <div className="absolute top-2.5 left-2.5">
-                      <span
-                        className={cn(
-                          'px-2 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wide',
-                          isRent ? 'bg-primary text-white' : 'bg-success text-white'
-                        )}
-                      >
-                        For {property.mode}
-                      </span>
-                    </div>
-                    {/* Price overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-3 pb-2.5 pt-6">
-                      <p className="text-white font-bold text-base">
-                        {formatPrice(property.price)}
-                        {isRent && <span className="text-xs font-normal text-white/80">/mo</span>}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-3">
-                    <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-2">
-                      {property.title}
-                    </h3>
-                    <div className="flex items-center gap-2.5 text-xs text-muted mb-1.5">
-                      <span>{property.type}</span>
-                      {property.bedrooms !== null && (
-                        <span className="flex items-center gap-0.5">
-                          <BedDouble size={12} />
-                          {property.bedrooms}
-                        </span>
-                      )}
-                      {property.bathrooms !== null && (
-                        <span className="flex items-center gap-0.5">
-                          <Bath size={12} />
-                          {property.bathrooms}
-                        </span>
-                      )}
-                    </div>
-                    <span className="flex items-center gap-0.5 text-xs text-muted">
-                      <MapPin size={11} />
-                      {property.region}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ────────── Section 6: Why YuhPlace ────────── */}
-      <section className="bg-surface-warm py-12 md:py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">Why YuhPlace?</h2>
-            <p className="text-sm text-muted max-w-md mx-auto">
-              A platform made for Guyanese, by Guyanese. Here is what makes us different.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {VALUE_PROPS.map((prop) => {
-              const Icon = prop.icon;
-              return (
-                <div
-                  key={prop.title}
-                  className="flex items-start gap-3.5 p-5 bg-white border border-border/50 rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center">
-                    <Icon size={20} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-1">{prop.title}</h3>
-                    <p className="text-xs text-muted leading-relaxed">{prop.description}</p>
-                  </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <Link href="/login" className="px-2.5 py-1 text-xs font-semibold hover:text-[#196a24] transition-colors" style={{ color: '#40493d' }}>Log in</Link>
+                  <Link href="/signup" className="px-3 py-1 text-xs font-bold text-white rounded-md hover:brightness-110 transition-colors" style={{ backgroundColor: '#196a24' }}>Sign up</Link>
                 </div>
-              );
-            })}
+              )
+            )}
           </div>
         </div>
-      </section>
+      </nav>
 
-      {/* ────────── Section 7: Footer ────────── */}
-      <footer className="bg-foreground text-white">
-        <div className="max-w-3xl mx-auto px-5 py-10 md:py-14">
-          {/* Top row */}
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-8">
-            {/* Brand */}
-            <div>
-              <div className="mb-3">
-                <img src="/whitelogo.svg" alt="YuhPlace" className="h-12" />
+      <main className="pt-12 sm:pt-14">
+
+        {/* ── HERO ── */}
+        <section className="relative overflow-hidden px-4 sm:px-6 pt-6 pb-10 sm:pt-12 sm:pb-16">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center">
+            <motion.div className="md:col-span-7 z-10" initial="hidden" animate="visible" variants={stagger}>
+              <motion.div variants={fadeUp} className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold mb-4 tracking-widest uppercase" style={{ backgroundColor: '#F1FBF4', color: '#196a24' }}>
+                <Plane size={10} /> For the Guyanese diaspora
+              </motion.div>
+              <motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-[0.9] mb-4" style={{ fontFamily: 'var(--font-headline)' }}>
+                Home, from<br />
+                <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, #196a24, #36843a)' }}>
+                  wherever yuh deh.
+                </span>
+              </motion.h1>
+              <motion.p variants={fadeUp} className="text-sm sm:text-base max-w-lg mb-6 leading-relaxed" style={{ color: '#40493d' }}>
+                You in Queens, Toronto, or London. Family still back home in Guyana. YuhPlace sends somebody yuh can trust &mdash; to see a property, drop off supplies, or fix what needs fixing.
+              </motion.p>
+              <motion.div variants={fadeUp} className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => openService('property_viewing')}
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm text-white flex items-center gap-2 shadow-sm hover:scale-[1.02] transition-transform"
+                  style={{ backgroundColor: '#196a24' }}
+                >
+                  Send somebody <ArrowRight size={14} />
+                </button>
+                <Link
+                  href="/home-services"
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ backgroundColor: '#f0edec', color: '#1c1b1b' }}
+                >
+                  How it works
+                </Link>
+              </motion.div>
+              <motion.div variants={fadeUp} className="mt-5 flex items-center gap-4 text-[11px]" style={{ color: '#40493d' }}>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck size={12} style={{ color: '#196a24' }} /> Pay after the job&rsquo;s done
+                </span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck size={12} style={{ color: '#196a24' }} /> Vetted partners only
+                </span>
+              </motion.div>
+            </motion.div>
+
+            <motion.div
+              className="md:col-span-5 relative h-[240px] sm:h-[320px]"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="absolute inset-0 rounded-2xl -rotate-3 -z-10" style={{ backgroundColor: '#f6f3f2' }} />
+              <div className="absolute inset-3 rounded-xl overflow-hidden shadow-lg rotate-2 transition-transform hover:rotate-0 duration-700">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="w-full h-full object-cover" alt="Home in Guyana" src="/Georgetown.png" />
               </div>
-              <p className="text-sm text-white/60 max-w-xs leading-relaxed">
-                Your local platform for Guyana. Discover, buy, sell, rent, and connect with your community.
+              <div className="absolute -bottom-3 -left-3 p-3 rounded-xl shadow-lg max-w-[200px]" style={{ backgroundColor: '#ffffff' }}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F1FBF4' }}>
+                    <ShieldCheck size={12} style={{ color: '#196a24' }} />
+                  </div>
+                  <p className="text-[10px] font-bold" style={{ color: '#196a24' }}>Verified Partner</p>
+                </div>
+                <p className="font-bold text-[11px] leading-tight mb-0.5" style={{ fontFamily: 'var(--font-headline)' }}>
+                  Property viewing in Georgetown
+                </p>
+                <p className="text-[10px]" style={{ color: '#40493d' }}>Video sent in 48 hours</p>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── THREE SERVICES ── */}
+        <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: '#f6f3f2' }}>
+          <div className="max-w-5xl mx-auto">
+            <motion.div
+              className="mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={stagger}
+            >
+              <motion.div variants={fadeUp}>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 block" style={{ color: '#196a24' }}>
+                  Three things we do
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none" style={{ fontFamily: 'var(--font-headline)' }}>
+                  Send home what they need.
+                </h2>
+              </motion.div>
+              <motion.p variants={fadeUp} className="text-xs sm:text-sm max-w-xs" style={{ color: '#40493d' }}>
+                One form. One trusted person. Proof at every step.
+              </motion.p>
+            </motion.div>
+
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-3 gap-3"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-50px' }}
+              variants={stagger}
+            >
+              {/* Property viewing */}
+              <motion.button
+                variants={cardFade}
+                onClick={() => openService('property_viewing')}
+                className="text-left p-5 rounded-2xl transition-all hover:shadow-lg active:scale-[0.99] flex flex-col h-full min-h-[220px]"
+                style={{ backgroundColor: '#fcf9f8' }}
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: '#F1FBF4' }}>
+                  <Home size={20} style={{ color: '#196a24' }} />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold mb-1" style={{ fontFamily: 'var(--font-headline)' }}>See a property</h3>
+                <p className="text-xs mb-4 leading-relaxed" style={{ color: '#40493d' }}>
+                  Buying or renting from abroad? A vetted agent walks the listing and sends video, photos, and honest notes.
+                </p>
+                <span className="mt-auto inline-flex items-center gap-1 text-xs font-bold" style={{ color: '#196a24' }}>
+                  Request a viewing <ArrowRight size={12} />
+                </span>
+              </motion.button>
+
+              {/* Grocery delivery */}
+              <motion.button
+                variants={cardFade}
+                onClick={() => openService('grocery_delivery')}
+                className="text-left p-5 rounded-2xl transition-all hover:shadow-lg active:scale-[0.99] flex flex-col h-full min-h-[220px] text-white"
+                style={{ background: 'linear-gradient(135deg, #196a24, #36843a)' }}
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+                  <ShoppingBasket size={20} style={{ color: '#f1e340' }} />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold mb-1" style={{ fontFamily: 'var(--font-headline)' }}>Send supplies home</h3>
+                <p className="text-xs mb-4 leading-relaxed" style={{ color: '#a3f69e' }}>
+                  Tell us what Mom needs. We shop at a real supermarket in Guyana, drop it at her door, and send you the receipt.
+                </p>
+                <span className="mt-auto inline-flex items-center gap-1 text-xs font-bold" style={{ color: '#f1e340' }}>
+                  Send a delivery <ArrowRight size={12} />
+                </span>
+              </motion.button>
+
+              {/* Handyman */}
+              <motion.button
+                variants={cardFade}
+                onClick={() => openService('handyman')}
+                className="text-left p-5 rounded-2xl transition-all hover:shadow-lg active:scale-[0.99] flex flex-col h-full min-h-[220px]"
+                style={{ backgroundColor: '#1c1b1b', color: '#fcf9f8' }}
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+                  <Wrench size={20} style={{ color: '#a3f69e' }} />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold mb-1" style={{ fontFamily: 'var(--font-headline)' }}>Hire a trusted hand</h3>
+                <p className="text-xs mb-4 leading-relaxed" style={{ color: '#e5e2e1' }}>
+                  Fix the gate. Clean the yard. Check on Auntie. Vetted handymen, cleaners, and tradespeople &mdash; no WhatsApp runaround.
+                </p>
+                <span className="mt-auto inline-flex items-center gap-1 text-xs font-bold" style={{ color: '#a3f69e' }}>
+                  Hire somebody <ArrowRight size={12} />
+                </span>
+              </motion.button>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── PROPERTY FEATURE (real-estate partner) ── */}
+        <section className="py-10 sm:py-14 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-10 items-center">
+            <motion.div
+              className="md:col-span-5 relative"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="p-2 rounded-2xl rotate-2" style={{ backgroundColor: '#f0edec' }}>
+                <div className="rounded-xl overflow-hidden h-[240px] sm:h-[320px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className="w-full h-full object-cover" alt="Property in Georgetown" src="/Georgetownstreet.png" />
+                </div>
+              </div>
+              <div className="absolute -bottom-3 -right-3 p-3 rounded-xl shadow-lg" style={{ backgroundColor: '#fcf9f8' }}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#196a24' }} />
+                  <span className="text-[10px] font-bold" style={{ color: '#196a24' }}>LIVE</span>
+                </div>
+                <p className="text-[11px] font-bold" style={{ fontFamily: 'var(--font-headline)' }}>
+                  New listings this week
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div className="md:col-span-7" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
+              <motion.span variants={fadeUp} className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 block" style={{ color: '#196a24' }}>
+                Property, the right way
+              </motion.span>
+              <motion.h2 variants={fadeUp} className="text-2xl sm:text-3xl font-black tracking-tighter leading-tight mb-4" style={{ fontFamily: 'var(--font-headline)' }}>
+                Browse listings. Tour from abroad.
+              </motion.h2>
+              <motion.p variants={fadeUp} className="text-sm leading-relaxed mb-5 max-w-lg" style={{ color: '#40493d' }}>
+                Every property on YuhPlace can be toured by a real person &mdash; not a filter, not a stock photo. Working with Guyanese real-estate partners who know the neighbourhoods, not just the MLS.
+              </motion.p>
+              <motion.div variants={fadeUp} className="space-y-2 mb-5">
+                {[
+                  'Verified partners with real reviews on every listing',
+                  'Request a viewing in one tap &mdash; video in 48 hours',
+                  'Rent, buy, or inherit &mdash; guided from wherever yuh deh',
+                ].map((line) => (
+                  <div key={line} className="flex items-start gap-2 text-xs" style={{ color: '#1c1b1b' }}>
+                    <ShieldCheck size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#196a24' }} />
+                    <span dangerouslySetInnerHTML={{ __html: line }} />
+                  </div>
+                ))}
+              </motion.div>
+              <motion.div variants={fadeUp} className="flex flex-wrap gap-2">
+                <Link
+                  href="/property"
+                  className="px-4 py-2.5 rounded-xl font-bold text-sm text-white flex items-center gap-2"
+                  style={{ backgroundColor: '#196a24' }}
+                >
+                  <Building2 size={14} /> Browse properties
+                </Link>
+                <button
+                  onClick={() => openService('property_viewing')}
+                  className="px-4 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ backgroundColor: '#f0edec', color: '#1c1b1b' }}
+                >
+                  Request a viewing
+                </button>
+              </motion.div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── ALSO ON YUHPLACE (soft surface the rest) ── */}
+        <section className="py-10 sm:py-12 px-4 sm:px-6" style={{ backgroundColor: '#1c1b1b', color: '#fcf9f8' }}>
+          <div className="max-w-5xl mx-auto">
+            <motion.div
+              className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={stagger}
+            >
+              <motion.h2 variants={fadeUp} className="text-xl sm:text-2xl font-black tracking-tighter" style={{ fontFamily: 'var(--font-headline)' }}>
+                Also on YuhPlace
+              </motion.h2>
+              <motion.p variants={fadeUp} className="text-xs" style={{ color: '#e5e2e1' }}>
+                Back home? The community side is here too.
+              </motion.p>
+            </motion.div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Link href="/market" className="group p-4 rounded-2xl transition-all hover:scale-[1.01]" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                <ShoppingBag size={18} className="mb-2" style={{ color: '#a3f69e' }} />
+                <h3 className="text-sm font-bold mb-0.5" style={{ fontFamily: 'var(--font-headline)' }}>Market</h3>
+                <p className="text-[11px]" style={{ color: '#e5e2e1' }}>Buy, sell, or swap with neighbours.</p>
+              </Link>
+              <Link href="/discover" className="group p-4 rounded-2xl transition-all hover:scale-[1.01]" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                <MapPin size={18} className="mb-2" style={{ color: '#a3f69e' }} />
+                <h3 className="text-sm font-bold mb-0.5" style={{ fontFamily: 'var(--font-headline)' }}>Discover</h3>
+                <p className="text-[11px]" style={{ color: '#e5e2e1' }}>Local news, alerts, and events.</p>
+              </Link>
+              <Link href="/home-services" className="group p-4 rounded-2xl transition-all hover:scale-[1.01]" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                <Plane size={18} className="mb-2" style={{ color: '#a3f69e' }} />
+                <h3 className="text-sm font-bold mb-0.5" style={{ fontFamily: 'var(--font-headline)' }}>Home Services</h3>
+                <p className="text-[11px]" style={{ color: '#e5e2e1' }}>From abroad? Start here.</p>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA ── */}
+        <section className="py-10 sm:py-14 px-4 sm:px-6" style={{ backgroundColor: '#fcf9f8' }}>
+          <div className="max-w-3xl mx-auto">
+            <motion.div
+              className="rounded-2xl p-8 sm:p-12 text-center relative overflow-hidden"
+              style={{ backgroundColor: '#ebe7e7' }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 left-0 w-full h-full" style={{ background: 'radial-gradient(circle at 50% 50%, #196a24 0%, transparent 60%)' }} />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tighter mb-3 relative z-10" style={{ fontFamily: 'var(--font-headline)' }}>
+                Got somebody back home?
+              </h2>
+              <p className="text-sm max-w-md mx-auto mb-6 relative z-10" style={{ color: '#40493d' }}>
+                Send a request in one minute. No account. No commitment. We&rsquo;ll come back to yuh within a day.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3 relative z-10">
+                <button
+                  onClick={() => openService('property_viewing')}
+                  className="px-5 py-3 rounded-xl font-bold text-sm text-white flex items-center gap-2"
+                  style={{ backgroundColor: '#196a24' }}
+                >
+                  Start a request <ArrowRight size={14} />
+                </button>
+                <Link href="/home-services" className="px-5 py-3 rounded-xl font-bold text-sm" style={{ backgroundColor: '#fcf9f8', color: '#1c1b1b' }}>
+                  See all services
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer className="px-4 sm:px-6 pb-6 sm:pb-8" style={{ backgroundColor: '#fcf9f8' }}>
+          <div className="max-w-5xl mx-auto pt-8 sm:pt-10 grid grid-cols-2 sm:grid-cols-4 gap-6" style={{ borderTop: '1px solid rgba(191,202,186,0.2)' }}>
+            <div className="col-span-2 sm:col-span-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="YuhPlace" className="h-5 mb-3" />
+              <p className="text-[11px] leading-relaxed" style={{ color: '#40493d' }}>
+                Bridging the Guyanese diaspora and home. Built for family.
               </p>
             </div>
-
-            {/* Links */}
-            <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm">
-              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">About</Link>
-              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Safety Tips</Link>
-              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Contact</Link>
-              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Terms</Link>
-              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Privacy</Link>
-              <Link href="#" className="text-white/60 hover:text-white hover:translate-x-0.5 transition-all">Report Content</Link>
+            <div>
+              <h5 className="text-xs font-bold mb-3" style={{ fontFamily: 'var(--font-headline)' }}>Services</h5>
+              <ul className="space-y-2 text-[11px]" style={{ color: '#40493d' }}>
+                <li><button onClick={() => openService('property_viewing')} className="hover:text-[#196a24] transition-colors text-left">Property viewing</button></li>
+                <li><button onClick={() => openService('grocery_delivery')} className="hover:text-[#196a24] transition-colors text-left">Supplies delivery</button></li>
+                <li><button onClick={() => openService('handyman')} className="hover:text-[#196a24] transition-colors text-left">Trusted handyman</button></li>
+                <li><Link href="/home-services" className="hover:text-[#196a24] transition-colors">All services</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="text-xs font-bold mb-3" style={{ fontFamily: 'var(--font-headline)' }}>On-ground</h5>
+              <ul className="space-y-2 text-[11px]" style={{ color: '#40493d' }}>
+                <li><Link href="/property" className="hover:text-[#196a24] transition-colors">Property listings</Link></li>
+                <li><Link href="/market" className="hover:text-[#196a24] transition-colors">Marketplace</Link></li>
+                <li><Link href="/discover" className="hover:text-[#196a24] transition-colors">Local updates</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="text-xs font-bold mb-3" style={{ fontFamily: 'var(--font-headline)' }}>Company</h5>
+              <ul className="space-y-2 text-[11px]" style={{ color: '#40493d' }}>
+                <li><Link href="/about" className="hover:text-[#196a24] transition-colors">About</Link></li>
+                <li><Link href="/contact" className="hover:text-[#196a24] transition-colors">Contact</Link></li>
+                <li><Link href="/terms" className="hover:text-[#196a24] transition-colors">Terms</Link></li>
+                <li><Link href="/privacy" className="hover:text-[#196a24] transition-colors">Privacy</Link></li>
+              </ul>
             </div>
           </div>
-
-          {/* Divider */}
-          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-white/40">
-              &copy; {new Date().getFullYear()} YuhPlace. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="text-white/40 hover:text-white hover:scale-110 transition-all">
-                <Facebook size={18} />
-              </a>
-              <a href="#" className="text-white/40 hover:text-white hover:scale-110 transition-all">
-                <Instagram size={18} />
-              </a>
-              <a href="#" className="text-white/40 hover:text-white hover:scale-110 transition-all">
-                <Twitter size={18} />
-              </a>
-            </div>
+          <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] pt-4 max-w-5xl mx-auto" style={{ color: '#40493d', borderTop: '1px solid rgba(191,202,186,0.2)' }}>
+            <p>&copy; {new Date().getFullYear()} YuhPlace. Built in Guyana, for Guyana &amp; wherever yuh deh.</p>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </main>
+
+      <HomeServiceRequestModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        defaultService={serviceChoice}
+      />
     </div>
   );
 }

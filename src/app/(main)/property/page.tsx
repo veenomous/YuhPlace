@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   Home,
   Building2,
@@ -13,11 +14,14 @@ import {
   MapPin,
   Star,
   SlidersHorizontal,
-  X,
-  ChevronDown,
   Plus,
   BadgeCheck,
   MessageSquare,
+  Search,
+  Eye,
+  ShieldCheck,
+  MessageCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { cn, formatPrice, timeAgo } from '@/lib/utils';
 import { useData } from '@/context/DataContext';
@@ -25,32 +29,19 @@ import { useRegion } from '@/context/RegionContext';
 import { PropertyFeedSkeleton } from '@/components/Skeletons';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import SellerRating from '@/components/SellerRating';
+import VerifiedPartner from '@/components/VerifiedPartner';
+import HomeServiceRequestModal from '@/components/HomeServiceRequestModal';
+import { Plane } from 'lucide-react';
 import type { PropertyListingWithDetails, PropertyType, ListingMode } from '@/types/database';
 
-// ---------- Helpers ----------
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const PROPERTY_TYPE_ICONS: Record<PropertyType, typeof Home> = {
-  house: Home,
-  apartment: Building2,
-  room: DoorOpen,
-  land: LandPlot,
-  commercial: Store,
+  house: Home, apartment: Building2, room: DoorOpen, land: LandPlot, commercial: Store,
 };
 
 const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
-  house: 'House',
-  apartment: 'Apartment',
-  room: 'Room',
-  land: 'Land',
-  commercial: 'Commercial',
-};
-
-const PLACEHOLDER_GRADIENTS: Record<PropertyType, string> = {
-  house: 'from-emerald-400 to-teal-600',
-  apartment: 'from-sky-400 to-blue-600',
-  room: 'from-violet-400 to-purple-600',
-  land: 'from-lime-400 to-green-600',
-  commercial: 'from-amber-400 to-orange-600',
+  house: 'House', apartment: 'Apartment', room: 'Room', land: 'Land', commercial: 'Commercial',
 };
 
 const BEDROOM_OPTIONS = [
@@ -64,20 +55,37 @@ const BEDROOM_OPTIONS = [
 const PRICE_RANGES_RENT = [
   { label: 'Any price', min: 0, max: Infinity },
   { label: 'Under $50K', min: 0, max: 50000 },
-  { label: '$50K - $100K', min: 50000, max: 100000 },
-  { label: '$100K - $200K', min: 100000, max: 200000 },
+  { label: '$50K–$100K', min: 50000, max: 100000 },
+  { label: '$100K–$200K', min: 100000, max: 200000 },
   { label: '$200K+', min: 200000, max: Infinity },
 ];
 
 const PRICE_RANGES_SALE = [
   { label: 'Any price', min: 0, max: Infinity },
   { label: 'Under $10M', min: 0, max: 10000000 },
-  { label: '$10M - $30M', min: 10000000, max: 30000000 },
-  { label: '$30M - $60M', min: 30000000, max: 60000000 },
+  { label: '$10M–$30M', min: 10000000, max: 30000000 },
+  { label: '$30M–$60M', min: 30000000, max: 60000000 },
   { label: '$60M+', min: 60000000, max: Infinity },
 ];
 
-// ---------- Component ----------
+// ─── Animation ───────────────────────────────────────────────────────────────
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
+};
+
+const stagger = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
+};
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function PropertyBrowsePage() {
   const { propertyListings, loading, commentCounts } = useData();
@@ -88,26 +96,29 @@ export default function PropertyBrowsePage() {
   const [minBedrooms, setMinBedrooms] = useState(0);
   const [priceRangeIdx, setPriceRangeIdx] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewingModalOpen, setViewingModalOpen] = useState(false);
 
   const priceRanges = mode === 'rent' ? PRICE_RANGES_RENT : PRICE_RANGES_SALE;
   const currentPriceRange = priceRanges[priceRangeIdx] ?? priceRanges[0];
 
   const filtered = useMemo(() => {
     return propertyListings.filter((p) => {
-      // Global region filter from TopNav
       if (selectedRegion !== 'all' && p.regions.slug !== selectedRegion) return false;
-      // Local filters
       if (p.listing_mode !== mode) return false;
       if (selectedType !== 'all' && p.property_type !== selectedType) return false;
       if (minBedrooms > 0 && (p.bedrooms === null || p.bedrooms < minBedrooms)) return false;
       if (p.price_amount < currentPriceRange.min || p.price_amount > currentPriceRange.max) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        if (!p.title.toLowerCase().includes(q) && !p.description.toLowerCase().includes(q)) return false;
+      }
       return true;
     }).sort((a, b) => {
-      // Featured first, then newest
       if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-  }, [propertyListings, selectedRegion, mode, selectedType, minBedrooms, currentPriceRange]);
+  }, [propertyListings, selectedRegion, mode, selectedType, minBedrooms, currentPriceRange, searchQuery]);
 
   const { visibleItems, hasMore, sentinelRef } = useInfiniteScroll(filtered);
 
@@ -118,337 +129,408 @@ export default function PropertyBrowsePage() {
     setSelectedType('all');
     setMinBedrooms(0);
     setPriceRangeIdx(0);
+    setSearchQuery('');
   }
 
+  // Split featured from rest
+  const featuredItems = visibleItems.filter((p) => p.is_featured);
+  const regularItems = visibleItems.filter((p) => !p.is_featured);
+
   return (
-    <div className="px-4 py-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-lg font-bold text-foreground">Property</h1>
-          <p className="text-xs text-muted mt-0.5">Rentals, homes, land, and more</p>
+    <div style={{ backgroundColor: '#fcf9f8', color: '#1c1b1b' }}>
+
+      {/* ── Hero ── */}
+      <section className="relative min-h-[280px] sm:min-h-[360px] flex items-end overflow-hidden rounded-b-[1.5rem]">
+        <div className="absolute inset-0 z-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="w-full h-full object-cover brightness-[0.65]" alt="Guyana property" src="/Georgetown.png" />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(28,27,27,0.8) 0%, transparent 70%)' }} />
         </div>
-        <Link
-          href="/property/create"
-          className="flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition-colors"
-        >
-          <Plus size={16} />
-          List Property
-        </Link>
-      </div>
-
-      {/* Rent / Sale Toggle */}
-      <div className="flex bg-surface rounded-xl p-1 mb-4">
-        <button
-          onClick={() => { setMode('rent'); setPriceRangeIdx(0); }}
-          className={cn(
-            'flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all',
-            mode === 'rent'
-              ? 'bg-primary text-white shadow-sm'
-              : 'text-muted hover:text-foreground'
-          )}
-        >
-          For Rent
-        </button>
-        <button
-          onClick={() => { setMode('sale'); setPriceRangeIdx(0); }}
-          className={cn(
-            'flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all',
-            mode === 'sale'
-              ? 'bg-primary text-white shadow-sm'
-              : 'text-muted hover:text-foreground'
-          )}
-        >
-          For Sale
-        </button>
-      </div>
-
-      {/* Property Type Filter Chips */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 -mx-4 px-4">
-        <button
-          onClick={() => setSelectedType('all')}
-          className={cn(
-            'flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border',
-            selectedType === 'all'
-              ? 'bg-primary text-white border-primary shadow-sm'
-              : 'bg-surface text-muted border-border hover:border-primary/30 hover:text-primary'
-          )}
-        >
-          All
-        </button>
-        {(Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[]).map((type) => {
-          const Icon = PROPERTY_TYPE_ICONS[type];
-          return (
-            <button
-              key={type}
-              onClick={() => setSelectedType(type)}
-              className={cn(
-                'flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border',
-                selectedType === type
-                  ? 'bg-primary text-white border-primary shadow-sm'
-                  : 'bg-surface text-muted border-border hover:border-primary/30 hover:text-primary'
-              )}
+        <div className="relative z-10 w-full px-4 pb-5 pt-16">
+          <motion.div initial="hidden" animate="visible" variants={stagger}>
+            <motion.h1
+              variants={fadeUp}
+              className="text-3xl sm:text-4xl font-extrabold tracking-tighter text-white mb-4 leading-[0.9]"
+              style={{ fontFamily: 'var(--font-headline)' }}
             >
-              <Icon size={14} />
-              {PROPERTY_TYPE_LABELS[type]}
-            </button>
-          );
-        })}
-      </div>
+              Find Your Place<br />
+              <span style={{ color: '#a3f69e' }}>in Guyana.</span>
+            </motion.h1>
 
-      {/* Filter Bar */}
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium border transition-all',
-            showFilters || activeFilterCount > 0
-              ? 'bg-primary-light text-primary border-primary'
-              : 'bg-white text-muted border-border'
-          )}
-        >
-          <SlidersHorizontal size={14} />
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="flex items-center justify-center w-5 h-5 bg-primary text-white text-xs rounded-full">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-        {activeFilterCount > 0 && (
-          <button
-            onClick={resetFilters}
-            className="text-sm text-primary font-medium hover:underline"
-          >
-            Clear all
-          </button>
-        )}
-        <span className="ml-auto text-sm text-muted">
-          {filtered.length} {filtered.length === 1 ? 'listing' : 'listings'}
-        </span>
-      </div>
-
-      {/* Expandable Filters */}
-      {showFilters && (
-        <div className="bg-white border border-border/50 rounded-2xl p-4 mb-4 space-y-4 shadow-card">
-          {/* Price Range */}
-          <div>
-            <label className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">
-              Price Range
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {priceRanges.map((range, idx) => (
+            {/* Search Shell */}
+            <motion.div
+              variants={fadeUp}
+              className="rounded-xl p-1 flex items-center gap-1 backdrop-blur-md"
+              style={{ backgroundColor: 'rgba(252,249,248,0.95)' }}
+            >
+              <div className="flex-1 px-3 py-2.5 flex items-center gap-2">
+                <MapPin size={16} style={{ color: '#196a24' }} />
+                <input
+                  className="bg-transparent border-none focus:ring-0 focus:outline-none w-full font-medium text-sm"
+                  placeholder="Where do you want to live?"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ color: '#1c1b1b' }}
+                />
+              </div>
+              <div className="flex gap-1">
                 <button
-                  key={range.label}
-                  onClick={() => setPriceRangeIdx(idx)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg text-sm font-medium border transition-all',
-                    priceRangeIdx === idx
-                      ? 'bg-primary-light text-primary border-primary'
-                      : 'bg-surface text-muted border-border hover:border-primary'
-                  )}
+                  onClick={() => { setMode('rent'); setPriceRangeIdx(0); }}
+                  className="px-3 py-2.5 rounded-lg font-bold text-xs transition-all"
+                  style={{
+                    backgroundColor: mode === 'rent' ? '#196a24' : 'transparent',
+                    color: mode === 'rent' ? '#fff' : '#40493d',
+                  }}
                 >
-                  {range.label}
+                  Rent
                 </button>
-              ))}
-            </div>
-          </div>
+                <button
+                  onClick={() => { setMode('sale'); setPriceRangeIdx(0); }}
+                  className="px-3 py-2.5 rounded-lg font-bold text-xs transition-all"
+                  style={{
+                    backgroundColor: mode === 'sale' ? '#196a24' : 'transparent',
+                    color: mode === 'sale' ? '#fff' : '#40493d',
+                  }}
+                >
+                  Buy
+                </button>
+                <button
+                  className="px-3 py-2.5 rounded-lg font-bold text-xs text-white flex items-center gap-1.5"
+                  style={{ backgroundColor: '#196a24' }}
+                >
+                  <Search size={14} /> Search
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
-          {/* Bedrooms */}
-          {selectedType !== 'land' && selectedType !== 'commercial' && (
+      {/* ── Diaspora strip: Request a viewing ── */}
+      <section className="px-4 pt-3">
+        <button
+          onClick={() => setViewingModalOpen(true)}
+          className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all hover:shadow-md active:scale-[0.99]"
+          style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE' }}
+        >
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#1667B7' }}>
+            <Plane size={16} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold leading-tight" style={{ color: '#114B8A', fontFamily: 'var(--font-headline)' }}>
+              Abroad? We&rsquo;ll tour any listing for you.
+            </p>
+            <p className="text-[11px] mt-0.5" style={{ color: '#1E3A8A' }}>
+              Vetted agents. Video + photos in 48 hours. No account needed.
+            </p>
+          </div>
+          <ArrowRight size={16} style={{ color: '#114B8A' }} className="flex-shrink-0" />
+        </button>
+      </section>
+
+      {/* ── Category Chips ── */}
+      <section className="px-4 pt-4 pb-2">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setSelectedType('all')}
+            className="flex-none shadow-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all text-xs font-bold"
+            style={{
+              backgroundColor: selectedType === 'all' ? '#196a24' : '#fff',
+              color: selectedType === 'all' ? '#fff' : '#1c1b1b',
+              fontFamily: 'var(--font-headline)',
+            }}
+          >
+            <Home size={16} style={{ color: selectedType === 'all' ? '#fff' : '#196a24' }} />
+            All
+          </button>
+          {(Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[]).map((type) => {
+            const Icon = PROPERTY_TYPE_ICONS[type];
+            const isActive = selectedType === type;
+            return (
+              <button
+                key={type}
+                onClick={() => setSelectedType(type)}
+                className="flex-none shadow-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all text-xs font-bold"
+                style={{
+                  backgroundColor: isActive ? '#196a24' : '#fff',
+                  color: isActive ? '#fff' : '#1c1b1b',
+                  fontFamily: 'var(--font-headline)',
+                }}
+              >
+                <Icon size={16} style={{ color: isActive ? '#fff' : '#196a24' }} />
+                {PROPERTY_TYPE_LABELS[type]}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Section Header + Filters ── */}
+      <section className="px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <span className="font-bold uppercase tracking-widest text-[10px] mb-1 block" style={{ color: '#196a24' }}>
+              Curated Collection
+            </span>
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-headline)' }}>
+              {mode === 'rent' ? 'Properties for Rent' : 'Properties for Sale'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/property/create"
+              className="text-white px-3 py-2 rounded-lg font-bold text-xs active:scale-95 transition-all flex items-center gap-1.5"
+              style={{ background: 'linear-gradient(135deg, #196a24, #36843a)' }}
+            >
+              <Plus size={13} /> List
+            </Link>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all"
+              style={{
+                backgroundColor: showFilters || activeFilterCount > 0 ? '#196a24' : '#f0edec',
+                color: showFilters || activeFilterCount > 0 ? '#fff' : '#40493d',
+              }}
+            >
+              <SlidersHorizontal size={13} />
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center" style={{ backgroundColor: '#f1e340', color: '#6c6400' }}>
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Expandable Filters */}
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="rounded-xl p-4 mb-3 space-y-4"
+            style={{ backgroundColor: '#f0edec' }}
+          >
             <div>
-              <label className="text-xs font-semibold text-muted uppercase tracking-wide mb-2 block">
-                Bedrooms
+              <label className="text-[10px] font-bold uppercase tracking-widest mb-2 block" style={{ color: 'rgba(64,73,61,0.6)' }}>
+                Price Range
               </label>
-              <div className="flex gap-2">
-                {BEDROOM_OPTIONS.map((opt) => (
+              <div className="flex flex-wrap gap-1.5">
+                {priceRanges.map((range, idx) => (
                   <button
-                    key={opt.value}
-                    onClick={() => setMinBedrooms(opt.value)}
-                    className={cn(
-                      'px-3.5 py-1.5 rounded-lg text-sm font-medium border transition-all',
-                      minBedrooms === opt.value
-                        ? 'bg-primary-light text-primary border-primary'
-                        : 'bg-surface text-muted border-border hover:border-primary'
-                    )}
+                    key={range.label}
+                    onClick={() => setPriceRangeIdx(idx)}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                    style={{
+                      backgroundColor: priceRangeIdx === idx ? '#196a24' : '#fff',
+                      color: priceRangeIdx === idx ? '#fff' : '#40493d',
+                    }}
                   >
-                    {opt.label}
+                    {range.label}
                   </button>
                 ))}
               </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Listings */}
-      {loading ? (
-        <PropertyFeedSkeleton />
-      ) : (
-      <div className="space-y-4">
-        {visibleItems.map((property) => (
-          <PropertyCard key={property.id} property={property} commentCount={commentCounts.get(property.id) ?? 0} />
-        ))}
-        {hasMore && <div ref={sentinelRef} className="h-4" />}
-
-        {filtered.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-14 h-14 rounded-full bg-surface border border-border/50 flex items-center justify-center mx-auto mb-4">
-              <Home size={24} className="text-muted" />
-            </div>
-            <p className="text-sm font-medium text-foreground mb-1">No properties found</p>
-            <p className="text-xs text-muted">
-              Try adjusting your filters or switching between Rent and Sale.
-            </p>
-            <button
-              onClick={resetFilters}
-              className="mt-4 text-xs text-primary font-semibold hover:underline"
-            >
-              Clear all filters
-            </button>
-          </div>
-        )}
-      </div>
-      )}
-    </div>
-  );
-}
-
-// ---------- Property Card ----------
-
-function PropertyCard({ property, commentCount }: { property: PropertyListingWithDetails; commentCount: number }) {
-  const Icon = PROPERTY_TYPE_ICONS[property.property_type];
-  const gradient = PLACEHOLDER_GRADIENTS[property.property_type];
-  const isRent = property.listing_mode === 'rent';
-
-  return (
-    <Link
-      href={`/property/${property.id}`}
-      className={cn(
-        'block bg-white rounded-2xl border overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200',
-        property.is_featured ? 'border-featured/40 ring-1 ring-featured/20' : 'border-border/50'
-      )}
-    >
-      {/* Image */}
-      <div className={cn(
-        'relative w-full h-48',
-        property.property_listing_images[0]?.image_url ? 'bg-surface' : `bg-gradient-to-br ${gradient}`
-      )}>
-        {property.property_listing_images[0]?.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={property.property_listing_images[0].image_url}
-            alt=""
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Icon size={48} className="text-white/40" />
-          </div>
-        )}
-
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex items-center gap-2">
-          <span
-            className={cn(
-              'px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide',
-              isRent
-                ? 'bg-primary text-white'
-                : 'bg-success text-white'
+            {selectedType !== 'land' && selectedType !== 'commercial' && (
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest mb-2 block" style={{ color: 'rgba(64,73,61,0.6)' }}>
+                  Bedrooms
+                </label>
+                <div className="flex gap-1.5">
+                  {BEDROOM_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setMinBedrooms(opt.value)}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                      style={{
+                        backgroundColor: minBedrooms === opt.value ? '#196a24' : '#fff',
+                        color: minBedrooms === opt.value ? '#fff' : '#40493d',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
-          >
-            For {property.listing_mode}
-          </span>
-          {property.is_featured && (
-            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-featured text-white">
-              <Star size={10} fill="currentColor" />
-              Featured
-            </span>
-          )}
-        </div>
+            {activeFilterCount > 0 && (
+              <button onClick={resetFilters} className="text-xs font-semibold" style={{ color: '#196a24' }}>
+                Clear all filters
+              </button>
+            )}
+          </motion.div>
+        )}
 
-        {/* Owner type badge */}
-        <div className="absolute top-3 right-3">
-          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-black/50 text-white capitalize">
-            {property.owner_type}
-          </span>
-        </div>
-
-        {/* Price overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-3 pt-8">
-          <p className="text-white font-bold text-lg">
-            {formatPrice(property.price_amount, property.currency)}
-            {isRent && <span className="text-sm font-normal text-white/80">/mo</span>}
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-medium uppercase tracking-widest" style={{ color: 'rgba(64,73,61,0.5)' }}>
+            {filtered.length} {filtered.length === 1 ? 'property' : 'properties'}
           </p>
+          <button className="text-xs font-bold flex items-center gap-1 transition-transform hover:translate-x-1" style={{ color: '#196a24' }}>
+            View all <ArrowRight size={12} />
+          </button>
         </div>
-      </div>
+      </section>
 
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="font-semibold text-foreground text-base leading-snug mb-2 line-clamp-2">
-          {property.title}
-        </h3>
-
-        {/* Meta row */}
-        <div className="flex items-center gap-3 text-sm text-muted mb-2">
-          <span className="flex items-center gap-1">
-            <Icon size={14} />
-            {PROPERTY_TYPE_LABELS[property.property_type]}
-          </span>
-          {property.bedrooms !== null && (
-            <span className="flex items-center gap-1">
-              <BedDouble size={14} />
-              {property.bedrooms} {property.bedrooms === 1 ? 'Bed' : 'Beds'}
-            </span>
-          )}
-          {property.bathrooms !== null && (
-            <span className="flex items-center gap-1">
-              <Bath size={14} />
-              {property.bathrooms} {property.bathrooms === 1 ? 'Bath' : 'Baths'}
-            </span>
-          )}
-        </div>
-
-        {/* Location */}
-        <div className="flex items-center gap-1 text-sm text-muted">
-          <MapPin size={13} className="shrink-0" />
-          <span className="truncate">
-            {property.neighborhood_text && `${property.neighborhood_text}, `}
-            {property.regions.name}
-          </span>
-        </div>
-
-        {/* Seller rating */}
-        <div className="mt-1">
-          <SellerRating sellerId={property.user_id} size="small" />
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center">
-              <span className="text-xs font-bold text-primary">
-                {property.profiles.name.charAt(0)}
-              </span>
+      {/* ── Property Grid ── */}
+      <section className="px-4 pb-6">
+        {loading ? (
+          <PropertyFeedSkeleton />
+        ) : filtered.length === 0 ? (
+          <motion.div className="text-center py-16" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#f0edec' }}>
+              <Home size={22} style={{ color: '#40493d' }} />
             </div>
-            <span className="text-sm text-muted truncate max-w-[140px]">
-              {property.profiles.name}
-            </span>
-            {property.profiles.is_verified_business && (
-              <BadgeCheck size={14} className="text-accent flex-shrink-0" />
-            )}
+            <p className="text-sm font-bold mb-1" style={{ fontFamily: 'var(--font-headline)' }}>No properties found</p>
+            <p className="text-xs mb-3" style={{ color: '#40493d' }}>Try adjusting your filters</p>
+            <button onClick={resetFilters} className="text-xs font-semibold" style={{ color: '#196a24' }}>Clear all filters</button>
+          </motion.div>
+        ) : (
+          <motion.div className="grid grid-cols-12 gap-3" initial="hidden" animate="visible" variants={stagger}>
+
+            {/* Featured items — larger cards */}
+            {featuredItems.map((property, idx) => (
+              <motion.div
+                key={property.id}
+                variants={cardVariants}
+                className={cn(idx === 0 ? 'col-span-8' : 'col-span-4', 'col-span-12 sm:col-span-8 first:sm:col-span-8 [&:nth-child(2)]:sm:col-span-4')}
+                style={{ gridColumn: idx === 0 ? 'span 8' : 'span 4' }}
+              >
+                <Link href={`/property/${property.id}`} className="block group">
+                  <div className={cn('relative overflow-hidden rounded-2xl', idx === 0 ? 'h-[220px] sm:h-[300px]' : 'h-[220px] sm:h-[300px]')} style={{ backgroundColor: '#f6f3f2' }}>
+                    {property.property_listing_images[0]?.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="" src={property.property_listing_images[0].image_url} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        {(() => { const Icon = PROPERTY_TYPE_ICONS[property.property_type]; return <Icon size={40} style={{ color: 'rgba(64,73,61,0.15)' }} />; })()}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    <div className="absolute bottom-0 left-0 p-4 text-white">
+                      <div className="flex gap-1.5 mb-2 flex-wrap">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase" style={{ backgroundColor: '#196a24' }}>
+                          {property.listing_mode === 'rent' ? 'Rent' : 'Sale'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase backdrop-blur-md" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                          Featured
+                        </span>
+                        {property.profiles.is_verified_partner && (
+                          <VerifiedPartner partnerName={property.profiles.partner_name ?? null} size="xs" />
+                        )}
+                      </div>
+                      <h3 className={cn('font-bold leading-tight', idx === 0 ? 'text-lg sm:text-2xl' : 'text-sm sm:text-lg')} style={{ fontFamily: 'var(--font-headline)' }}>
+                        {property.title}
+                      </h3>
+                      <p className="text-white/70 text-xs sm:text-sm mt-0.5">
+                        {property.neighborhood_text && `${property.neighborhood_text}, `}{property.regions.name} &bull; {formatPrice(property.price_amount, property.currency)}
+                        {property.listing_mode === 'rent' && '/mo'}
+                      </p>
+                      {idx === 0 && (
+                        <div className="flex items-center gap-3 mt-2 text-[10px] sm:text-xs">
+                          {property.bedrooms !== null && (
+                            <span className="flex items-center gap-1"><BedDouble size={12} style={{ color: '#a3f69e' }} /> {property.bedrooms} Beds</span>
+                          )}
+                          {property.bathrooms !== null && (
+                            <span className="flex items-center gap-1"><Bath size={12} style={{ color: '#a3f69e' }} /> {property.bathrooms} Baths</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+
+            {/* Regular items — 3-column grid of smaller overlay cards */}
+            {regularItems.map((property) => (
+              <motion.div key={property.id} variants={cardVariants} className="col-span-6 sm:col-span-4">
+                <Link href={`/property/${property.id}`} className="block group">
+                  <div className="relative overflow-hidden rounded-2xl h-[180px] sm:h-[220px]" style={{ backgroundColor: '#f6f3f2' }}>
+                    {property.property_listing_images[0]?.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="" src={property.property_listing_images[0].image_url} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        {(() => { const Icon = PROPERTY_TYPE_ICONS[property.property_type]; return <Icon size={32} style={{ color: 'rgba(64,73,61,0.15)' }} />; })()}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+
+                    {/* Mode badge */}
+                    <div className="absolute top-2 left-2">
+                      <span className="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase" style={{ backgroundColor: property.listing_mode === 'rent' ? '#196a24' : '#f1e340', color: property.listing_mode === 'rent' ? '#fff' : '#6c6400' }}>
+                        {property.listing_mode === 'rent' ? 'Rent' : 'Sale'}
+                      </span>
+                    </div>
+
+                    <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                      <h3 className="text-white text-sm font-bold leading-tight line-clamp-2" style={{ fontFamily: 'var(--font-headline)' }}>
+                        {property.title}
+                      </h3>
+                      <p className="text-white/80 text-xs mt-0.5">
+                        {formatPrice(property.price_amount, property.currency)}
+                        {property.listing_mode === 'rent' && '/mo'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1 text-white/60 text-[10px]">
+                        <span className="flex items-center gap-0.5">
+                          <MapPin size={9} /> {property.regions.name}
+                        </span>
+                        {property.bedrooms !== null && (
+                          <span className="flex items-center gap-0.5"><BedDouble size={9} /> {property.bedrooms}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+        {hasMore && <div ref={sentinelRef} className="h-4" />}
+      </section>
+
+      {/* ── Features Section ── */}
+      <section className="px-4 py-10" style={{ backgroundColor: '#f6f3f2' }}>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
+          <motion.h2 variants={fadeUp} className="text-2xl sm:text-3xl font-extrabold tracking-tighter mb-2" style={{ fontFamily: 'var(--font-headline)' }}>
+            Seamless Property <span className="italic" style={{ color: '#196a24' }}>Discovery</span>
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-sm leading-relaxed mb-6 max-w-md" style={{ color: '#40493d' }}>
+            YuhPlace makes finding your next home in Guyana effortless — from first search to final key.
+          </motion.p>
+          <div className="space-y-2.5">
+            {[
+              { icon: Eye, title: 'Photo Galleries', desc: 'Browse detailed photos before visiting.' },
+              { icon: ShieldCheck, title: 'Verified Listings', desc: 'Every property checked by our team.' },
+              { icon: MessageCircle, title: 'Direct Chat', desc: 'Connect instantly with owners and agents.' },
+            ].map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={feature.title}
+                  variants={fadeUp}
+                  className="p-4 rounded-xl flex items-center gap-4 shadow-sm"
+                  style={{ backgroundColor: '#fcf9f8' }}
+                >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(25,106,36,0.1)' }}>
+                    <Icon size={18} style={{ color: '#196a24' }} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold" style={{ fontFamily: 'var(--font-headline)' }}>{feature.title}</h4>
+                    <p className="text-xs" style={{ color: '#40493d' }}>{feature.desc}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {commentCount > 0 && (
-              <span className="flex items-center gap-1 text-[11px] text-primary font-medium">
-                <MessageSquare size={12} />
-                {commentCount}
-              </span>
-            )}
-            <span className="text-xs text-muted">{timeAgo(property.created_at)}</span>
-          </div>
-        </div>
-      </div>
-    </Link>
+        </motion.div>
+      </section>
+
+      <HomeServiceRequestModal
+        open={viewingModalOpen}
+        onClose={() => setViewingModalOpen(false)}
+        defaultService="property_viewing"
+      />
+    </div>
   );
 }

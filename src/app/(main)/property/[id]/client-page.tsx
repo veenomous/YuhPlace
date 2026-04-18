@@ -33,10 +33,14 @@ import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import type { PropertyType } from '@/types/database';
 import ReportModal from '@/components/ReportModal';
+import ShareModal from '@/components/ShareModal';
 import CommentSection from '@/components/CommentSection';
 import FavoriteButton from '@/components/FavoriteButton';
 import ReviewSection from '@/components/ReviewSection';
 import SellerRating from '@/components/SellerRating';
+import VerifiedPartner from '@/components/VerifiedPartner';
+import HomeServiceRequestModal from '@/components/HomeServiceRequestModal';
+import { Plane } from 'lucide-react';
 import { useViewCount } from '@/hooks/useViewCount';
 
 // ---------- Helpers ----------
@@ -83,6 +87,8 @@ export default function PropertyListingClient({ id }: { id: string }) {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [showShare, setShowShare] = useState(false);
+  const [showViewingRequest, setShowViewingRequest] = useState(false);
 
   const property = getPropertyListing(id);
   useViewCount('property_listing', property?.id);
@@ -161,15 +167,7 @@ export default function PropertyListingClient({ id }: { id: string }) {
 
         {/* Share button */}
         <button
-          onClick={() => {
-            if (navigator.share) {
-              navigator.share({
-                title: property.title,
-                text: `Check out this property on YuhPlace: ${property.title}`,
-                url: window.location.href,
-              });
-            }
-          }}
+          onClick={() => setShowShare(true)}
           className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center bg-black/40 backdrop-blur-sm text-white rounded-full hover:bg-black/60 transition-colors"
         >
           <Share2 size={16} />
@@ -289,6 +287,26 @@ export default function PropertyListingClient({ id }: { id: string }) {
           </span>
         </div>
 
+        {/* ── Diaspora: Request a viewing from abroad ── */}
+        <button
+          onClick={() => setShowViewingRequest(true)}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl mb-5 text-left transition-all hover:shadow-md active:scale-[0.99]"
+          style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE' }}
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#1667B7' }}>
+            <Plane size={18} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold" style={{ color: '#114B8A', fontFamily: 'var(--font-headline)' }}>
+              Abroad? We&rsquo;ll tour it for you.
+            </p>
+            <p className="text-xs" style={{ color: '#1E3A8A' }}>
+              A vetted agent walks the property and sends video, photos, and honest notes within 48 hours.
+            </p>
+          </div>
+          <ChevronRight size={18} style={{ color: '#114B8A' }} className="flex-shrink-0" />
+        </button>
+
         <hr className="border-border mb-5" />
 
         {/* Key Details Grid */}
@@ -367,7 +385,10 @@ export default function PropertyListingClient({ id }: { id: string }) {
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white border border-border text-muted capitalize">
                   {OWNER_TYPE_LABELS[property.owner_type]}
                 </span>
-                {property.profiles.is_verified_business && (
+                {property.profiles.is_verified_partner && (
+                  <VerifiedPartner partnerName={property.profiles.partner_name ?? null} size="sm" />
+                )}
+                {property.profiles.is_verified_business && !property.profiles.is_verified_partner && (
                   <BadgeCheck size={14} className="text-accent flex-shrink-0" />
                 )}
               </div>
@@ -416,7 +437,7 @@ export default function PropertyListingClient({ id }: { id: string }) {
 
         {/* Comments */}
         <div id="comments-section">
-          <CommentSection targetType="property_listing" targetId={property.id} />
+          <CommentSection targetType="property_listing" targetId={property.id} contentOwnerId={property.user_id} contentTitle={property.title} />
         </div>
       </div>
 
@@ -459,6 +480,24 @@ export default function PropertyListingClient({ id }: { id: string }) {
           onClose={() => setShowReportModal(false)}
         />
       )}
+
+      {/* Share Modal */}
+      {showShare && (
+        <ShareModal
+          title={property.title}
+          url={typeof window !== 'undefined' ? window.location.href : `/property/${id}`}
+          onClose={() => setShowShare(false)}
+        />
+      )}
+
+      {/* Request a viewing from abroad */}
+      <HomeServiceRequestModal
+        open={showViewingRequest}
+        onClose={() => setShowViewingRequest(false)}
+        defaultService="property_viewing"
+        targetPropertyId={property.id}
+        targetPropertyTitle={property.title}
+      />
 
       {/* Sticky Bottom Bar */}
       <div className="fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-border">

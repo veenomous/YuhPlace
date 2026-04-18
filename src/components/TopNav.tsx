@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Search, MapPin, X, LogOut, ChevronDown, Bell } from 'lucide-react';
+import { Search, MapPin, X, LogOut, ChevronDown, Bell, Car, Store } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRegion } from '@/context/RegionContext';
 import { useSearch } from '@/context/SearchContext';
@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { REGIONS_WITH_ALL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { FeyButton } from '@/components/ui/fey-button';
 
 export default function TopNav() {
   const { selectedRegion, setSelectedRegion, regionName } = useRegion();
@@ -32,10 +33,52 @@ export default function TopNav() {
 
   useEffect(() => {
     fetchUnreadCount();
-    // Poll every 30 seconds for new notifications
     const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
+    // Re-fetch when notifications are marked read (dispatched from notifications page)
+    const handleRead = () => fetchUnreadCount();
+    window.addEventListener('notifications-read', handleRead);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notifications-read', handleRead);
+    };
   }, [fetchUnreadCount]);
+
+  // Re-fetch unread count when navigating away from notifications page
+  useEffect(() => {
+    if (pathname !== '/notifications') fetchUnreadCount();
+  }, [pathname, fetchUnreadCount]);
+
+  // Push notification subscription
+  useEffect(() => {
+    if (!user || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidKey) return;
+
+    async function subscribePush() {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        if (existing) return; // already subscribed
+
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') return;
+
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: vapidKey,
+        });
+        const json = sub.toJSON();
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+        });
+      } catch (err) {
+        console.error('Push subscription failed:', err);
+      }
+    }
+    subscribePush();
+  }, [user]);
 
   useEffect(() => {
     if (searchOpen && inputRef.current) {
@@ -50,6 +93,11 @@ export default function TopNav() {
     }
   }
 
+  const isRidesPage = pathname.startsWith('/rides');
+  const isStoreLanding = pathname === '/store' || pathname.startsWith('/store/about') || pathname.startsWith('/store/directory');
+  const isHomeServices = pathname.startsWith('/home-services');
+  const isFullWidthPage = isRidesPage || isStoreLanding || isHomeServices;
+
   const displayName = profile?.name || user?.user_metadata?.name || user?.email || '';
   const initials = displayName
     .split(' ')
@@ -60,14 +108,67 @@ export default function TopNav() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-soft">
-      <div className="mx-auto max-w-lg flex items-center justify-between h-14 px-4">
-        {/* Logo */}
-        <Link href="/" className="flex-shrink-0">
-          <img src="/logo.svg" alt="YuhPlace" className="h-9" />
-        </Link>
+      <div className={cn(
+        "mx-auto flex items-center justify-between px-4",
+        isFullWidthPage ? "max-w-6xl h-16" : "max-w-3xl h-14"
+      )}>
+        {/* Logo — show sub-brand on /rides and /store pages */}
+        {isRidesPage ? (
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link href="/rides" className="flex items-center gap-1">
+              <span className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">YuhRide</span>
+            </Link>
+            <Link href="/" className="hidden sm:flex items-center gap-1">
+              <span className="text-xs text-muted font-medium">powered by</span>
+              <img src="/logo.svg" alt="YuhPlace" className="h-6" />
+            </Link>
+          </div>
+        ) : isStoreLanding ? (
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link href="/store" className="flex items-center gap-1">
+              <span className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">YuhStore</span>
+            </Link>
+            <Link href="/" className="hidden sm:flex items-center gap-1">
+              <span className="text-xs text-muted font-medium">powered by</span>
+              <img src="/logo.svg" alt="YuhPlace" className="h-6" />
+            </Link>
+          </div>
+        ) : (
+          <Link href="/" className="flex-shrink-0">
+            <img src="/logo.svg" alt="YuhPlace" className="h-9" />
+          </Link>
+        )}
 
         {/* Region selector + Search + Auth */}
         <div className="flex items-center gap-0.5">
+          {/* Rides page header actions */}
+          {isRidesPage && (
+            <>
+              <Link href="/rides/about" className="hidden sm:block mr-1 text-xs text-muted hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-surface">
+                Learn More
+              </Link>
+              <Link href="/rides/register" className="hidden sm:block mr-2">
+                <FeyButton icon={<Car size={16} />}>
+                  Register as a Driver
+                </FeyButton>
+              </Link>
+            </>
+          )}
+
+          {/* Store page header actions */}
+          {isStoreLanding && (
+            <>
+              <Link href="/store/about" className="hidden sm:block mr-1 text-xs text-muted hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-surface">
+                Learn More
+              </Link>
+              <Link href="/store/create" className="hidden sm:block mr-2">
+                <FeyButton icon={<Store size={16} />}>
+                  Create a Store
+                </FeyButton>
+              </Link>
+            </>
+          )}
+
           <div className="relative">
             <button
               onClick={() => { setRegionOpen(!regionOpen); setSearchOpen(false); }}
@@ -179,7 +280,7 @@ export default function TopNav() {
       {/* Search bar (expandable) */}
       {searchOpen && (
         <form onSubmit={handleSearch} className="border-t border-border/30 px-4 py-2 bg-white">
-          <div className="mx-auto max-w-lg">
+          <div className="mx-auto max-w-3xl">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input
