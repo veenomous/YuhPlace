@@ -40,8 +40,11 @@ import ReviewSection from '@/components/ReviewSection';
 import SellerRating from '@/components/SellerRating';
 import VerifiedPartner from '@/components/VerifiedPartner';
 import HomeServiceRequestModal from '@/components/HomeServiceRequestModal';
+import CurrencySwitcher from '@/components/CurrencySwitcher';
 import { Plane } from 'lucide-react';
 import { useViewCount } from '@/hooks/useViewCount';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { formatPriceIn, normalizeCurrency } from '@/lib/currency';
 
 // ---------- Helpers ----------
 
@@ -89,6 +92,7 @@ export default function PropertyListingClient({ id }: { id: string }) {
   const [deleteError, setDeleteError] = useState('');
   const [showShare, setShowShare] = useState(false);
   const [showViewingRequest, setShowViewingRequest] = useState(false);
+  const [displayCurrency] = useDisplayCurrency();
 
   const property = getPropertyListing(id);
   useViewCount('property_listing', property?.id);
@@ -239,10 +243,21 @@ export default function PropertyListingClient({ id }: { id: string }) {
         </div>
 
         {/* Price */}
-        <p className="text-2xl font-bold text-foreground mb-1">
-          {formatPrice(property.price_amount, property.currency)}
-          {isRent && <span className="text-base font-normal text-muted">/mo</span>}
-        </p>
+        <div className="mb-1 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-2xl font-bold text-foreground">
+              {formatPriceIn(property.price_amount, property.currency, displayCurrency)}
+              {isRent && <span className="text-base font-normal text-muted">/mo</span>}
+            </p>
+            {normalizeCurrency(property.currency) !== displayCurrency && (
+              <p className="text-xs text-muted mt-0.5">
+                ~ {formatPrice(property.price_amount, property.currency)}
+                {isRent && '/mo'} native
+              </p>
+            )}
+          </div>
+          <CurrencySwitcher size="sm" className="flex-shrink-0 mt-1" />
+        </div>
 
         {/* Title */}
         <h1 className="text-lg font-semibold text-foreground mb-3 leading-snug">
@@ -505,7 +520,7 @@ export default function PropertyListingClient({ id }: { id: string }) {
           <FavoriteButton targetType="property_listing" targetId={property.id} />
           <div className="flex-1 min-w-0">
             <p className="text-lg font-bold text-foreground truncate">
-              {formatPrice(property.price_amount, property.currency)}
+              {formatPriceIn(property.price_amount, property.currency, displayCurrency)}
               {isRent && <span className="text-sm font-normal text-muted">/mo</span>}
             </p>
           </div>

@@ -31,6 +31,9 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import SellerRating from '@/components/SellerRating';
 import VerifiedPartner from '@/components/VerifiedPartner';
 import HomeServiceRequestModal from '@/components/HomeServiceRequestModal';
+import CurrencySwitcher from '@/components/CurrencySwitcher';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import { formatPriceIn } from '@/lib/currency';
 import { Plane } from 'lucide-react';
 import type { PropertyListingWithDetails, PropertyType, ListingMode } from '@/types/database';
 
@@ -98,6 +101,7 @@ export default function PropertyBrowsePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingModalOpen, setViewingModalOpen] = useState(false);
+  const [displayCurrency] = useDisplayCurrency();
 
   const priceRanges = mode === 'rent' ? PRICE_RANGES_RENT : PRICE_RANGES_SALE;
   const currentPriceRange = priceRanges[priceRangeIdx] ?? priceRanges[0];
@@ -278,6 +282,7 @@ export default function PropertyBrowsePage() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
+            <CurrencySwitcher size="sm" />
             <Link
               href="/property/create"
               className="text-white px-3 py-2 rounded-lg font-bold text-xs active:scale-95 transition-all flex items-center gap-1.5"
@@ -422,7 +427,7 @@ export default function PropertyBrowsePage() {
                         {property.title}
                       </h3>
                       <p className="text-white/70 text-xs sm:text-sm mt-0.5">
-                        {property.neighborhood_text && `${property.neighborhood_text}, `}{property.regions.name} &bull; {formatPrice(property.price_amount, property.currency)}
+                        {property.neighborhood_text && `${property.neighborhood_text}, `}{property.regions.name} &bull; {formatPriceIn(property.price_amount, property.currency, displayCurrency)}
                         {property.listing_mode === 'rent' && '/mo'}
                       </p>
                       {idx === 0 && (
@@ -468,7 +473,7 @@ export default function PropertyBrowsePage() {
                         {property.title}
                       </h3>
                       <p className="text-white/80 text-xs mt-0.5">
-                        {formatPrice(property.price_amount, property.currency)}
+                        {formatPriceIn(property.price_amount, property.currency, displayCurrency)}
                         {property.listing_mode === 'rent' && '/mo'}
                       </p>
                       <div className="flex items-center gap-2 mt-1 text-white/60 text-[10px]">
