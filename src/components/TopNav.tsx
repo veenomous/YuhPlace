@@ -12,6 +12,13 @@ import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { FeyButton } from '@/components/ui/fey-button';
 
+const PRIMARY_NAV: { label: string; href: string }[] = [
+  { label: 'Services', href: '/home-services' },
+  { label: 'Property', href: '/property' },
+  { label: 'Market', href: '/market' },
+  { label: 'Discover', href: '/discover' },
+];
+
 export default function TopNav() {
   const { selectedRegion, setSelectedRegion, regionName } = useRegion();
   const { query, setQuery } = useSearch();
@@ -137,6 +144,34 @@ export default function TopNav() {
           <Link href="/" className="flex-shrink-0">
             <img src="/logo.svg" alt="YuhPlace" className="h-9" />
           </Link>
+        )}
+
+        {/* Primary category tabs — desktop only, on standard pages */}
+        {!isFullWidthPage && (
+          <nav className="hidden md:flex items-center gap-1 mx-4">
+            {PRIMARY_NAV.map((item) => {
+              const active =
+                item.href === '/home-services'
+                  ? pathname.startsWith('/home-services')
+                  : item.href === '/property'
+                    ? pathname.startsWith('/property')
+                    : item.href === '/market'
+                      ? pathname.startsWith('/market')
+                      : pathname.startsWith('/discover');
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'px-2.5 py-1 rounded-lg text-xs font-semibold tracking-tight transition-colors',
+                    active ? 'text-primary bg-primary-light' : 'text-muted hover:text-foreground hover:bg-surface',
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
         )}
 
         {/* Region selector + Search + Auth */}
