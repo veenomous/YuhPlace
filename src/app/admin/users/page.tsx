@@ -10,6 +10,8 @@ import {
   ChevronDown,
   Loader2,
   Filter,
+  ShieldCheck,
+  X,
 } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -25,6 +27,9 @@ interface AdminUser {
   account_type: 'individual' | 'business' | 'agent_landlord';
   avatar_url: string | null;
   is_verified_business: boolean;
+  is_verified_partner: boolean;
+  partner_name: string | null;
+  partner_logo_url: string | null;
   status: 'active' | 'suspended';
   is_admin: boolean;
   created_at: string;
@@ -50,6 +55,7 @@ const STATUS_FILTER_OPTIONS: { label: string; value: string }[] = [
   { label: 'Active', value: 'active' },
   { label: 'Suspended', value: 'suspended' },
   { label: 'Verified', value: 'verified' },
+  { label: 'Partners', value: 'partners' },
 ];
 
 const TYPE_FILTER_OPTIONS: { label: string; value: string }[] = [
@@ -70,6 +76,7 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [partnerEditUser, setPartnerEditUser] = useState<AdminUser | null>(null);
 
   const fetchUsers = useCallback(async () => {
     const supabase = createClient();
@@ -93,6 +100,7 @@ export default function AdminUsersPage() {
     if (statusFilter === 'active') results = results.filter((u) => u.status === 'active');
     else if (statusFilter === 'suspended') results = results.filter((u) => u.status === 'suspended');
     else if (statusFilter === 'verified') results = results.filter((u) => u.is_verified_business);
+    else if (statusFilter === 'partners') results = results.filter((u) => u.is_verified_partner);
 
     if (typeFilter !== 'all') results = results.filter((u) => u.account_type === typeFilter);
 
@@ -135,8 +143,41 @@ export default function AdminUsersPage() {
     setActionLoading(null);
   }
 
+  async function handleSetPartner(
+    userId: string,
+    isPartner: boolean,
+    partnerName: string | null,
+    partnerLogoUrl: string | null,
+  ) {
+    setActionLoading(userId);
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc('admin_set_partner', {
+      p_user_id: userId,
+      p_is_partner: isPartner,
+      p_partner_name: partnerName,
+      p_partner_logo_url: partnerLogoUrl,
+    });
+    if (!error && data) {
+      const payload = data as { is_verified_partner: boolean; partner_name: string | null; partner_logo_url: string | null };
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                is_verified_partner: payload.is_verified_partner,
+                partner_name: payload.partner_name,
+                partner_logo_url: payload.partner_logo_url,
+              }
+            : u,
+        ),
+      );
+    }
+    setActionLoading(null);
+  }
+
   const suspendedCount = users.filter((u) => u.status === 'suspended').length;
   const verifiedCount = users.filter((u) => u.is_verified_business).length;
+  const partnerCount = users.filter((u) => u.is_verified_partner).length;
 
   if (loading) {
     return (
@@ -163,6 +204,12 @@ export default function AdminUsersPage() {
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
             <BadgeCheck size={12} />
             {verifiedCount} verified
+          </span>
+        )}
+        {partnerCount > 0 && (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+            <ShieldCheck size={12} />
+            {partnerCount} partner{partnerCount === 1 ? '' : 's'}
           </span>
         )}
         {suspendedCount > 0 && (
@@ -229,6 +276,19 @@ export default function AdminUsersPage() {
         )}
       </div>
 
+      {/* Partner edit modal */}
+      {partnerEditUser && (
+        <PartnerEditModal
+          user={partnerEditUser}
+          saving={actionLoading === partnerEditUser.id}
+          onClose={() => setPartnerEditUser(null)}
+          onSave={async (isPartner, name, logoUrl) => {
+            await handleSetPartner(partnerEditUser.id, isPartner, name, logoUrl);
+            setPartnerEditUser(null);
+          }}
+        />
+      )}
+
       {/* Users Table */}
       <div className="bg-white border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
@@ -277,10 +337,16 @@ export default function AdminUsersPage() {
                             <span className="text-xs font-bold text-primary-dark">{initials}</span>
                           </div>
                           <div>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-medium text-foreground">{user.name}</span>
                               {user.is_verified_business && (
                                 <BadgeCheck size={14} className="text-amber-500 flex-shrink-0" />
+                              )}
+                              {user.is_verified_partner && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">
+                                  <ShieldCheck size={10} />
+                                  {user.partner_name ? `PARTNER · ${user.partner_name}` : 'PARTNER'}
+                                </span>
                               )}
                               {user.is_admin && (
                                 <span className="text-[10px] font-bold text-primary bg-primary-light px-1.5 py-0.5 rounded">ADMIN</span>
@@ -351,6 +417,22 @@ export default function AdminUsersPage() {
                                 </button>
                               )}
 
+                              {/* Partner */}
+                              {!user.is_admin && (
+                                <button
+                                  onClick={() => setPartnerEditUser(user)}
+                                  className={cn(
+                                    'p-1.5 rounded-lg transition-colors',
+                                    user.is_verified_partner
+                                      ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+                                      : 'text-muted hover:text-blue-600 hover:bg-blue-50',
+                                  )}
+                                  title={user.is_verified_partner ? 'Edit partner details' : 'Mark as verified partner'}
+                                >
+                                  <ShieldCheck size={16} />
+                                </button>
+                              )}
+
                               {/* Suspend / Unsuspend */}
                               {!user.is_admin && user.status === 'active' && (
                                 <button
@@ -380,6 +462,120 @@ export default function AdminUsersPage() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Partner edit modal
+// ---------------------------------------------------------------------------
+
+function PartnerEditModal({
+  user,
+  saving,
+  onClose,
+  onSave,
+}: {
+  user: AdminUser;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (isPartner: boolean, partnerName: string | null, partnerLogoUrl: string | null) => Promise<void>;
+}) {
+  const [isPartner, setIsPartner] = useState(user.is_verified_partner);
+  const [partnerName, setPartnerName] = useState(user.partner_name ?? '');
+  const [partnerLogoUrl, setPartnerLogoUrl] = useState(user.partner_logo_url ?? '');
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-xl">
+        <div className="flex items-start justify-between p-5 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#EFF6FF' }}>
+              <ShieldCheck size={18} className="text-blue-700" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground">Verified Partner</h2>
+              <p className="text-xs text-muted">{user.name}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-muted hover:bg-surface rounded-lg">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <label className="flex items-start gap-3 p-3 rounded-xl border border-border cursor-pointer hover:bg-surface/40 transition-colors">
+            <input
+              type="checkbox"
+              checked={isPartner}
+              onChange={(e) => setIsPartner(e.target.checked)}
+              className="mt-1"
+            />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Mark as Verified Partner</p>
+              <p className="text-xs text-muted mt-0.5">
+                Their listings show a partner badge. They can be assigned to incoming home-service requests.
+              </p>
+            </div>
+          </label>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1 text-muted">
+              Partner name (shown on the badge)
+            </label>
+            <input
+              type="text"
+              value={partnerName}
+              onChange={(e) => setPartnerName(e.target.value)}
+              placeholder="e.g. GY Realty Group"
+              disabled={!isPartner}
+              className="w-full px-3 py-2.5 rounded-xl text-sm bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
+            />
+            <p className="text-[10px] text-muted mt-1">
+              Leave blank to show the generic &quot;Verified Partner&quot; badge.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1 text-muted">
+              Partner logo URL (optional)
+            </label>
+            <input
+              type="url"
+              value={partnerLogoUrl}
+              onChange={(e) => setPartnerLogoUrl(e.target.value)}
+              placeholder="https://..."
+              disabled={!isPartner}
+              className="w-full px-3 py-2.5 rounded-xl text-sm bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 p-4 bg-surface/40 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-semibold text-foreground rounded-lg hover:bg-surface"
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() =>
+              onSave(
+                isPartner,
+                partnerName.trim() ? partnerName.trim() : null,
+                partnerLogoUrl.trim() ? partnerLogoUrl.trim() : null,
+              )
+            }
+            disabled={saving}
+            className="px-4 py-2 text-sm font-bold text-white rounded-lg flex items-center gap-1.5 disabled:opacity-60"
+            style={{ backgroundColor: '#1667B7' }}
+          >
+            {saving ? <Loader2 size={14} className="animate-spin" /> : null}
+            Save
+          </button>
         </div>
       </div>
     </div>

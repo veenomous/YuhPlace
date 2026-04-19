@@ -11,11 +11,17 @@ import {
   Users,
   Star,
   Settings,
+  Plus,
+  Building2,
   Loader2,
   ShieldAlert,
+  UserSearch,
+  Store,
+  Plane,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { DataProvider } from '@/context/DataContext';
 
 // ---------------------------------------------------------------------------
 // Sidebar Navigation Config
@@ -23,11 +29,15 @@ import { useAuth } from '@/context/AuthContext';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { label: 'Home Services', href: '/admin/home-services', icon: Plane },
   { label: 'Reports', href: '/admin/reports', icon: Flag },
   { label: 'Discover Posts', href: '/admin/discover', icon: Compass },
   { label: 'Market Listings', href: '/admin/market', icon: ShoppingBag },
   { label: 'Property Listings', href: '/admin/properties', icon: Home },
   { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Stores', href: '/admin/stores', icon: Store },
+  { label: 'Quick Add', href: '/admin/quick-add', icon: Plus },
+  { label: 'Leads', href: '/admin/leads', icon: UserSearch },
   { label: 'Featured', href: '/admin/featured', icon: Star },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
@@ -138,7 +148,9 @@ export default function AdminLayout({
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0">
-        <div className="max-w-6xl mx-auto px-8 py-8">{children}</div>
+        <DataProvider>
+          <div className="max-w-6xl mx-auto px-8 py-8">{children}</div>
+        </DataProvider>
       </main>
     </div>
   );

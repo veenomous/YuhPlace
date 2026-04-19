@@ -71,13 +71,18 @@ function SignupForm() {
     e.preventDefault();
     setError('');
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phone.trim()) {
       setError('Please fill in all required fields.');
       return;
     }
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters.');
+      return;
+    }
+
+    if (phone.trim().length < 6) {
+      setError('Please enter a valid phone number.');
       return;
     }
 
@@ -120,12 +125,24 @@ function SignupForm() {
   return (
     <div className="bg-white border border-border/50 rounded-2xl p-6 shadow-card">
       {/* Header */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-5">
         <h1 className="text-xl font-bold text-foreground">Join YuhPlace</h1>
         <p className="text-sm text-muted mt-1">
           Create your account and connect with Guyana
         </p>
       </div>
+
+      {/* Diaspora nudge */}
+      <Link
+        href="/home-services"
+        className="flex items-center gap-2 p-3 rounded-xl mb-5 text-left transition-all hover:shadow-sm"
+        style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE' }}
+      >
+        <span className="text-lg">✈️</span>
+        <span className="flex-1 text-xs leading-snug" style={{ color: '#114B8A' }}>
+          <strong>Abroad, need something done in Guyana?</strong> Skip signup — send a request direct.
+        </span>
+      </Link>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -230,7 +247,7 @@ function SignupForm() {
         {/* Phone (optional) */}
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1.5">
-            Phone <span className="text-xs text-muted font-normal">(optional)</span>
+            Phone <span className="text-danger">*</span>
           </label>
           <div className="relative flex">
             <select

@@ -2,14 +2,14 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'YuhPlace — Your place for Guyana',
+    name: 'YuhPlace — Home, from wherever yuh deh',
     short_name: 'YuhPlace',
     description:
-      'Discover local updates, buy and sell nearby, and find rentals, homes, and services in Guyana.',
+      'For the Guyanese diaspora. Send somebody to tour a property, drop off supplies, or fix what needs fixing in Guyana.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#FFFFFF',
-    theme_color: '#1667B7',
+    background_color: '#fcf9f8',
+    theme_color: '#196a24',
     icons: [
       {
         src: '/icon',

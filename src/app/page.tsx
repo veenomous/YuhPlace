@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import HomeServiceRequestModal from '@/components/HomeServiceRequestModal';
+import NewsletterSignup from '@/components/NewsletterSignup';
 import type { HomeServiceType } from '@/types/database';
 
 // ─── Animation ───────────────────────────────────────────────────────────────
@@ -424,8 +425,12 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h5 className="text-xs font-bold mb-3" style={{ fontFamily: 'var(--font-headline)' }}>Company</h5>
-              <ul className="space-y-2 text-[11px]" style={{ color: '#40493d' }}>
+              <h5 className="text-xs font-bold mb-2" style={{ fontFamily: 'var(--font-headline)' }}>GT This Week</h5>
+              <p className="text-[11px] mb-2 leading-relaxed" style={{ color: '#40493d' }}>
+                News from home, top property drops, and what yuh people dem saying. One email, every Sunday.
+              </p>
+              <NewsletterSignup source="landing_footer" variant="light" />
+              <ul className="space-y-1.5 text-[11px] mt-3" style={{ color: '#40493d' }}>
                 <li><Link href="/about" className="hover:text-[#196a24] transition-colors">About</Link></li>
                 <li><Link href="/contact" className="hover:text-[#196a24] transition-colors">Contact</Link></li>
                 <li><Link href="/terms" className="hover:text-[#196a24] transition-colors">Terms</Link></li>

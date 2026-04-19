@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins, Inter, Geist_Mono } from "next/font/google";
+import { Poppins, Inter, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import ServiceWorkerRegister from "./sw-register";
 import "./globals.css";
@@ -23,24 +23,45 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://yuhplace.vercel.app";
+const TITLE = "YuhPlace — Home, from wherever yuh deh";
+const DESCRIPTION =
+  "For the Guyanese diaspora. Send somebody to tour a property, drop off supplies, or fix what needs fixing in Guyana. Vetted partners. Proof at every step.";
+
 export const metadata: Metadata = {
-  title: "YuhPlace — Your place for Guyana",
-  description:
-    "Discover local updates, buy and sell nearby, and find rentals, homes, and services in Guyana.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITLE,
+    template: "%s · YuhPlace",
+  },
+  description: DESCRIPTION,
+  keywords: [
+    "Guyana property from abroad",
+    "Guyana diaspora services",
+    "property viewing Guyana",
+    "send groceries Guyana",
+    "handyman Guyana",
+    "YuhPlace",
+  ],
   openGraph: {
-    title: "YuhPlace — Your place for Guyana",
-    description:
-      "Discover local updates, buy and sell nearby, and find rentals, homes, and services in Guyana.",
-    url: "https://yuhplace.vercel.app",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
     siteName: "YuhPlace",
     type: "website",
     locale: "en_US",
   },
   twitter: {
-    card: "summary",
-    title: "YuhPlace — Your place for Guyana",
-    description:
-      "Discover local updates, buy and sell nearby, and find rentals, homes, and services in Guyana.",
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
   },
   appleWebApp: {
     capable: true,
@@ -50,7 +71,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1667B7",
+  themeColor: "#196a24",
   maximumScale: 1,
 };
 
@@ -62,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} ${inter.variable} ${geistMono.variable} antialiased`}
+        className={`${poppins.variable} ${inter.variable} ${geistMono.variable} ${plusJakarta.variable} antialiased`}
       >
         <AuthProvider>{children}</AuthProvider>
         <ServiceWorkerRegister />
