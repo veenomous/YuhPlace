@@ -102,8 +102,7 @@ export default function TopNav() {
 
   const isRidesPage = pathname.startsWith('/rides');
   const isStoreLanding = pathname === '/store' || pathname.startsWith('/store/about') || pathname.startsWith('/store/directory');
-  const isHomeServices = pathname.startsWith('/home-services');
-  const isFullWidthPage = isRidesPage || isStoreLanding || isHomeServices;
+  const isSubBrandPage = isRidesPage || isStoreLanding;
 
   const displayName = profile?.name || user?.user_metadata?.name || user?.email || '';
   const initials = displayName
@@ -114,11 +113,11 @@ export default function TopNav() {
     .toUpperCase();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-soft">
-      <div className={cn(
-        "mx-auto flex items-center justify-between px-4",
-        isFullWidthPage ? "max-w-6xl h-16" : "max-w-3xl h-14"
-      )}>
+    <header
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl shadow-soft"
+      style={{ backgroundColor: 'rgba(252,249,248,0.88)' }}
+    >
+      <div className="mx-auto flex items-center justify-between px-4 max-w-5xl h-14">
         {/* Logo — show sub-brand on /rides and /store pages */}
         {isRidesPage ? (
           <div className="flex items-center gap-3 flex-shrink-0">
@@ -146,26 +145,20 @@ export default function TopNav() {
           </Link>
         )}
 
-        {/* Primary category tabs — desktop only, on standard pages */}
-        {!isFullWidthPage && (
-          <nav className="hidden md:flex items-center gap-1 mx-4">
+        {/* Primary category tabs — desktop only, hidden on sub-brand pages */}
+        {!isSubBrandPage && (
+          <nav className="hidden md:flex items-center gap-1 ml-6 flex-1">
             {PRIMARY_NAV.map((item) => {
-              const active =
-                item.href === '/home-services'
-                  ? pathname.startsWith('/home-services')
-                  : item.href === '/property'
-                    ? pathname.startsWith('/property')
-                    : item.href === '/market'
-                      ? pathname.startsWith('/market')
-                      : pathname.startsWith('/discover');
+              const active = pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-2.5 py-1 rounded-lg text-xs font-semibold tracking-tight transition-colors',
+                    'px-3 py-1.5 rounded-full text-xs font-bold tracking-tight transition-colors',
                     active ? 'text-primary bg-primary-light' : 'text-muted hover:text-foreground hover:bg-surface',
                   )}
+                  style={{ fontFamily: 'var(--font-headline)' }}
                 >
                   {item.label}
                 </Link>

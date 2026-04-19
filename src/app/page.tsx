@@ -48,53 +48,70 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#fcf9f8', color: '#1c1b1b' }}>
 
-      {/* ── TopNav ── */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-xl shadow-sm" style={{ backgroundColor: 'rgba(252,249,248,0.85)' }}>
-        <div className="flex justify-between items-center px-4 sm:px-6 h-12 sm:h-14 w-full max-w-5xl mx-auto">
-          <div className="flex items-center gap-3 sm:gap-6">
+      {/* ── TopNav (matches shared TopNav styling exactly) ── */}
+      <header
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl shadow-soft"
+        style={{ backgroundColor: 'rgba(252,249,248,0.88)' }}
+      >
+        <div className="mx-auto flex items-center justify-between px-4 max-w-5xl h-14">
+          {/* Logo */}
+          <Link href="/" className="flex-shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.svg" alt="YuhPlace" className="h-5 sm:h-6" />
-            <div className="hidden sm:flex gap-4">
-              {[
-                { label: 'Services', href: '/home-services' },
-                { label: 'Property', href: '/property' },
-                { label: 'Market', href: '/market' },
-                { label: 'Discover', href: '/discover' },
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-xs font-semibold tracking-tight transition-colors hover:text-[#196a24]"
-                  style={{ color: '#40493d', fontFamily: 'var(--font-headline)' }}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/notifications" className="p-1.5 rounded-full transition-all hover:bg-[#ebe7e7]/50">
-              <Bell size={16} style={{ color: '#40493d' }} />
+            <img src="/logo.svg" alt="YuhPlace" className="h-9" />
+          </Link>
+
+          {/* Primary category tabs — match shared TopNav */}
+          <nav className="hidden md:flex items-center gap-1 ml-6 flex-1">
+            {[
+              { label: 'Services', href: '/home-services' },
+              { label: 'Property', href: '/property' },
+              { label: 'Market', href: '/market' },
+              { label: 'Discover', href: '/discover' },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="px-3 py-1.5 rounded-full text-xs font-bold tracking-tight transition-colors text-muted hover:text-foreground hover:bg-surface"
+                style={{ fontFamily: 'var(--font-headline)' }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right-side actions */}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/notifications"
+              className="p-1.5 text-muted hover:text-foreground hover:bg-surface rounded-lg transition-colors"
+            >
+              <Bell size={18} />
             </Link>
             {!loading && (
               user ? (
-                <Link href="/profile" className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e5e2e1' }}>
-                  <span className="text-[10px] font-bold" style={{ color: '#196a24' }}>
+                <Link href="/profile" className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center overflow-hidden">
+                  <span className="text-[10px] font-bold text-primary-dark">
                     {(user.user_metadata?.name || user.email || '?')[0].toUpperCase()}
                   </span>
                 </Link>
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <Link href="/login" className="px-2.5 py-1 text-xs font-semibold hover:text-[#196a24] transition-colors" style={{ color: '#40493d' }}>Log in</Link>
-                  <Link href="/signup" className="px-3 py-1 text-xs font-bold text-white rounded-md hover:brightness-110 transition-colors" style={{ backgroundColor: '#196a24' }}>Sign up</Link>
+                  <Link href="/login" className="px-2.5 py-1 text-xs font-semibold text-muted hover:text-foreground transition-colors">Log in</Link>
+                  <Link
+                    href="/signup"
+                    className="px-3 py-1.5 text-xs font-bold text-white rounded-lg hover:brightness-110 transition-colors"
+                    style={{ backgroundColor: '#196a24' }}
+                  >
+                    Sign up
+                  </Link>
                 </div>
               )
             )}
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="pt-12 sm:pt-14">
+      <main className="pt-14">
 
         {/* ── HERO ── */}
         <section className="relative overflow-hidden px-4 sm:px-6 pt-6 pb-10 sm:pt-12 sm:pb-16">

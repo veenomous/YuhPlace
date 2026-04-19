@@ -143,72 +143,69 @@ export default function PropertyBrowsePage() {
   return (
     <div style={{ backgroundColor: '#fcf9f8', color: '#1c1b1b' }}>
 
-      {/* ── Hero ── */}
-      <section className="relative min-h-[280px] sm:min-h-[360px] flex items-end overflow-hidden rounded-b-[1.5rem]">
-        <div className="absolute inset-0 z-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="w-full h-full object-cover brightness-[0.65]" alt="Guyana property" src="/Georgetown.png" />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(28,27,27,0.8) 0%, transparent 70%)' }} />
-        </div>
-        <div className="relative z-10 w-full px-4 pb-5 pt-16">
-          <motion.div initial="hidden" animate="visible" variants={stagger}>
-            <motion.h1
-              variants={fadeUp}
-              className="text-3xl sm:text-4xl font-extrabold tracking-tighter text-white mb-4 leading-[0.9]"
-              style={{ fontFamily: 'var(--font-headline)' }}
-            >
-              Find Your Place<br />
-              <span style={{ color: '#a3f69e' }}>in Guyana.</span>
-            </motion.h1>
+      {/* ── Hero (text-first, matches landing/home-services/discover/market) ── */}
+      <section className="px-4 pt-6 pb-4">
+        <motion.div initial="hidden" animate="visible" variants={stagger}>
+          <motion.span
+            variants={fadeUp}
+            className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold mb-3 tracking-widest uppercase"
+            style={{ backgroundColor: '#F1FBF4', color: '#196a24' }}
+          >
+            <Home size={10} /> Property
+          </motion.span>
+          <motion.h1
+            variants={fadeUp}
+            className="text-3xl sm:text-4xl font-black tracking-tighter leading-[0.95] mb-2"
+            style={{ fontFamily: 'var(--font-headline)' }}
+          >
+            Find your place<br />
+            <span style={{ color: '#196a24' }}>in Guyana.</span>
+          </motion.h1>
+          <motion.p variants={fadeUp} className="text-sm max-w-md mb-4" style={{ color: '#40493d' }}>
+            Rent, buy, or inherit &mdash; guided from wherever yuh deh. Every listing tour-able by a real person.
+          </motion.p>
 
-            {/* Search Shell */}
-            <motion.div
-              variants={fadeUp}
-              className="rounded-xl p-1 flex items-center gap-1 backdrop-blur-md"
-              style={{ backgroundColor: 'rgba(252,249,248,0.95)' }}
-            >
-              <div className="flex-1 px-3 py-2.5 flex items-center gap-2">
-                <MapPin size={16} style={{ color: '#196a24' }} />
-                <input
-                  className="bg-transparent border-none focus:ring-0 focus:outline-none w-full font-medium text-sm"
-                  placeholder="Where do you want to live?"
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ color: '#1c1b1b' }}
-                />
-              </div>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => { setMode('rent'); setPriceRangeIdx(0); }}
-                  className="px-3 py-2.5 rounded-lg font-bold text-xs transition-all"
-                  style={{
-                    backgroundColor: mode === 'rent' ? '#196a24' : 'transparent',
-                    color: mode === 'rent' ? '#fff' : '#40493d',
-                  }}
-                >
-                  Rent
-                </button>
-                <button
-                  onClick={() => { setMode('sale'); setPriceRangeIdx(0); }}
-                  className="px-3 py-2.5 rounded-lg font-bold text-xs transition-all"
-                  style={{
-                    backgroundColor: mode === 'sale' ? '#196a24' : 'transparent',
-                    color: mode === 'sale' ? '#fff' : '#40493d',
-                  }}
-                >
-                  Buy
-                </button>
-                <button
-                  className="px-3 py-2.5 rounded-lg font-bold text-xs text-white flex items-center gap-1.5"
-                  style={{ backgroundColor: '#196a24' }}
-                >
-                  <Search size={14} /> Search
-                </button>
-              </div>
-            </motion.div>
+          {/* Search + Rent/Buy toggle */}
+          <motion.div
+            variants={fadeUp}
+            className="rounded-xl p-1 flex items-center gap-1 shadow-sm"
+            style={{ backgroundColor: '#ffffff', border: '1px solid rgba(191,202,186,0.3)' }}
+          >
+            <div className="flex-1 px-3 py-2.5 flex items-center gap-2">
+              <MapPin size={16} style={{ color: '#196a24' }} />
+              <input
+                className="bg-transparent border-none focus:ring-0 focus:outline-none w-full font-medium text-sm"
+                placeholder="Where do you want to live?"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ color: '#1c1b1b' }}
+              />
+            </div>
+            <div className="flex gap-1">
+              <button
+                onClick={() => { setMode('rent'); setPriceRangeIdx(0); }}
+                className="px-3 py-2.5 rounded-lg font-bold text-xs transition-all"
+                style={{
+                  backgroundColor: mode === 'rent' ? '#196a24' : 'transparent',
+                  color: mode === 'rent' ? '#fff' : '#40493d',
+                }}
+              >
+                Rent
+              </button>
+              <button
+                onClick={() => { setMode('sale'); setPriceRangeIdx(0); }}
+                className="px-3 py-2.5 rounded-lg font-bold text-xs transition-all"
+                style={{
+                  backgroundColor: mode === 'sale' ? '#196a24' : 'transparent',
+                  color: mode === 'sale' ? '#fff' : '#40493d',
+                }}
+              >
+                Buy
+              </button>
+            </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Diaspora strip: Request a viewing ── */}
@@ -216,20 +213,20 @@ export default function PropertyBrowsePage() {
         <button
           onClick={() => setViewingModalOpen(true)}
           className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all hover:shadow-md active:scale-[0.99]"
-          style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE' }}
+          style={{ backgroundColor: '#F1FBF4', border: '1px solid rgba(25,106,36,0.15)' }}
         >
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#1667B7' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#196a24' }}>
             <Plane size={16} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold leading-tight" style={{ color: '#114B8A', fontFamily: 'var(--font-headline)' }}>
+            <p className="text-sm font-bold leading-tight" style={{ color: '#114a19', fontFamily: 'var(--font-headline)' }}>
               Abroad? We&rsquo;ll tour any listing for you.
             </p>
-            <p className="text-[11px] mt-0.5" style={{ color: '#1E3A8A' }}>
+            <p className="text-[11px] mt-0.5" style={{ color: '#196a24' }}>
               Vetted agents. Video + photos in 48 hours. No account needed.
             </p>
           </div>
-          <ArrowRight size={16} style={{ color: '#114B8A' }} className="flex-shrink-0" />
+          <ArrowRight size={16} style={{ color: '#196a24' }} className="flex-shrink-0" />
         </button>
       </section>
 

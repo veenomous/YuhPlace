@@ -226,7 +226,7 @@ export default function PropertyListingClient({ id }: { id: string }) {
           <span
             className={cn(
               'px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide',
-              isRent ? 'bg-primary-light text-primary' : 'bg-success-light text-success'
+              isRent ? 'bg-primary-light text-primary' : 'bg-accent-light text-accent'
             )}
           >
             For {property.listing_mode}
@@ -306,20 +306,20 @@ export default function PropertyListingClient({ id }: { id: string }) {
         <button
           onClick={() => setShowViewingRequest(true)}
           className="w-full flex items-center gap-3 p-4 rounded-2xl mb-5 text-left transition-all hover:shadow-md active:scale-[0.99]"
-          style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE' }}
+          style={{ backgroundColor: '#F1FBF4', border: '1px solid rgba(25,106,36,0.15)' }}
         >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#1667B7' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#196a24' }}>
             <Plane size={18} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold" style={{ color: '#114B8A', fontFamily: 'var(--font-headline)' }}>
+            <p className="text-sm font-bold" style={{ color: '#114a19', fontFamily: 'var(--font-headline)' }}>
               Abroad? We&rsquo;ll tour it for you.
             </p>
-            <p className="text-xs" style={{ color: '#1E3A8A' }}>
+            <p className="text-xs" style={{ color: '#196a24' }}>
               A vetted agent walks the property and sends video, photos, and honest notes within 48 hours.
             </p>
           </div>
-          <ChevronRight size={18} style={{ color: '#114B8A' }} className="flex-shrink-0" />
+          <ChevronRight size={18} style={{ color: '#196a24' }} className="flex-shrink-0" />
         </button>
 
         <hr className="border-border mb-5" />
