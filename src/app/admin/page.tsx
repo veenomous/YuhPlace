@@ -14,10 +14,46 @@ import {
   Gavel,
   Loader2,
   RotateCcw,
+  Plane,
+  Inbox,
+  Mail,
+  ShoppingBasket,
+  Wrench,
+  HelpCircle,
 } from 'lucide-react';
 import { cn, timeAgo } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import type { ReportStatus, ReportTargetType, ReportReason } from '@/types/database';
+import type { ReportStatus, ReportTargetType, ReportReason, HomeServiceType, HomeServiceStatus } from '@/types/database';
+
+interface DiaspoRequest {
+  id: string;
+  service_type: HomeServiceType;
+  status: HomeServiceStatus;
+  requester_name: string;
+  requester_location: string | null;
+  created_at: string;
+}
+
+interface WaitlistEntry {
+  id: string;
+  email: string;
+  location: string | null;
+  created_at: string;
+}
+
+const SERVICE_ICON: Record<HomeServiceType, typeof Home> = {
+  property_viewing: Home,
+  grocery_delivery: ShoppingBasket,
+  handyman: Wrench,
+  other: HelpCircle,
+};
+
+const SERVICE_LABEL: Record<HomeServiceType, string> = {
+  property_viewing: 'Viewing',
+  grocery_delivery: 'Supplies',
+  handyman: 'Handyman',
+  other: 'Other',
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -72,6 +108,7 @@ const TARGET_TYPE_CONFIG: Record<ReportTargetType, { label: string; className: s
   discover_post: { label: 'Discover Post', className: 'bg-purple-100 text-purple-700' },
   market_listing: { label: 'Market Listing', className: 'bg-primary-light text-primary-dark' },
   property_listing: { label: 'Property', className: 'bg-teal-100 text-teal-700' },
+  job: { label: 'Job', className: 'bg-amber-100 text-amber-700' },
   user: { label: 'User', className: 'bg-orange-100 text-orange-700' },
 };
 
@@ -91,16 +128,40 @@ const REASON_LABELS: Record<ReportReason, string> = {
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [reports, setReports] = useState<AdminReport[]>([]);
+  const [diasporaRequests, setDiasporaRequests] = useState<DiaspoRequest[]>([]);
+  const [openRequestCount, setOpenRequestCount] = useState(0);
+  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
+  const [waitlistCount, setWaitlistCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     const supabase = createClient();
-    const [statsRes, reportsRes] = await Promise.all([
+    const [statsRes, reportsRes, requestsRes, openCountRes, waitlistRes] = await Promise.all([
       supabase.rpc('get_admin_stats'),
       supabase.rpc('get_admin_reports'),
+      supabase
+        .from('home_service_requests')
+        .select('id, service_type, status, requester_name, requester_location, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5),
+      supabase
+        .from('home_service_requests')
+        .select('id', { count: 'exact', head: true })
+        .not('status', 'in', '(completed,cancelled)'),
+      supabase
+        .from('newsletter_subscribers')
+        .select('id, email, location, created_at', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .limit(5),
     ]);
     if (statsRes.data) setStats(statsRes.data as AdminStats);
     if (reportsRes.data) setReports((reportsRes.data as AdminReport[]).slice(0, 5));
+    if (requestsRes.data) setDiasporaRequests(requestsRes.data as DiaspoRequest[]);
+    if (typeof openCountRes.count === 'number') setOpenRequestCount(openCountRes.count);
+    if (waitlistRes.data) {
+      setWaitlist(waitlistRes.data as WaitlistEntry[]);
+      setWaitlistCount(waitlistRes.count ?? waitlistRes.data.length);
+    }
     setLoading(false);
   }, []);
 
@@ -186,6 +247,118 @@ export default function AdminDashboardPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* Diaspora widget */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <Plane size={16} style={{ color: '#196a24' }} />
+          <h2 className="text-base font-semibold text-foreground">Diaspora activity</h2>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          {/* Open home-service requests */}
+          <div className="bg-white border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Inbox size={16} className="text-blue-600" />
+                <h3 className="text-sm font-bold text-foreground">Open service requests</h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700">
+                  {openRequestCount}
+                </span>
+              </div>
+              <Link
+                href="/admin/home-services"
+                className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+              >
+                Open inbox <ArrowRight size={12} />
+              </Link>
+            </div>
+            {diasporaRequests.length === 0 ? (
+              <div className="px-5 py-10 text-center text-muted text-xs">
+                Nothing yet. When diaspora requests come in, they&apos;ll show up here.
+              </div>
+            ) : (
+              <ul className="divide-y divide-border">
+                {diasporaRequests.map((r) => {
+                  const Icon = SERVICE_ICON[r.service_type];
+                  const isOpen = r.status !== 'completed' && r.status !== 'cancelled';
+                  return (
+                    <li key={r.id} className="px-5 py-3 flex items-center gap-3">
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          isOpen ? 'bg-blue-50' : 'bg-surface',
+                        )}
+                      >
+                        <Icon size={14} className={isOpen ? 'text-blue-600' : 'text-muted'} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">
+                          {r.requester_name}
+                          <span className="ml-2 text-muted font-normal">· {SERVICE_LABEL[r.service_type]}</span>
+                        </p>
+                        <p className="text-[11px] text-muted">
+                          {r.requester_location ? `${r.requester_location} · ` : ''}
+                          {timeAgo(r.created_at)}
+                        </p>
+                      </div>
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0',
+                          isOpen ? 'bg-blue-50 text-blue-700' : 'bg-surface text-muted',
+                        )}
+                      >
+                        {r.status.replace('_', ' ')}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* Waitlist */}
+          <div className="bg-white border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Mail size={16} style={{ color: '#196a24' }} />
+                <h3 className="text-sm font-bold text-foreground">GT This Week waitlist</h3>
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  style={{ backgroundColor: '#F1FBF4', color: '#196a24' }}
+                >
+                  {waitlistCount}
+                </span>
+              </div>
+              <span className="text-xs text-muted">Newest first</span>
+            </div>
+            {waitlist.length === 0 ? (
+              <div className="px-5 py-10 text-center text-muted text-xs">
+                No signups yet. The landing footer captures to this list.
+              </div>
+            ) : (
+              <ul className="divide-y divide-border">
+                {waitlist.map((w) => (
+                  <li key={w.id} className="px-5 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#F1FBF4' }}>
+                      <Mail size={14} style={{ color: '#196a24' }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground truncate">
+                        {w.email}
+                      </p>
+                      <p className="text-[11px] text-muted">
+                        {w.location ? `${w.location} · ` : ''}
+                        {timeAgo(w.created_at)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Recent Reports */}
