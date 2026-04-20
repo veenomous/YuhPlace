@@ -43,6 +43,10 @@ export interface Profile {
   is_verified_partner: boolean;
   partner_name: string | null;
   partner_logo_url: string | null;
+  partner_slug: string | null;
+  partner_tagline: string | null;
+  partner_bio: string | null;
+  partner_banner_url: string | null;
   status: UserStatus;
   is_admin: boolean;
   email_notifications: boolean;
@@ -235,26 +239,26 @@ export interface CommentWithProfile extends Comment {
 
 // Joined types for frontend display
 export interface DiscoverPostWithDetails extends DiscoverPost {
-  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'is_verified_partner' | 'partner_name' | 'partner_logo_url' | 'created_at'>;
+  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'is_verified_partner' | 'partner_name' | 'partner_logo_url' | 'partner_slug' | 'created_at'>;
   regions: Pick<Region, 'name' | 'slug'>;
   discover_post_images: DiscoverPostImage[];
 }
 
 export interface MarketListingWithDetails extends MarketListing {
-  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'is_verified_partner' | 'partner_name' | 'partner_logo_url' | 'created_at'>;
+  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'is_verified_partner' | 'partner_name' | 'partner_logo_url' | 'partner_slug' | 'created_at'>;
   regions: Pick<Region, 'name' | 'slug'>;
   market_categories: Pick<MarketCategory, 'name' | 'slug'>;
   market_listing_images: MarketListingImage[];
 }
 
 export interface PropertyListingWithDetails extends PropertyListing {
-  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'is_verified_partner' | 'partner_name' | 'partner_logo_url' | 'created_at'>;
+  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'is_verified_partner' | 'partner_name' | 'partner_logo_url' | 'partner_slug' | 'created_at'>;
   regions: Pick<Region, 'name' | 'slug'>;
   property_listing_images: PropertyListingImage[];
 }
 
 export interface JobWithDetails extends Job {
-  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'is_verified_partner' | 'partner_name' | 'partner_logo_url' | 'created_at'>;
+  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url' | 'is_verified_business' | 'is_verified_partner' | 'partner_name' | 'partner_logo_url' | 'partner_slug' | 'created_at'>;
   regions: Pick<Region, 'name' | 'slug'>;
   job_images: JobImage[];
 }

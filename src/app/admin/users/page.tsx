@@ -30,6 +30,10 @@ interface AdminUser {
   is_verified_partner: boolean;
   partner_name: string | null;
   partner_logo_url: string | null;
+  partner_slug: string | null;
+  partner_tagline: string | null;
+  partner_bio: string | null;
+  partner_banner_url: string | null;
   status: 'active' | 'suspended';
   is_admin: boolean;
   created_at: string;
@@ -39,6 +43,16 @@ interface AdminUser {
   property_count: number;
   reports_filed: number;
 }
+
+type PartnerUpdate = {
+  is_verified_partner: boolean;
+  partner_name: string | null;
+  partner_logo_url: string | null;
+  partner_slug: string | null;
+  partner_tagline: string | null;
+  partner_bio: string | null;
+  partner_banner_url: string | null;
+};
 
 // ---------------------------------------------------------------------------
 // Config
@@ -145,31 +159,32 @@ export default function AdminUsersPage() {
 
   async function handleSetPartner(
     userId: string,
-    isPartner: boolean,
-    partnerName: string | null,
-    partnerLogoUrl: string | null,
+    payload: {
+      isPartner: boolean;
+      partnerName: string | null;
+      partnerLogoUrl: string | null;
+      partnerSlug: string | null;
+      partnerTagline: string | null;
+      partnerBio: string | null;
+      partnerBannerUrl: string | null;
+    },
   ) {
     setActionLoading(userId);
     const supabase = createClient();
     const { data, error } = await supabase.rpc('admin_set_partner', {
       p_user_id: userId,
-      p_is_partner: isPartner,
-      p_partner_name: partnerName,
-      p_partner_logo_url: partnerLogoUrl,
+      p_is_partner: payload.isPartner,
+      p_partner_name: payload.partnerName,
+      p_partner_logo_url: payload.partnerLogoUrl,
+      p_partner_slug: payload.partnerSlug,
+      p_partner_tagline: payload.partnerTagline,
+      p_partner_bio: payload.partnerBio,
+      p_partner_banner_url: payload.partnerBannerUrl,
     });
     if (!error && data) {
-      const payload = data as { is_verified_partner: boolean; partner_name: string | null; partner_logo_url: string | null };
+      const updated = data as PartnerUpdate;
       setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId
-            ? {
-                ...u,
-                is_verified_partner: payload.is_verified_partner,
-                partner_name: payload.partner_name,
-                partner_logo_url: payload.partner_logo_url,
-              }
-            : u,
-        ),
+        prev.map((u) => (u.id === userId ? { ...u, ...updated } : u)),
       );
     }
     setActionLoading(null);
@@ -282,8 +297,8 @@ export default function AdminUsersPage() {
           user={partnerEditUser}
           saving={actionLoading === partnerEditUser.id}
           onClose={() => setPartnerEditUser(null)}
-          onSave={async (isPartner, name, logoUrl) => {
-            await handleSetPartner(partnerEditUser.id, isPartner, name, logoUrl);
+          onSave={async (payload) => {
+            await handleSetPartner(partnerEditUser.id, payload);
             setPartnerEditUser(null);
           }}
         />
@@ -472,6 +487,14 @@ export default function AdminUsersPage() {
 // Partner edit modal
 // ---------------------------------------------------------------------------
 
+function slugify(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
 function PartnerEditModal({
   user,
   saving,
@@ -481,19 +504,41 @@ function PartnerEditModal({
   user: AdminUser;
   saving: boolean;
   onClose: () => void;
-  onSave: (isPartner: boolean, partnerName: string | null, partnerLogoUrl: string | null) => Promise<void>;
+  onSave: (payload: {
+    isPartner: boolean;
+    partnerName: string | null;
+    partnerLogoUrl: string | null;
+    partnerSlug: string | null;
+    partnerTagline: string | null;
+    partnerBio: string | null;
+    partnerBannerUrl: string | null;
+  }) => Promise<void>;
 }) {
   const [isPartner, setIsPartner] = useState(user.is_verified_partner);
   const [partnerName, setPartnerName] = useState(user.partner_name ?? '');
   const [partnerLogoUrl, setPartnerLogoUrl] = useState(user.partner_logo_url ?? '');
+  const [partnerSlug, setPartnerSlug] = useState(user.partner_slug ?? '');
+  const [partnerTagline, setPartnerTagline] = useState(user.partner_tagline ?? '');
+  const [partnerBio, setPartnerBio] = useState(user.partner_bio ?? '');
+  const [partnerBannerUrl, setPartnerBannerUrl] = useState(user.partner_banner_url ?? '');
+  const [slugTouched, setSlugTouched] = useState(!!user.partner_slug);
+
+  // Auto-derive slug from partner name until user edits slug manually.
+  useEffect(() => {
+    if (!slugTouched && partnerName.trim()) {
+      setPartnerSlug(slugify(partnerName));
+    }
+  }, [partnerName, slugTouched]);
+
+  const disabled = !isPartner;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-xl">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-8 overflow-y-auto">
+      <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-xl my-auto">
         <div className="flex items-start justify-between p-5 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#EFF6FF' }}>
-              <ShieldCheck size={18} className="text-blue-700" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary-light">
+              <ShieldCheck size={18} className="text-primary" />
             </div>
             <div>
               <h2 className="text-base font-bold text-foreground">Verified Partner</h2>
@@ -516,66 +561,148 @@ function PartnerEditModal({
             <div>
               <p className="text-sm font-semibold text-foreground">Mark as Verified Partner</p>
               <p className="text-xs text-muted mt-0.5">
-                Their listings show a partner badge. They can be assigned to incoming home-service requests.
+                Gives them a storefront at /agent/[slug], a badge on every listing, and routing for diaspora requests.
               </p>
             </div>
           </label>
 
           <div>
             <label className="text-[10px] font-bold uppercase tracking-widest block mb-1 text-muted">
-              Partner name (shown on the badge)
+              Partner name
             </label>
             <input
               type="text"
               value={partnerName}
               onChange={(e) => setPartnerName(e.target.value)}
               placeholder="e.g. GY Realty Group"
-              disabled={!isPartner}
+              disabled={disabled}
               className="w-full px-3 py-2.5 rounded-xl text-sm bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
             />
-            <p className="text-[10px] text-muted mt-1">
-              Leave blank to show the generic &quot;Verified Partner&quot; badge.
-            </p>
           </div>
 
           <div>
             <label className="text-[10px] font-bold uppercase tracking-widest block mb-1 text-muted">
-              Partner logo URL (optional)
+              Storefront URL slug
+            </label>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted">/agent/</span>
+              <input
+                type="text"
+                value={partnerSlug}
+                onChange={(e) => {
+                  setPartnerSlug(e.target.value);
+                  setSlugTouched(true);
+                }}
+                onBlur={() => setPartnerSlug(slugify(partnerSlug))}
+                placeholder="gy-realty-group"
+                disabled={disabled}
+                className="flex-1 px-3 py-2.5 rounded-xl text-sm bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
+              />
+            </div>
+            {partnerSlug && (
+              <p className="text-[10px] text-muted mt-1">
+                Preview: yuhplace.com/agent/{partnerSlug}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1 text-muted">
+              Tagline (1 line)
             </label>
             <input
-              type="url"
-              value={partnerLogoUrl}
-              onChange={(e) => setPartnerLogoUrl(e.target.value)}
-              placeholder="https://..."
-              disabled={!isPartner}
+              type="text"
+              value={partnerTagline}
+              onChange={(e) => setPartnerTagline(e.target.value)}
+              placeholder="Georgetown&rsquo;s most-trusted real estate team."
+              disabled={disabled}
+              maxLength={120}
               className="w-full px-3 py-2.5 rounded-xl text-sm bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
             />
           </div>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1 text-muted">
+              Bio (paragraph)
+            </label>
+            <textarea
+              value={partnerBio}
+              onChange={(e) => setPartnerBio(e.target.value)}
+              rows={3}
+              placeholder="Who you are, what you specialize in, why buyers trust you."
+              disabled={disabled}
+              className="w-full px-3 py-2.5 rounded-xl text-sm bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest block mb-1 text-muted">
+                Logo URL
+              </label>
+              <input
+                type="url"
+                value={partnerLogoUrl}
+                onChange={(e) => setPartnerLogoUrl(e.target.value)}
+                placeholder="https://..."
+                disabled={disabled}
+                className="w-full px-3 py-2.5 rounded-xl text-sm bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest block mb-1 text-muted">
+                Banner URL
+              </label>
+              <input
+                type="url"
+                value={partnerBannerUrl}
+                onChange={(e) => setPartnerBannerUrl(e.target.value)}
+                placeholder="https://..."
+                disabled={disabled}
+                className="w-full px-3 py-2.5 rounded-xl text-sm bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 p-4 bg-surface/40 border-t border-border">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-semibold text-foreground rounded-lg hover:bg-surface"
-            disabled={saving}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() =>
-              onSave(
-                isPartner,
-                partnerName.trim() ? partnerName.trim() : null,
-                partnerLogoUrl.trim() ? partnerLogoUrl.trim() : null,
-              )
-            }
-            disabled={saving}
-            className="px-4 py-2 text-sm font-bold text-white rounded-lg flex items-center gap-1.5 disabled:opacity-60"
-            style={{ backgroundColor: '#1667B7' }}
-          >
-            {saving ? <Loader2 size={14} className="animate-spin" /> : null}
-            Save
-          </button>
+        <div className="flex items-center justify-between gap-2 p-4 bg-surface/40 border-t border-border">
+          {user.partner_slug && user.is_verified_partner ? (
+            <a
+              href={`/agent/${user.partner_slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Open current storefront &rarr;
+            </a>
+          ) : <span />}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-semibold text-foreground rounded-lg hover:bg-surface"
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() =>
+                onSave({
+                  isPartner,
+                  partnerName: partnerName.trim() ? partnerName.trim() : null,
+                  partnerLogoUrl: partnerLogoUrl.trim() ? partnerLogoUrl.trim() : null,
+                  partnerSlug: partnerSlug.trim() ? slugify(partnerSlug) : null,
+                  partnerTagline: partnerTagline.trim() ? partnerTagline.trim() : null,
+                  partnerBio: partnerBio.trim() ? partnerBio.trim() : null,
+                  partnerBannerUrl: partnerBannerUrl.trim() ? partnerBannerUrl.trim() : null,
+                })
+              }
+              disabled={saving}
+              className="px-4 py-2 text-sm font-bold text-white rounded-lg flex items-center gap-1.5 disabled:opacity-60 bg-primary hover:bg-primary-dark"
+            >
+              {saving ? <Loader2 size={14} className="animate-spin" /> : null}
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>

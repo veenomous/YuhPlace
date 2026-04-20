@@ -18,6 +18,7 @@ import {
   UserSearch,
   Store,
   Plane,
+  Upload,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { label: 'Discover Posts', href: '/admin/discover', icon: Compass },
   { label: 'Market Listings', href: '/admin/market', icon: ShoppingBag },
   { label: 'Property Listings', href: '/admin/properties', icon: Home },
+  { label: 'Bulk Import', href: '/admin/property/bulk-import', icon: Upload },
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Stores', href: '/admin/stores', icon: Store },
   { label: 'Quick Add', href: '/admin/quick-add', icon: Plus },

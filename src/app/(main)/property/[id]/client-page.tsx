@@ -386,13 +386,20 @@ export default function PropertyListingClient({ id }: { id: string }) {
         <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">Listed By</h2>
         <div className="bg-surface rounded-2xl p-4 mb-6">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center shrink-0">
-              <span className="text-lg font-bold text-primary">{property.profiles.name.charAt(0)}</span>
+            <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center shrink-0 overflow-hidden">
+              {property.profiles.is_verified_partner && property.profiles.partner_logo_url ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={property.profiles.partner_logo_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg font-bold text-primary">{(property.profiles.partner_name ?? property.profiles.name).charAt(0)}</span>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="font-semibold text-foreground truncate">{property.profiles.name}</h3>
-                {property.profiles.is_verified_business && (
+                <h3 className="font-semibold text-foreground truncate">
+                  {property.profiles.partner_name ?? property.profiles.name}
+                </h3>
+                {property.profiles.is_verified_business && !property.profiles.is_verified_partner && (
                   <BadgeCheck size={16} className="text-accent shrink-0" />
                 )}
               </div>
@@ -403,15 +410,21 @@ export default function PropertyListingClient({ id }: { id: string }) {
                 {property.profiles.is_verified_partner && (
                   <VerifiedPartner partnerName={property.profiles.partner_name ?? null} size="sm" />
                 )}
-                {property.profiles.is_verified_business && !property.profiles.is_verified_partner && (
-                  <BadgeCheck size={14} className="text-accent flex-shrink-0" />
-                )}
               </div>
               <div className="flex items-center gap-1.5 mt-2 text-xs text-muted">
                 <CalendarDays size={12} />
                 Member since {memberSince(property.profiles.created_at)}
               </div>
               <SellerRating sellerId={property.user_id} size="small" />
+              {property.profiles.is_verified_partner && property.profiles.partner_slug && (
+                <Link
+                  href={`/agent/${property.profiles.partner_slug}`}
+                  className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary hover:underline"
+                >
+                  See all their listings
+                  <ChevronRight size={12} />
+                </Link>
+              )}
             </div>
           </div>
         </div>
